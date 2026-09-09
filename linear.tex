@@ -322,4 +322,133 @@
   \end{itemize}
 \end{frame}
 
+%=============================================================================
+%  UPDATE SLIDES -- results after the full benchmark, added after the proposal
+%=============================================================================
+
+\begin{frame}{Update: What the Full Benchmark Found}
+  \vspace{-0.15em}
+  \colorbox{LSlightgold}{\parbox{0.98\linewidth}{\vspace{0.25em}
+    {\bfseries\normalsize\color{LSnavy} 930 matrices $\times$ 16 solvers $=$ 14{,}880 measurements}\\[0.15em]
+    {\footnotesize\color{LSgray} 27 domains, $n = 5$ to $10{,}000$. Every result is scored by the
+    harness from the residual it measures itself, never by a solver's own convergence flag.}
+    \vspace{0.25em}}}
+  \vspace{0.5em}
+  \small
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{@{}p{4.5cm}p{2.1cm}p{1.9cm}p{3.1cm}@{}}
+    \toprule
+    \hdrow \hdtxt{Solver} & \hdtxt{Applicable} & \hdtxt{Solved} & \hdtxt{Conditional success}\\
+    \midrule
+    \texttt{spsolve} (SuperLU) & 904 & \textcolor{LSgreen}{\textbf{876}} & 96.9\%\\
+    \rowcolor{LSlight}
+    Gauss elimination / LU & 598 & 595 & 99.5\%\\
+    ILU-Krylov (dispatched) & 739 & 619 & 83.8\%\\
+    \rowcolor{LSlight}
+    Gauss-Seidel & 414 & 121 & 29.2\%\\
+    Jacobi & 414 & 75 & 18.1\%\\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.6em}
+  \begin{block}{\small Two numbers, never one}
+    \footnotesize \emph{Applicability} is how much of the corpus a method is even defined on;
+    \emph{conditional success} is how much of that it actually solves. Jacobi and Gauss-Seidel
+    are undefined on \textbf{491 of 930} systems, because a zero on the diagonal leaves nothing
+    to divide by.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Update: The APK Claim Does Not Survive}
+  \small
+  \vspace{0.2em}
+  We proposed APK as a novel method. Measured against the baselines it was missing, the
+  dispatch rule that made it ``ours'' contributes \textbf{one matrix}.
+  \vspace{0.5em}
+  \begin{center}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{@{}p{6.6cm}p{3.0cm}@{}}
+    \toprule
+    \hdrow \hdtxt{Configuration} & \hdtxt{Solved (of 739)}\\
+    \midrule
+    ILU-Krylov, symmetry dispatch \emph{(the proposal)} & 619\\
+    \rowcolor{LSlight}
+    ILU-BiCGSTAB, no dispatch at all & 618\\
+    ILU only, zero Krylov iterations & 79\\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.5em}
+  \begin{itemize}\setlength\itemsep{0.3em}
+    \item The dispatch rule is the decision flowchart in Barrett et al., \emph{Templates}
+      (SIAM, 1994), and the default behaviour of PETSc and MATLAB's backslash.
+    \item Its accuracy advantage came from an \textbf{iterative refinement pass no other
+      method received}. Given the same pass, \textcolor{LSred}{\bfseries Jacobi} becomes the most
+      accurate method in the benchmark: $6.99\times10^{-16}$ against APK's $7.11\times10^{-14}$.
+    \item A sparse direct solver beats every iterative configuration: \textbf{876 against 619}.
+  \end{itemize}
+  \vspace{0.3em}
+  {\footnotesize\color{LSgray} Reporting this is the point. A negative result we found ourselves
+  is worth more than a claim a reviewer would break.}
+\end{frame}
+
+\begin{frame}{Update: Why the Base Paper's Effect Vanishes}
+  \small
+  On the 414 systems where both methods are defined: \textbf{75} both converge,
+  \textbf{46} only Gauss-Seidel, and \gd{zero} only Jacobi, against the 1{,}095 only-Jacobi
+  cases the base paper reports at $n \le 5$.
+  \vspace{0.5em}
+  \begin{center}
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{@{}p{5.4cm}p{1.6cm}p{2.5cm}p{2.5cm}@{}}
+    \toprule
+    \hdrow \hdtxt{Hypothesis class} & \hdtxt{Systems} & \hdtxt{Jacobi works} & \hdtxt{Only-Jacobi}\\
+    \midrule
+    Strictly diagonally dominant & 43 & 88.4\% & 0\\
+    \rowcolor{LSlight}
+    H-matrix & 83 & 77.1\% & 0\\
+    M-matrix & 34 & 64.7\% & 0\\
+    \rowcolor{LSlight}
+    \textbf{No theorem applies} & \textbf{192} & \textcolor{LSred}{\bfseries 1.6\%} & 0\\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.55em}
+  \begin{block}{\small A theorem can be true and still useless}
+    \footnotesize Householder and John (1958) guarantee Gauss-Seidel converges for every
+    symmetric positive-definite matrix, and $\rho(T_{GS}) < 1$ does hold on 98 of our 104 SPD
+    systems. Within a 10{,}000-iteration budget it delivers on \textbf{44}: the remaining 54
+    need a median of \textbf{1{,}798{,}184} iterations. That gap is invisible at $n \le 5$.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Update: Our Actual Contribution}
+  \vspace{-0.15em}
+  \colorbox{LSlightgold}{\parbox{0.98\linewidth}{\vspace{0.25em}
+    {\bfseries\normalsize\color{LSnavy} Convergence-Oriented Diagonal Selection}\\[0.15em]
+    {\footnotesize\color{LSgray} A stationary method divides by $a_{ii}$, so it depends entirely on
+    which entries sit on the diagonal, and that was decided by the order the rows arrived in.}
+    \vspace{0.25em}}}
+  \vspace{0.5em}
+  \small
+  \begin{itemize}\setlength\itemsep{0.42em}
+    \item \textbf{\color{LSteal}Most preprocessing provably cannot help.}
+      Row scaling gives $T_J' = I - (RD)^{-1}RA = T_J$ exactly; column scaling is a similarity
+      transform; a symmetric permutation leaves $\rho(T_J)$ invariant. \textbf{Only a row
+      permutation changes which entries form $D$.}
+    \item \textbf{\color{LSteal}MC64 optimises the wrong objective.}
+      It maximises $\prod |a_{ii}|$, built for pivot stability in \emph{direct} solvers.
+      Convergence instead needs a small row ratio $\sum_{j \ne i} |a_{ij}| / |a_{ii}|$.
+    \item \textbf{\color{LSteal}We minimise the worst row ratio}, a bottleneck assignment solved
+      by binary search plus bipartite matching. No single objective wins everywhere, so all
+      candidates are computed and ranked by an estimated $\rho(T_{GS})$ in about $0.01$\,s.
+  \end{itemize}
+  \vspace{0.4em}
+  \begin{center}
+  \colorbox{LSlight}{\parbox{0.94\linewidth}{\centering\footnotesize
+  \texttt{odepa400}: $\rho(T_{GS}) = 1.0001$ as given, MC64 leaves it unchanged,
+  ours reaches \gd{$0.495$} and Gauss-Seidel converges.\\
+  A shuffled $3\times3$: $\rho(T_{GS})$ falls from $99.19$ to $0.0316$, solved in 7 iterations.}}
+  \end{center}
+\end{frame}
+
 \end{document}

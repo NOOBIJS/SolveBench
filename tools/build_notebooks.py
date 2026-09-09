@@ -31,7 +31,7 @@ OUT = ROOT / "kaggle_upload"
 
 MODULES = ["config", "metrics", "direct_solvers", "iterative_solvers",
            "reference_solvers", "refinement", "io_utils", "spectral",
-           "benchmark", "__init__"]
+           "reordering", "benchmark", "__init__"]
 
 DATASET = "mdmarufhasanrubab/solvebench-matrices-large"
 
@@ -67,7 +67,7 @@ def cell_library():
             '    (_pkg / f"{_name}.py").write_text(_src, encoding="utf-8")\n'
             'sys.path.insert(0, str(_pkg.parent))\n\n'
             'import solvebench\n'
-            'from solvebench import benchmark, config, io_utils, metrics, spectral\n'
+            'from solvebench import benchmark, config, io_utils, metrics, reordering, spectral\n'
             'print(f"library loaded: {len(_SOURCES)} modules, "\n'
             '      f"{len(benchmark.METHODS)} methods")\n'
             'for _m in benchmark.METHODS:\n'
@@ -297,6 +297,145 @@ print(cost.to_string(float_format=lambda v: f"{v:.0f}"))
 cost.to_csv(OUT_DIR / "tables" / "refinement_cost.csv")'''
 
 
+REORDERING = '''T0 = time.perf_counter()
+import numpy as np
+import pandas as pd
+
+# The question this notebook exists to answer: how many systems does *choosing* the
+# diagonal move from "no stationary method works" to "solved"?
+#
+#   none  -- the matrix as it arrives, the baseline every earlier result uses
+#   mc64  -- the established permutation, maximising the product of |diagonal| entries
+#   best  -- compute mc64, min-sum and bottleneck, keep whichever gives the smallest
+#            estimated rho(T_GS). "none" is among the candidates, so this can never do
+#            worse than leaving the matrix alone.
+CONDITIONS = ("none", "mc64", "best")
+STATIONARY = {"Jacobi": solvebench.iterative_solvers.jacobi,
+              "Gauss-Seidel": solvebench.iterative_solvers.gauss_seidel,
+              "SOR": solvebench.iterative_solvers.sor}
+
+rows = []
+csv = OUT_DIR / "tables" / "reordering_study.csv"
+order = sorted(MATRICES, key=lambda e: e["path"].stat().st_size)
+
+for i, entry in enumerate(order, 1):
+    base = {"domain": entry["domain"], "matrix": entry["name"]}
+    try:
+        A = io_utils.load_matrix(entry["path"])
+    except Exception as e:
+        rows.append({**base, "status": f"load_failed: {type(e).__name__}"})
+        continue
+    n = A.shape[0]
+    base.update(n=n, nnz=A.nnz)
+    zr, zc = io_utils.structural_singularity(A)
+    if zr or zc:
+        rows.append({**base, "status": "structurally_singular"})
+        pd.DataFrame(rows).to_csv(csv, index=False)
+        continue
+
+    x_true, b = io_utils.make_ground_truth(A)
+    bn = np.linalg.norm(b) or 1.0
+    xn = np.linalg.norm(x_true) or 1.0
+    line = f"[{i}/{len(order)}] {entry['name']:<22} n={n:<6}"
+
+    for cond in CONDITIONS:
+        t0 = time.perf_counter()
+        try:
+            A2, b2, info = reordering.select_diagonal(A, b, objective=cond)
+        except Exception as e:
+            rows.append({**base, "condition": cond,
+                         "status": f"reorder_failed: {type(e).__name__}"})
+            continue
+        setup = time.perf_counter() - t0
+        zeros = int((np.abs(A2.diagonal()) < 1e-14).sum())
+
+        # Exact spectra only for the two conditions the write-up compares, and only
+        # where the dense route is affordable. Selection itself uses a cheap estimate.
+        rho_j = rho_g = np.nan
+        if cond in ("none", "best") and n <= config.SPECTRAL_EXACT_CAP and zeros == 0:
+            try:
+                rho_j, _ = spectral.spectral_radius(A2, "jacobi")
+                rho_g, _ = spectral.spectral_radius(A2, "gauss_seidel")
+            except Exception:
+                pass
+
+        for mname, fn in STATIONARY.items():
+            row = {**base, "condition": cond, "method": mname,
+                   "chosen": info.get("chosen", cond), "setup_sec": setup,
+                   "zero_diagonal": zeros, "rho_jacobi": rho_j, "rho_gauss_seidel": rho_g}
+            if zeros:
+                row.update(metrics.blank(metrics.STATUS_NOT_APPLICABLE, "zero diagonal"))
+                rows.append(row)
+                continue
+            try:
+                t1 = time.perf_counter()
+                x, its, conv, work = fn(A2, b2)
+                row.update(runtime_sec=time.perf_counter() - t1, iterations=its,
+                           **work.as_dict(),
+                           **metrics.score(A2, x, b2, x_true, bn, xn, conv))
+            except solvebench.SolverNotApplicable as e:
+                row.update(metrics.blank(metrics.STATUS_NOT_APPLICABLE, str(e)))
+            except (MemoryError, RuntimeError, ValueError, ZeroDivisionError) as e:
+                row.update(metrics.blank(metrics.STATUS_ERROR, f"{type(e).__name__}: {e}"))
+            rows.append(row)
+
+        solved = sum(1 for r in rows[-len(STATIONARY):]
+                     if r.get("status") == metrics.STATUS_SOLVED)
+        line += f"  {cond}:{solved}/3"
+
+    print(line + f"   ({(time.perf_counter() - T0) / 60:.1f} min)", flush=True)
+    pd.DataFrame(rows).to_csv(csv, index=False)
+
+study = pd.DataFrame(rows)
+print(f"\\nrows {len(study):,}")'''
+
+REORDERING_SUMMARY = '''ok = study[study.method.notna()]
+piv = (ok.assign(solved=ok.status == metrics.STATUS_SOLVED)
+         .pivot_table(index=["matrix", "method"], columns="condition",
+                      values="solved", aggfunc="max"))
+
+print("=== systems solved, by condition ===")
+for c in CONDITIONS:
+    if c in piv:
+        print(f"  {c:<6} {int(piv[c].sum()):>5}")
+
+if "none" in piv and "best" in piv:
+    gained = piv[(piv["none"] == 0) & (piv["best"] == 1)]
+    lost = piv[(piv["none"] == 1) & (piv["best"] == 0)]
+    print(f"\\n  RESCUED (failed as given, solved after choosing the diagonal): {len(gained)}")
+    print(f"  LOST    (solved as given, failed after)                      : {len(lost)}")
+    if "mc64" in piv:
+        mc = piv[(piv["none"] == 0) & (piv["mc64"] == 1)]
+        print(f"  MC64 rescues                                                 : {len(mc)}")
+        print(f"  ours rescues where MC64 does not                             : "
+              f"{len(set(gained.index) - set(mc.index))}")
+    print("\\n  by method:")
+    for m in STATIONARY:
+        lvl = piv.index.get_level_values("method")
+        if m not in set(lvl):
+            continue
+        sub = piv.xs(m, level="method")
+        g = ((sub["none"] == 0) & (sub["best"] == 1)).sum()
+        print(f"    {m:<14} {int(sub['none'].sum()):>4} -> {int(sub['best'].sum()):>4}"
+              f"   (+{int(g)} rescued)")
+
+print("\\n=== which objective the selector picked ===")
+print(ok[ok.condition == "best"].drop_duplicates("matrix").chosen.value_counts().to_string())
+
+sp_rows = ok[(ok.condition.isin(["none", "best"])) & ok.rho_gauss_seidel.notna()]
+if len(sp_rows):
+    w = sp_rows.drop_duplicates(["matrix", "condition"]).pivot(
+        index="matrix", columns="condition", values="rho_gauss_seidel").dropna()
+    if {"none", "best"} <= set(w.columns):
+        crossed = ((w["none"] >= 1) & (w["best"] < 1)).sum()
+        print(f"\\n=== rho(T_GS) crossing below 1 (n <= {config.SPECTRAL_EXACT_CAP}) ===")
+        print(f"  matrices measured both ways  : {len(w)}")
+        print(f"  rho >= 1 as given, < 1 after : {int(crossed)}")
+        print(f"  median change in rho         : {(w['best'] - w['none']).median():.4g}")
+
+piv.to_csv(OUT_DIR / "tables" / "reordering_pivot.csv")'''
+
+
 NOTEBOOKS = {
     "solvebench-main-sweep": {
         "title": "SolveBench Main Sweep",
@@ -317,6 +456,18 @@ NOTEBOOKS = {
                   "it says *why* the main sweep came out as it did."),
         "body": [SPECTRAL, SPECTRAL_SUMMARY],
         "tables": ["spectral.csv", "hypothesis_coverage.csv"],
+    },
+    "solvebench-reordering-study": {
+        "title": "SolveBench Reordering Study",
+        "intro": ("# SolveBench -- Reordering Study\\n\\n"
+                  "How many systems does *choosing* the diagonal move from unsolvable "
+                  "to solved?\\n\\nA stationary method divides by a_ii, so it depends "
+                  "entirely on which entries sit on the diagonal -- and that was decided "
+                  "by the order the rows happened to arrive in. Three conditions: the "
+                  "matrix as given, the established MC64 permutation, and a selection "
+                  "among the MC64, min-sum and bottleneck objectives."),
+        "body": [REORDERING, REORDERING_SUMMARY],
+        "tables": ["reordering_study.csv", "reordering_pivot.csv"],
     },
     "solvebench-refinement-study": {
         "title": "SolveBench Refinement Study",

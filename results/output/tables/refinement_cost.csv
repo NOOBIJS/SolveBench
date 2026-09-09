@@ -1,14 +1,14 @@
 method,0,1,2
-BiCGSTAB,360.5,670.5,695.5
+BiCGSTAB,677.0,1236.0,1284.0
 GMRES(30),118.0,6134.5,6594.5
 Gauss elimination,0.0,1.0,2.0
 Gauss-Jordan,0.0,1.0,2.0
-Gauss-Seidel,1156.0,11501.5,17419.0
+Gauss-Seidel,1156.0,11501.5,30002.0
 ILU only,,,2.0
-ILU-BiCGSTAB,3.5,8.5,9.5
-ILU-GMRES(30),5.0,11.0,12.0
-ILU-Krylov (dispatched),3.5,8.5,9.5
+ILU-BiCGSTAB,5.5,13.5,14.5
+ILU-GMRES(30),7.0,15.0,16.0
+ILU-Krylov (dispatched),5.5,13.5,14.5
 LU,0.0,1.0,1.0
-SOR,3476.5,9020.0,14021.0
+SOR,3476.5,16379.0,26380.0
 splu (SuperLU),0.0,1.0,1.0
 spsolve (SuperLU),0.0,1.0,1.0
