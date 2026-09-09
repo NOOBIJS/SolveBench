@@ -245,3 +245,68 @@ def test_cancellation_ratio_detects_a_noise_rhs():
     matrices hit this, the worst at 3.5e-17."""
     A = sp.csr_matrix(np.array([[1.0, -1.0], [1.0, -1.0]]))
     assert io_utils.cancellation_ratio(A, np.ones(2)) < 1e-15
+
+
+# ---------------------------------------------------------------- reordering
+
+
+def test_permutation_restores_a_shuffled_dominant_matrix():
+    """The worked example: a diagonally dominant matrix whose rows arrived in the
+    wrong order. rho(T_GS) is 99.19 as given and 0.0316 once the diagonal is chosen."""
+    from solvebench import reordering as ro
+    A = sp.csr_matrix(np.array([[1.0, 10.0, 1.0],
+                                [10.0, 1.0, 1.0],
+                                [1.0, 1.0, 10.0]]))
+    b = A @ np.ones(3)
+    assert spectral.spectral_radius(A, "gauss_seidel")[0] > 1.0
+
+    for objective in ("bottleneck", "minsum", "mc64", "best"):
+        A2, b2, _ = ro.select_diagonal(A, b, objective=objective)
+        assert spectral.spectral_radius(A2, "gauss_seidel")[0] < 0.1, objective
+        x, _, conv, _ = it.gauss_seidel(A2, b2)
+        assert metrics.score(A2, x, b2, np.ones(3), reported_converged=conv)["status"] \
+            == metrics.STATUS_SOLVED, objective
+
+
+def test_row_permutation_preserves_the_solution():
+    """A'x = PAx = Pb = b', so nothing needs un-permuting afterwards."""
+    from solvebench import reordering as ro
+    rng = np.random.default_rng(11)
+    A = sp.csr_matrix(rng.standard_normal((6, 6)))
+    x_true = rng.standard_normal(6)
+    b = A @ x_true
+    A2, b2, _ = ro.select_diagonal(A, b, objective="bottleneck")
+    assert np.allclose(A2 @ x_true, b2)
+
+
+def test_scaling_cannot_change_the_spectral_radius():
+    """Row and column scaling leave rho(T_J) invariant -- the fact that rules most
+    preprocessing out and leaves row permutation as the only lever."""
+    rng = np.random.default_rng(5)
+    A = sp.csr_matrix(rng.standard_normal((30, 30)) + 6 * sp.eye(30))
+    base = spectral.spectral_radius(A, "jacobi")[0]
+    s = np.abs(rng.standard_normal(30)) + 0.5
+    assert np.isclose(spectral.spectral_radius(sp.diags(s) @ A, "jacobi")[0], base)
+    assert np.isclose(spectral.spectral_radius(A @ sp.diags(s), "jacobi")[0], base)
+
+
+def test_best_is_never_worse_than_doing_nothing():
+    """"no permutation" is one of the candidates, so the portfolio cannot lose."""
+    from solvebench import reordering as ro
+    rng = np.random.default_rng(3)
+    A = sp.csr_matrix(rng.standard_normal((25, 25)) + 8 * sp.eye(25))
+    before = spectral.spectral_radius(A, "gauss_seidel")[0]
+    A2, _, info = ro.select_diagonal(A, None, objective="best")
+    assert spectral.spectral_radius(A2, "gauss_seidel")[0] <= before + 1e-9
+    assert info["chosen"] in ro.PORTFOLIO
+
+
+def test_wide_ratio_range_does_not_hang():
+    """Raw ratios spanning ten orders of magnitude made the min-sum matching run
+    past 240 s on nnc261; log1p compresses them and it returns immediately."""
+    from solvebench import reordering as ro
+    A = sp.csr_matrix(np.array([[1e-10, 1.0, 0.0],
+                                [1.0, 1e10, 1.0],
+                                [0.0, 1.0, 1.0]]))
+    p, cost = ro.minsum_permutation(A)
+    assert p is not None and np.isfinite(cost)
