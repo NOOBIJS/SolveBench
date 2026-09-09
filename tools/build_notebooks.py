@@ -299,7 +299,7 @@ cost.to_csv(OUT_DIR / "tables" / "refinement_cost.csv")'''
 
 NOTEBOOKS = {
     "solvebench-main-sweep": {
-        "title": "SolveBench: Main Sweep (16 solvers, 930 matrices)",
+        "title": "SolveBench Main Sweep",
         "intro": ("# SolveBench -- Main Sweep\\n\\n"
                   "16 solvers across 930 real sparse matrices from 27 domains.\\n\\n"
                   "Refinement is **disabled for every method**, so the comparison "
@@ -309,7 +309,7 @@ NOTEBOOKS = {
         "tables": ["benchmark_results.csv", "method_summary.csv", "per_domain.csv"],
     },
     "solvebench-spectral": {
-        "title": "SolveBench: Spectral Analysis and Hypothesis Coverage",
+        "title": "SolveBench Spectral",
         "intro": ("# SolveBench -- Spectral Analysis\\n\\n"
                   "No solving. Computes rho(T_J) and rho(T_GS) for every matrix, "
                   "plus the classical hypothesis class each one falls in.\\n\\n"
@@ -319,7 +319,7 @@ NOTEBOOKS = {
         "tables": ["spectral.csv", "hypothesis_coverage.csv"],
     },
     "solvebench-refinement-study": {
-        "title": "SolveBench: Iterative Refinement as a Controlled Factor",
+        "title": "SolveBench Refinement Study",
         "intro": ("# SolveBench -- Refinement Study\\n\\n"
                   "0, 1 and 2 refinement passes for all 16 methods on a stratified "
                   "subsample.\\n\\nIn the first sweep refinement was applied to one "
@@ -354,8 +354,11 @@ def build(name, spec):
         "nbformat": 4, "nbformat_minor": 5,
     }
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    nb_path = OUT / f"{name}.ipynb"
+    # One directory per kernel: the Kaggle CLI pushes a folder and requires the
+    # metadata to be named exactly kernel-metadata.json inside it.
+    kdir = OUT / name
+    kdir.mkdir(parents=True, exist_ok=True)
+    nb_path = kdir / f"{name}.ipynb"
     nb_path.write_text(json.dumps(nb, indent=1), encoding="utf-8")
 
     meta = {
@@ -373,7 +376,7 @@ def build(name, spec):
         "kernel_sources": [],
         "model_sources": [],
     }
-    (OUT / f"{name}.kernel-metadata.json").write_text(json.dumps(meta, indent=2))
+    (kdir / "kernel-metadata.json").write_text(json.dumps(meta, indent=2))
     return nb_path, len(cells)
 
 

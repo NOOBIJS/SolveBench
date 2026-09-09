@@ -1,6 +1,6 @@
 {
   "id": "mdmarufhasanrubab/solvebench-main-sweep",
-  "title": "SolveBench: Main Sweep (16 solvers, 930 matrices)",
+  "title": "SolveBench Main Sweep",
   "code_file": "solvebench-main-sweep.ipynb",
   "language": "python",
   "kernel_type": "notebook",

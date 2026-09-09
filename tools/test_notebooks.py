@@ -44,7 +44,7 @@ def run_notebook(path, n_matrices):
 
 def main():
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 3
-    notebooks = sorted(NB_DIR.glob("solvebench-*.ipynb"))
+    notebooks = sorted(NB_DIR.glob("solvebench-*/solvebench-*.ipynb"))
     if not notebooks:
         raise SystemExit("no notebooks found -- run tools/build_notebooks.py first")
 

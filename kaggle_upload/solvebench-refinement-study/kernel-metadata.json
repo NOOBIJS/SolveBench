@@ -1,7 +1,7 @@
 {
-  "id": "mdmarufhasanrubab/solvebench-spectral",
-  "title": "SolveBench: Spectral Analysis and Hypothesis Coverage",
-  "code_file": "solvebench-spectral.ipynb",
+  "id": "mdmarufhasanrubab/solvebench-refinement-study",
+  "title": "SolveBench Refinement Study",
+  "code_file": "solvebench-refinement-study.ipynb",
   "language": "python",
   "kernel_type": "notebook",
   "is_private": true,

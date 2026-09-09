@@ -1,7 +1,7 @@
 {
-  "id": "mdmarufhasanrubab/solvebench-refinement-study",
-  "title": "SolveBench: Iterative Refinement as a Controlled Factor",
-  "code_file": "solvebench-refinement-study.ipynb",
+  "id": "mdmarufhasanrubab/solvebench-spectral",
+  "title": "SolveBench Spectral",
+  "code_file": "solvebench-spectral.ipynb",
   "language": "python",
   "kernel_type": "notebook",
   "is_private": true,
