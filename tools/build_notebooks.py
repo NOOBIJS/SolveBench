@@ -314,9 +314,27 @@ STATIONARY = {"Jacobi": solvebench.iterative_solvers.jacobi,
               "Gauss-Seidel": solvebench.iterative_solvers.gauss_seidel,
               "SOR": solvebench.iterative_solvers.sor}
 
+# Set by the generator. The probe variant trades corpus coverage and the exact spectra
+# for a run short enough to confirm the pipeline works before the full sweep finishes.
+PROBE_N = __PROBE_N__
+WITH_EXACT_SPECTRA = __WITH_SPECTRA__
+
 rows = []
 csv = OUT_DIR / "tables" / "reordering_study.csv"
 order = sorted(MATRICES, key=lambda e: e["path"].stat().st_size)
+
+if PROBE_N and PROBE_N < len(order):
+    # Stratified by size decile so the sample keeps the corpus's spread rather than
+    # filling up with small, fast matrices.
+    rng = np.random.default_rng(20260910)
+    edges = np.linspace(0, len(order), 11).astype(int)
+    picked = []
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        bucket = order[lo:hi]
+        take = min(PROBE_N // 10, len(bucket))
+        picked += [bucket[j] for j in rng.choice(len(bucket), size=take, replace=False)]
+    order = sorted(picked, key=lambda e: e["path"].stat().st_size)
+    print(f"probe: {len(order)} matrices sampled across 10 size deciles (seed 20260910)")
 
 for i, entry in enumerate(order, 1):
     base = {"domain": entry["domain"], "matrix": entry["name"]}
@@ -352,7 +370,8 @@ for i, entry in enumerate(order, 1):
         # Exact spectra only for the two conditions the write-up compares, and only
         # where the dense route is affordable. Selection itself uses a cheap estimate.
         rho_j = rho_g = np.nan
-        if cond in ("none", "best") and n <= config.SPECTRAL_EXACT_CAP and zeros == 0:
+        if (WITH_EXACT_SPECTRA and cond in ("none", "best")
+                and n <= config.SPECTRAL_EXACT_CAP and zeros == 0):
             try:
                 rho_j, _ = spectral.spectral_radius(A2, "jacobi")
                 rho_g, _ = spectral.spectral_radius(A2, "gauss_seidel")
@@ -435,6 +454,15 @@ if len(sp_rows):
 
 piv.to_csv(OUT_DIR / "tables" / "reordering_pivot.csv")'''
 
+# The full sweep, and a probe short enough to confirm the pipeline and show the signal
+# early. The probe drops the exact spectra -- roughly two hours of the cost -- and
+# samples the corpus; everything else, including the 10,000-iteration cap, is identical,
+# so the two are directly comparable.
+REORDERING_FULL = (REORDERING.replace("__PROBE_N__", "None")
+                             .replace("__WITH_SPECTRA__", "True"))
+REORDERING_PROBE = (REORDERING.replace("__PROBE_N__", "200")
+                              .replace("__WITH_SPECTRA__", "False"))
+
 
 NOTEBOOKS = {
     "solvebench-main-sweep": {
@@ -466,7 +494,19 @@ NOTEBOOKS = {
                   "by the order the rows happened to arrive in. Three conditions: the "
                   "matrix as given, the established MC64 permutation, and a selection "
                   "among the MC64, min-sum and bottleneck objectives."),
-        "body": [REORDERING, REORDERING_SUMMARY],
+        "body": [REORDERING_FULL, REORDERING_SUMMARY],
+        "tables": ["reordering_study.csv", "reordering_pivot.csv"],
+    },
+    "solvebench-reordering-probe": {
+        "title": "SolveBench Reordering Probe",
+        "intro": ("# SolveBench -- Reordering Probe\\n\\n"
+                  "The same experiment as the full reordering study, on 200 matrices "
+                  "sampled across the corpus's size deciles and without the exact "
+                  "spectra.\\n\\nIt exists to show the signal early: the full sweep runs "
+                  "for hours because the method working is what makes it expensive -- "
+                  "491 systems that short-circuit as undefined suddenly have a usable "
+                  "diagonal and iterate to the cap."),
+        "body": [REORDERING_PROBE, REORDERING_SUMMARY],
         "tables": ["reordering_study.csv", "reordering_pivot.csv"],
     },
     "solvebench-refinement-study": {
