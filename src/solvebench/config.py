@@ -22,7 +22,12 @@ DIVERGENCE_GROWTH = 1e4
 # method: the same wrapper around Gauss-Seidel reaches 5.44e-16, about 27x more
 # accurate than refined APK's 1.45e-14. Every solver is now measured at each of
 # these pass counts so the comparison is like-for-like.
-REFINEMENT_PASSES = (0, 1, 2)
+REFINEMENT_PASSES = (0, 1)
+# A second pass costs roughly another full solve and buys little: measured on
+# fs_541_2, Gauss-Seidel goes 7.12e-04 -> 1.30e-11 -> 5.85e-12 across 0, 1 and 2
+# passes. Stopping at one is therefore a claim that needs evidence, so the
+# ablation below runs all three on a stratified subsample to justify it.
+REFINEMENT_STUDY_PASSES = (0, 1, 2)
 
 # --- ILU preconditioner ------------------------------------------------------
 ILU_DROP_TOL = 1e-3

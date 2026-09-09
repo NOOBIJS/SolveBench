@@ -1,138 +1,238 @@
-"""The benchmark harness: for every (matrix, method) pair, run the solve and
-record runtime, iterations, residual, error, and condition number -- exactly
-the five columns described in linear.tex's methodology diagram.
+"""The benchmark harness.
+
+For every matrix in the corpus and every method defined on it, run the solve and
+record what happened. Three rules hold throughout, and each exists because the
+first sweep broke it:
+
+1. **One judge.** No solver decides its own outcome. Every result goes through
+   :func:`solvebench.metrics.score`, which measures the residual from A, x and b
+   and applies one tolerance to all methods.
+2. **Every matrix is accounted for.** A matrix that is skipped, unloadable or
+   structurally singular still produces a row, with a reason code, for every
+   method. Denominators reconcile to the corpus size by construction rather than
+   by hoping nothing was dropped.
+3. **Refinement is a factor, not a feature.** Every method is run at each
+   refinement pass count, so no method's accuracy is credited to a wrapper the
+   others did not get.
 """
 import time
 import warnings
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
+import scipy.sparse.linalg as spla
 
-from . import direct_solvers as direct
-from . import iterative_solvers as iterative
+from . import config, direct_solvers as direct, iterative_solvers as it
+from . import metrics, reference_solvers as ref, spectral
 from .direct_solvers import SolverNotApplicable
-from .io_utils import discover_matrices, load_matrix, make_ground_truth
-
-DIRECT_METHODS = {
-    "Gauss elimination": direct.gauss_elimination,
-    "Gauss-Jordan": direct.gauss_jordan,
-    "LU": direct.lu_solve,
-    "Cholesky": direct.cholesky_solve,
-}
-
-ITERATIVE_METHODS = {
-    "Jacobi": iterative.jacobi,
-    "Gauss-Seidel": iterative.gauss_seidel,
-    "SOR": iterative.sor,
-    "Conjugate Gradient": iterative.conjugate_gradient,
-}
-
-# Our direct solvers are genuinely hand-written (no LAPACK), which makes them
-# roughly 50-100x slower than numpy.linalg.solve at this scale -- confirmed by
-# timing n=3000 at ~35s. Past this size the O(n^3) cost makes them impractical
-# to actually run (tens of minutes per matrix, per method). Iterative methods
-# are sparse-based and stay fast regardless of size, so only direct methods
-# are capped here.
-DIRECT_METHOD_SIZE_CAP = 3000
+from .io_utils import (cancellation_ratio, discover_matrices, load_matrix,
+                       make_ground_truth, structural_singularity)
+from .refinement import refine
 
 
-def _condition_number(A_dense: np.ndarray) -> float:
+class Method:
+    """One benchmarked method and the facts the harness needs about it."""
+
+    def __init__(self, name, fn, family, dense=False, capped=False):
+        self.name = name
+        self.fn = fn
+        self.family = family
+        self.dense = dense      # takes a dense array rather than a sparse matrix
+        self.capped = capped    # subject to DIRECT_SIZE_CAP
+
+    def __repr__(self):
+        return f"<Method {self.name}>"
+
+
+def _wrap_dense(fn):
+    """Adapt a hand-written direct solver to the common 4-tuple contract."""
+    def call(A_dense, b):
+        x, steps = fn(A_dense, b)
+        return x, steps, None, it.Work()      # None: it makes no convergence claim
+    return call
+
+
+#: Every method in the benchmark. The hand-written direct solvers are labelled
+#: "direct-handwritten" and are pedagogical implementations validated against
+#: LAPACK, not performance competitors -- they are pure-Python O(n^3) and about
+#: 50-100x slower than a library call, which is why they alone carry a size cap.
+METHODS = [
+    Method("Gauss elimination", _wrap_dense(direct.gauss_elimination), "direct-handwritten", dense=True, capped=True),
+    Method("Gauss-Jordan", _wrap_dense(direct.gauss_jordan), "direct-handwritten", dense=True, capped=True),
+    Method("LU", _wrap_dense(direct.lu_solve), "direct-handwritten", dense=True, capped=True),
+    Method("Cholesky", _wrap_dense(direct.cholesky_solve), "direct-handwritten", dense=True, capped=True),
+
+    Method("spsolve (SuperLU)", ref.sparse_spsolve, "direct-library"),
+    Method("splu (SuperLU)", ref.sparse_lu, "direct-library"),
+
+    Method("Jacobi", it.jacobi, "stationary"),
+    Method("Gauss-Seidel", it.gauss_seidel, "stationary"),
+    Method("SOR", it.sor, "stationary"),
+
+    Method("Conjugate Gradient", it.conjugate_gradient, "krylov"),
+    Method("BiCGSTAB", it.bicgstab, "krylov"),
+    Method("GMRES(30)", lambda A, b: it.gmres(A, b, restart=30), "krylov"),
+
+    Method("ILU only", ref.ilu_only, "preconditioned"),
+    Method("ILU-BiCGSTAB", ref.ilu_bicgstab, "preconditioned"),
+    Method("ILU-GMRES(30)", ref.ilu_gmres, "preconditioned"),
+    Method("ILU-Krylov (dispatched)", ref.ilu_krylov_dispatched, "preconditioned"),
+]
+
+METHOD_NAMES = [m.name for m in METHODS]
+
+
+def condition_number(A, A_dense, n):
+    """Exact via SVD where affordable, a 1-norm estimate otherwise.
+
+    The route is returned alongside the value: an exact condition number and an
+    estimate are not the same measurement and must not be pooled silently.
+    """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        if A_dense is not None and n <= config.COND_EXACT_CAP:
+            try:
+                return float(np.linalg.cond(A_dense)), "exact_svd"
+            except (np.linalg.LinAlgError, MemoryError):
+                pass
         try:
-            return float(np.linalg.cond(A_dense))
-        except np.linalg.LinAlgError:
-            return float("nan")
+            lu = spla.splu(A.tocsc())
+            inv_norm = spla.onenormest(spla.LinearOperator(
+                A.shape, matvec=lu.solve, rmatvec=lambda v: lu.solve(v, "T")))
+            return float(spla.onenormest(A) * inv_norm), "estimate_1norm"
+        except Exception:
+            return float("inf"), "failed"
 
 
-def run_one_matrix(domain: str, name: str, mtx_path: Path) -> list[dict]:
-    A_sparse = load_matrix(mtx_path)
-    n = A_sparse.shape[0]
-    x_true, b = make_ground_truth(A_sparse)
+def _row(base, method, passes, **extra):
+    return {**base, "method": method.name, "family": method.family,
+            "refinement_passes": passes, **extra}
+
+
+def run_one_matrix(domain, name, mtx_path, refinement_passes=(0, 1),
+                   with_spectral=True, seed=None, verbose=True):
+    """Benchmark every method on one matrix. Returns (result_rows, spectral_row)."""
+    try:
+        A = load_matrix(mtx_path)
+    except Exception as e:
+        base = {"domain": domain, "matrix": name, "n": np.nan, "nnz": np.nan}
+        rows = [_row(base, m, p, **metrics.blank("load_failed", f"{type(e).__name__}: {e}"))
+                for m in METHODS for p in refinement_passes]
+        return rows, {"domain": domain, "matrix": name, "status": "load_failed"}
+
+    n = A.shape[0]
+    base = {"domain": domain, "matrix": name, "n": n, "nnz": A.nnz,
+            "density": A.nnz / (n * n)}
+
+    zero_rows, zero_cols = structural_singularity(A)
+    if zero_rows or zero_cols:
+        if verbose:
+            print(f"    structurally singular ({zero_rows} zero rows, {zero_cols} zero cols)"
+                  " -- no unique solution, all methods skipped")
+        note = f"{zero_rows} zero rows, {zero_cols} zero cols"
+        rows = [_row(base, m, p, **metrics.blank(metrics.STATUS_SINGULAR, note))
+                for m in METHODS for p in refinement_passes]
+        return rows, {**base, "status": metrics.STATUS_SINGULAR}
+
+    x_true, b = make_ground_truth(A, seed=seed)
     b_norm = np.linalg.norm(b) or 1.0
-    x_true_norm = np.linalg.norm(x_true) or 1.0
-    A_dense = A_sparse.toarray()
-    cond = _condition_number(A_dense)
+    xt_norm = np.linalg.norm(x_true) or 1.0
+
+    needs_dense = n <= max(config.DIRECT_SIZE_CAP, config.COND_EXACT_CAP)
+    A_dense = A.toarray() if needs_dense else None
+
+    cond, cond_how = condition_number(A, A_dense, n)
+    base.update(condition_number=cond, condition_method=cond_how,
+                ill_conditioned=bool(cond > config.ILL_CONDITIONED),
+                cancellation_ratio=cancellation_ratio(A, x_true))
+    if verbose:
+        print(f"    n={n:,} nnz={A.nnz:,} cond={cond:.2e} ({cond_how})")
 
     rows = []
-
-    for method_name, solver in DIRECT_METHODS.items():
-        row = {"domain": domain, "matrix": name, "n": n, "nnz": A_sparse.nnz,
-               "method": method_name, "type": "direct", "condition_number": cond}
-        if n > DIRECT_METHOD_SIZE_CAP:
-            row.update({"status": f"skipped_too_large_for_hand_written_direct_solver (n={n} > {DIRECT_METHOD_SIZE_CAP})",
-                        "runtime_sec": None, "iterations": None, "residual_abs": None,
-                        "error_abs": None, "residual_rel": None, "error_rel": None})
-            rows.append(row)
-            continue
-        try:
-            t0 = time.perf_counter()
-            x, steps = solver(A_dense, b)
-            elapsed = time.perf_counter() - t0
-            residual_abs = float(np.linalg.norm(A_sparse @ x - b))
-            error_abs = float(np.linalg.norm(x - x_true))
-            row.update({
-                "status": "ok",
-                "runtime_sec": elapsed,
-                "iterations": steps,
-                "residual_abs": residual_abs,
-                "error_abs": error_abs,
-                "residual_rel": residual_abs / b_norm,
-                "error_rel": error_abs / x_true_norm,
-            })
-        except SolverNotApplicable as e:
-            row.update({"status": f"not_applicable: {e}", "runtime_sec": None, "iterations": None,
-                        "residual_abs": None, "error_abs": None, "residual_rel": None, "error_rel": None})
-        rows.append(row)
-
-    for method_name, solver in ITERATIVE_METHODS.items():
-        row = {"domain": domain, "matrix": name, "n": n, "nnz": A_sparse.nnz,
-               "method": method_name, "type": "iterative", "condition_number": cond}
-        try:
-            t0 = time.perf_counter()
-            x, its, converged = solver(A_sparse, b)
-            elapsed = time.perf_counter() - t0
-            residual_abs = float(np.linalg.norm(A_sparse @ x - b))
-            error_abs = float(np.linalg.norm(x - x_true))
-            row.update({
-                "status": "ok" if converged else "did_not_converge",
-                "runtime_sec": elapsed,
-                "iterations": its,
-                "residual_abs": residual_abs,
-                "error_abs": error_abs,
-                "residual_rel": residual_abs / b_norm,
-                "error_rel": error_abs / x_true_norm,
-            })
-        except SolverNotApplicable as e:
-            row.update({"status": f"not_applicable: {e}", "runtime_sec": None, "iterations": None,
-                        "residual_abs": None, "error_abs": None, "residual_rel": None, "error_rel": None})
-        rows.append(row)
-
-    return rows
-
-
-def run_full_benchmark(dataset_root: Path, output_csv: Path, verbose: bool = True) -> pd.DataFrame:
-    matrices = discover_matrices(dataset_root)
-    all_rows = []
-    for i, entry in enumerate(matrices, 1):
+    for m in METHODS:
+        operand = A_dense if m.dense else A
+        for passes in refinement_passes:
+            if m.capped and n > config.DIRECT_SIZE_CAP:
+                rows.append(_row(base, m, passes,
+                                 **metrics.blank(metrics.STATUS_SKIPPED,
+                                                 f"n={n} > cap {config.DIRECT_SIZE_CAP}")))
+                continue
+            if m.dense and A_dense is None:
+                rows.append(_row(base, m, passes,
+                                 **metrics.blank(metrics.STATUS_SKIPPED, "dense form not built")))
+                continue
+            try:
+                t0 = time.perf_counter()
+                if passes:
+                    x, iters, conv, work = refine(m.fn, operand, b, passes=passes)
+                else:
+                    x, iters, conv, work = m.fn(operand, b)
+                elapsed = time.perf_counter() - t0
+                scored = metrics.score(A, x, b, x_true, b_norm, xt_norm, conv)
+                rows.append(_row(base, m, passes, runtime_sec=elapsed, iterations=iters,
+                                 **work.as_dict(), **scored))
+            except SolverNotApplicable as e:
+                rows.append(_row(base, m, passes,
+                                 **metrics.blank(metrics.STATUS_NOT_APPLICABLE, str(e))))
+            except (MemoryError, RuntimeError, ValueError, ZeroDivisionError) as e:
+                rows.append(_row(base, m, passes,
+                                 **metrics.blank(metrics.STATUS_ERROR, f"{type(e).__name__}: {e}")))
         if verbose:
-            print(f"[{i}/{len(matrices)}] {entry['domain']}/{entry['name']} ...", flush=True)
-        try:
-            all_rows.extend(run_one_matrix(entry["domain"], entry["name"], entry["path"]))
-        except Exception as e:  # matrix-level failure (bad file, out of memory, etc.)
-            if verbose:
-                print(f"    FAILED to process matrix: {e}")
-            all_rows.append({"domain": entry["domain"], "matrix": entry["name"], "n": None,
-                              "nnz": None, "method": "ALL", "type": "ALL",
-                              "condition_number": None, "status": f"matrix_load_failed: {e}",
-                              "runtime_sec": None, "iterations": None, "residual_abs": None,
-                              "error_abs": None, "residual_rel": None, "error_rel": None})
+            last = rows[-1]
+            print(f"      {m.name:<24s} {last['status']}")
 
-    df = pd.DataFrame(all_rows)
-    output_csv.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_csv, index=False)
+    spec = {**base, "status": "analysed"}
+    if with_spectral:
+        try:
+            rho_j, how_j = spectral.spectral_radius(A, "jacobi")
+            rho_g, how_g = spectral.spectral_radius(A, "gauss_seidel")
+            spec.update(spectral.classify(A, rho_j, rho_g),
+                        rho_jacobi_method=how_j, rho_gs_method=how_g)
+        except (MemoryError, ValueError) as e:
+            spec.update(status=f"spectral_failed: {type(e).__name__}")
+
+    return rows, spec
+
+
+def run_full_benchmark(dataset_root, results_csv, spectral_csv=None,
+                       refinement_passes=(0, 1), with_spectral=True,
+                       seed=None, verbose=True):
+    """Sweep the whole corpus, checkpointing after every matrix."""
+    entries = discover_matrices(dataset_root)
+    all_rows, all_spec = [], []
+    t0 = time.perf_counter()
+
+    for i, entry in enumerate(entries, 1):
+        if verbose:
+            print(f"\n[{i}/{len(entries)}] {entry['domain']}/{entry['name']}"
+                  f"   ({(time.perf_counter() - t0) / 60:.1f} min elapsed)")
+        rows, spec = run_one_matrix(entry["domain"], entry["name"], entry["path"],
+                                    refinement_passes=refinement_passes,
+                                    with_spectral=with_spectral, seed=seed, verbose=verbose)
+        all_rows.extend(rows)
+        all_spec.append(spec)
+        pd.DataFrame(all_rows).to_csv(results_csv, index=False)     # checkpoint
+        if spectral_csv:
+            pd.DataFrame(all_spec).to_csv(spectral_csv, index=False)
+
+    results = pd.DataFrame(all_rows)
     if verbose:
-        print(f"\nWrote {len(df)} rows to {output_csv}")
-    return df
+        expected = len(entries) * len(METHODS) * len(refinement_passes)
+        print(f"\nSweep complete in {(time.perf_counter() - t0) / 60:.1f} min")
+        print(f"  rows {len(results):,} of {expected:,} expected"
+              f"  |  matrices {results['matrix'].nunique()} of {len(entries)}")
+        print(results["status"].value_counts().to_string())
+    return results, pd.DataFrame(all_spec)
+
+
+def summarise(results, passes=0):
+    """Applicability and conditional success per method, as separate columns.
+
+    These are never multiplied into a single rate: doing that is what reported
+    Conjugate Gradient at 10.4% when its conditional success is 83.9%, and
+    Cholesky at 10.1% when it solves every system it applies to.
+    """
+    subset = results[results["refinement_passes"] == passes]
+    return pd.DataFrame([metrics.rates(subset, m) for m in METHOD_NAMES
+                         if m in set(subset["method"])])

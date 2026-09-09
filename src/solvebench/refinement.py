@@ -38,10 +38,17 @@ def refine(solver, A, b, passes=1):
     total.precond = work.precond
     total.setup = work.setup
 
+    b_norm = np.linalg.norm(b) or 1.0
     for _ in range(passes):
         r = b - A @ x
         total.matvecs += 1
         if not np.all(np.isfinite(r)):
+            break
+        # Nothing left to correct. Handing a zero right-hand side to the solver
+        # is not merely wasteful: CG's first search direction is then the zero
+        # vector, p'Ap is exactly 0, and it reports the matrix as indefinite --
+        # so an exact solve would be recorded as a solver failure.
+        if np.linalg.norm(r) <= np.finfo(float).eps * b_norm:
             break
         d, its, conv, w = solver(A, r)
         total.matvecs += w.matvecs

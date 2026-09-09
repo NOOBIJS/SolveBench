@@ -177,6 +177,11 @@ def conjugate_gradient(A, b, max_iter=config.MAX_ITERATIONS, tol=config.TOLERANC
     p = r.copy()
     rs = r @ r
 
+    # x = 0 already solves it. Without this the first search direction is the
+    # zero vector, p'Ap is 0, and the matrix gets reported as indefinite.
+    if np.sqrt(rs) <= tol * b_norm:
+        return x, 0, True, work
+
     for k in range(1, max_iter + 1):
         Ap = A @ p
         work.matvecs += 1
