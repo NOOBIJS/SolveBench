@@ -310,3 +310,39 @@ def test_wide_ratio_range_does_not_hang():
                                 [0.0, 1.0, 1.0]]))
     p, cost = ro.minsum_permutation(A)
     assert p is not None and np.isfinite(cost)
+
+
+# ---------------------------------------------------------------- corpus
+
+
+def test_duplicate_matrices_are_removed_once():
+    """bcsstk07, bcsstk12 and t2dal_a are byte-identical copies of other matrices in
+    the corpus, so every result for them was counted twice."""
+    import pandas as pd
+    from solvebench import corpus
+    df = pd.DataFrame({"matrix": ["bcsstk06", "bcsstk07", "t2dal", "t2dal_a", "nos7"],
+                       "domain": ["structural_problem"] * 5})
+    out = corpus.apply(df)
+    assert set(out.matrix) == {"bcsstk06", "t2dal", "nos7"}
+    assert "t2dal_bci" not in corpus.DUPLICATES, "same shape, different matrix -- keep it"
+    for kept in corpus.KEPT_DESPITE_DUPLICATE_KIND:
+        assert kept not in corpus.DUPLICATES
+
+
+def test_split_cfd_domain_is_merged():
+    """SuiteSparse spells the Goodwin group's kind without a 'problem' suffix, so its
+    four matrices landed in a folder of their own beside the other 122."""
+    import pandas as pd
+    from solvebench import corpus
+    df = pd.DataFrame({"matrix": ["Goodwin_010", "ex11"],
+                       "domain": ["computational_fluid_dynamics",
+                                  "computational_fluid_dynamics_problem"]})
+    assert corpus.apply(df).domain.nunique() == 1
+
+
+def test_correction_leaves_other_domains_alone():
+    import pandas as pd
+    from solvebench import corpus
+    df = pd.DataFrame({"matrix": ["a", "b"],
+                       "domain": ["structural_problem", "circuit_simulation_problem"]})
+    assert list(corpus.apply(df).domain) == ["structural_problem", "circuit_simulation_problem"]

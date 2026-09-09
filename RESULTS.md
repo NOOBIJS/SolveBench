@@ -3,7 +3,8 @@
 **Living document.** Every number here was measured, not estimated, and each is traceable
 to a table under `results_v2/tables/`. Updated as work progresses.
 
-Last updated: **2026-09-09** · corpus 930 matrices, 27 domains, n = 5 … 10,000
+Last updated: **2026-09-10** · corpus **927 unique matrices, 26 domains**, n = 5 … 10,000
+(930 files downloaded; see §0.1 for the three duplicates and the split domain)
 
 ---
 
@@ -24,10 +25,40 @@ see §7 for what changed and why.
 ### Corpus accounting (reconciles to 930)
 
 ```
-930 matrices
-  − 6   load failures (truncated downloads)      →  924 loaded
-  − 19  structurally singular (zero row/column)  →  905 scored
+930 files downloaded
+  − 3   exact duplicates (see 0.1)               →  927 unique matrices
+  − 6   load failures (truncated downloads)      →  921 loaded
+  − 19  structurally singular (zero row/column)  →  902 scored
 ```
+
+## 0.1 Two defects in the downloaded corpus
+
+Both are corrected at analysis time by `src/solvebench/corpus.py`, so the raw files, the
+Kaggle runs and every table stay consistent without re-uploading 985 MB.
+
+**One domain arrived split in two.** Folders were named by slugifying SuiteSparse's
+`kind` field, which spells the same physical domain several ways. The grouping folded
+`X problem`, `subsequent X problem` and `X problem sequence` together correctly
+everywhere — but the Goodwin group carries the kind `computational fluid dynamics` with
+no "problem" suffix, so its 4 matrices landed in a folder of their own beside the 122 in
+`computational_fluid_dynamics_problem`. Every other domain checks out. **27 → 26 domains.**
+
+**Three matrices are exact duplicates of three others.** SuiteSparse marks them with a
+`duplicate ...` kind; comparing CSR structure and values byte for byte confirms it:
+
+```
+bcsstk07  ≡  bcsstk06     420 x 420,   7,860 nnz
+bcsstk12  ≡  bcsstk11    1473 x 1473, 34,241 nnz
+t2dal_a   ≡  t2dal       4257 x 4257, 37,465 nnz
+```
+
+Every result for those three was counted twice. `t2dal_bci` has the same shape but is a
+genuinely different matrix and is kept; `nasa1824` and `t2dal_e` carry a duplicate kind
+but their originals are not in this corpus, so they are unique here and are kept too.
+
+**The correction changes no conclusion.** spsolve 876 → 874 solved (96.9% → 97.0%); the
+dispatch gap stays at exactly one matrix (617 vs 616); the base-paper test goes from
+n = 414 to n = 411 with 75 / 46 / 0 unchanged.
 
 ---
 
@@ -39,32 +70,32 @@ Conditional success = of that, how much it actually solves, verified by residual
 
 | Method | Applicable | Solved | Applicability | Conditional success |
 |---|---|---|---|---|
-| Gauss elimination | 598 | 595 | 64.3% | **99.5%** |
-| LU | 598 | 595 | 64.3% | **99.5%** |
-| splu (SuperLU) | 888 | 876 | 95.5% | **98.6%** |
-| spsolve (SuperLU) | 904 | 876 | 97.2% | **96.9%** |
-| Cholesky | 62 | 60 | 6.7% | 96.8% |
-| Gauss-Jordan | 596 | 539 | 64.1% | 90.4% |
-| Conjugate Gradient | 110 | 93 | 11.8% | 84.5% |
-| ILU-Krylov (dispatched) | 739 | 619 | 79.5% | 83.8% |
-| ILU-BiCGSTAB | 739 | 618 | 79.5% | 83.6% |
-| ILU-GMRES(30) | 739 | 604 | 79.5% | 81.7% |
-| BiCGSTAB | 905 | 343 | 97.3% | 37.9% |
-| Gauss-Seidel | 414 | 121 | 44.5% | 29.2% |
-| SOR (ω=1.25) | 414 | 119 | 44.5% | 28.7% |
-| GMRES(30) | 905 | 240 | 97.3% | 26.5% |
-| Jacobi | 414 | 75 | 44.5% | 18.1% |
-| ILU only | 739 | 79 | 79.5% | 10.7% |
+| Gauss elimination | 596 | 593 | 64.3% | **99.5%** |
+| LU | 596 | 593 | 64.3% | **99.5%** |
+| splu (SuperLU) | 885 | 874 | 95.5% | **98.8%** |
+| spsolve (SuperLU) | 901 | 874 | 97.2% | **97.0%** |
+| Cholesky | 60 | 58 | 6.5% | 96.7% |
+| Gauss-Jordan | 594 | 537 | 64.1% | 90.4% |
+| Conjugate Gradient | 108 | 91 | 11.7% | 84.3% |
+| ILU-Krylov (dispatched) | 736 | 617 | 79.4% | 83.8% |
+| ILU-BiCGSTAB | 736 | 616 | 79.4% | 83.7% |
+| ILU-GMRES(30) | 736 | 602 | 79.4% | 81.8% |
+| BiCGSTAB | 902 | 341 | 97.3% | 37.8% |
+| Gauss-Seidel | 411 | 121 | 44.3% | 29.4% |
+| SOR (ω=1.25) | 411 | 119 | 44.3% | 29.0% |
+| GMRES(30) | 902 | 240 | 97.3% | 26.6% |
+| Jacobi | 411 | 75 | 44.3% | 18.2% |
+| ILU only | 736 | 79 | 79.4% | 10.7% |
 
-**A sparse direct solver wins outright: `spsolve` solves 876, the best iterative
-configuration 619.** This is the comparison the first sweep never ran.
+**A sparse direct solver wins outright: `spsolve` solves 874, the best iterative
+configuration 617.** This is the comparison the first sweep never ran.
 
-### Outcomes across all 14,880 attempts
+### Outcomes across all 14,832 attempts
 
 ```
-solved                 6,452      not_applicable         3,540
-did_not_converge       2,491      skipped_too_large      1,176
-inaccurate               756      structurally_singular    304
+solved                 6,430      not_applicable         3,539
+did_not_converge       2,475      skipped_too_large      1,172
+inaccurate               751      structurally_singular    304
 load_failed               96      diverged                  65
 ```
 
@@ -77,8 +108,8 @@ Gauss-Jordan.
 ## 2. The dispatch rule contributes one matrix
 
 ```
-ILU-Krylov (dispatched)   619 of 739 solved      symmetry → PCG, else BiCGSTAB
-ILU-BiCGSTAB (always)     618 of 739 solved      no dispatch at all
+ILU-Krylov (dispatched)   617 of 736 solved      symmetry → PCG, else BiCGSTAB
+ILU-BiCGSTAB (always)     616 of 736 solved      no dispatch at all
                           ───────
                           +1 matrix  (0.14%)
 ```
@@ -91,8 +122,8 @@ story either — the Krylov iteration does the work.
 
 ## 3. The base paper's test on real matrices
 
-Denominator is **414**, the systems where both methods are defined. Jacobi,
-Gauss-Seidel and SOR are undefined on 491 of 930 — a zero on the diagonal makes the
+Denominator is **411**, the systems where both methods are defined. Jacobi,
+Gauss-Seidel and SOR are undefined on 491 of 927 — a zero on the diagonal makes the
 update rule meaningless.
 
 | | count |

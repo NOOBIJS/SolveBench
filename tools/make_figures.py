@@ -22,6 +22,7 @@ Design notes, since these end up in a report:
   colours, which no palette separates safely for scatter.
 """
 import argparse
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -30,6 +31,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+from solvebench import corpus
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -423,7 +427,13 @@ def main():
         if not p.exists():
             print(f"  (skipped: {name} not present yet)")
             return None
-        return pd.read_csv(p)
+        df = pd.read_csv(p)
+        # Merge the split CFD domain and drop the three exact duplicates before
+        # anything is plotted, so no figure double-counts a matrix or splits a domain.
+        fixed = corpus.apply(df)
+        if len(fixed) != len(df):
+            print(f"  {name}: {len(df) - len(fixed)} duplicate rows removed")
+        return fixed
 
     print(f"reading {tables}")
     res = load("benchmark_results.csv")
