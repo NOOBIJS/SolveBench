@@ -1,0 +1,17 @@
+domain,method,n,applicable,solved
+2d_3d_problem,BiCGSTAB,3,3,3
+2d_3d_problem,Cholesky,3,0,0
+2d_3d_problem,Conjugate Gradient,3,0,0
+2d_3d_problem,GMRES(30),3,3,1
+2d_3d_problem,Gauss elimination,3,3,3
+2d_3d_problem,Gauss-Jordan,3,3,3
+2d_3d_problem,Gauss-Seidel,3,3,1
+2d_3d_problem,ILU only,3,3,0
+2d_3d_problem,ILU-BiCGSTAB,3,3,3
+2d_3d_problem,ILU-GMRES(30),3,3,3
+2d_3d_problem,ILU-Krylov (dispatched),3,3,3
+2d_3d_problem,Jacobi,3,3,0
+2d_3d_problem,LU,3,3,3
+2d_3d_problem,SOR,3,3,2
+2d_3d_problem,splu (SuperLU),3,3,3
+2d_3d_problem,spsolve (SuperLU),3,3,3
