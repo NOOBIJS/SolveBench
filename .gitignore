@@ -78,3 +78,6 @@ results/output/
 results/figures/
 results_v2/*/solvebench/
 results_v2/*/*.log
+
+# Unrelated skill scaffold, not part of this project
+advanced-memory-mcp-numerical-methods-expert/
