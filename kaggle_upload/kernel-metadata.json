@@ -1,0 +1,17 @@
+{
+  "id": "mdmarufhasanrubab/solvebench-direct-vs-iterative-linear-solvers",
+  "title": "SolveBench: Direct vs Iterative Linear Solvers (Large Scale)",
+  "code_file": "solvebench.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": [
+    "mdmarufhasanrubab/solvebench-matrices-large"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

@@ -1,0 +1,76 @@
+# ============================================================================
+#  CREDENTIALS -- never commit, never push.
+#  kaggle.json holds a live API username+key. A key pushed to a public GitHub
+#  repo is typically scraped and abused within minutes, so this entry must stay
+#  at the top of this file and must never be removed or overridden with `git
+#  add -f`. If it is ever committed even once, revoke the key on Kaggle
+#  (Settings -> API -> Expire Token) rather than trying to rewrite history.
+# ============================================================================
+kaggle.json
+**/kaggle.json
+*.key
+.env
+
+# ============================================================================
+#  Matrix data (~2.6 GB). Not committed: these are redistributable only from
+#  their source, and GitHub rejects pushes at this size. The corpus is fully
+#  identified by results_final/solvebench_output/tables/01_dataset_manifest.csv
+#  plus ssstats.csv, so it can be re-downloaded from the SuiteSparse Matrix
+#  Collection rather than stored here.
+# ============================================================================
+dataset/
+dataset_large/
+matrices/
+small_matrices/
+kaggle_dataset_large/
+*.mtx
+*.zip
+
+# ============================================================================
+#  Third-party material we do not have redistribution rights to
+# ============================================================================
+Paper.pdf
+
+# ============================================================================
+#  Superseded / derived outputs
+# ============================================================================
+results_large/
+results_final/solvebench_results.zip
+
+# PDFs built from the Markdown sources in this repo -- regenerate, don't commit.
+# linear.pdf is kept deliberately: it is the presentation artifact itself.
+SolveBench_Guide.pdf
+Convergence_Theory_Deep_Dive.pdf
+Publication_Analysis_Bangla.pdf
+
+# ============================================================================
+#  LaTeX build artifacts
+# ============================================================================
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# ============================================================================
+#  Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# ============================================================================
+#  Editor / OS
+# ============================================================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

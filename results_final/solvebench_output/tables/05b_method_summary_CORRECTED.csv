@@ -1,0 +1,11 @@
+method,type,attempted,converged,success_rate_pct,median_runtime_s,median_rel_error_CONVERGED_ONLY
+Gauss elimination,direct,611,598,97.9,0.18412,2.3577451119808655e-12
+LU,direct,611,598,97.9,0.17758,2.962599343182546e-12
+Gauss-Jordan,direct,611,596,97.5,0.31517,3.237233642956278e-12
+Cholesky,direct,611,62,10.1,0.01677,4.384306201896247e-14
+APK (ours),iterative,905,613,67.7,0.00902,6.032751423355248e-14
+BiCGSTAB,iterative,905,321,35.5,0.03068,1.105325322085723e-06
+Gauss-Seidel,iterative,905,121,13.4,0.07879,1.0718093218155174e-07
+SOR,iterative,905,119,13.1,0.14602,8.143299435330099e-08
+Conjugate Gradient,iterative,905,94,10.4,0.02187,1.6178417930159233e-05
+Jacobi,iterative,905,75,8.3,0.00856,8.125678476396973e-09

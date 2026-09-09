@@ -1,0 +1,82 @@
+{
+  "config": {
+    "max_iterations": 10000,
+    "tolerance": 1e-08,
+    "sor_omega": 1.25,
+    "refinement_passes": 1,
+    "direct_size_cap": 2000,
+    "cond_exact_cap": 2000
+  },
+  "started": "2026-08-23 02:58:55.041617",
+  "runtime_minutes": 237.2104632163667,
+  "on_kaggle": true,
+  "n_matrices": 930,
+  "n_rows": 9246,
+  "figures": [
+    {
+      "name": "00_pipeline_diagram",
+      "file": "00_pipeline_diagram.png",
+      "caption": "The benchmark pipeline, mirroring the project proposal."
+    },
+    {
+      "name": "01_dataset_composition",
+      "file": "01_dataset_composition.png",
+      "caption": "Composition and size/sparsity spread of the benchmark set."
+    },
+    {
+      "name": "02_sparsity_patterns",
+      "file": "02_sparsity_patterns.png",
+      "caption": "Nonzero structure of a representative matrix from each domain."
+    },
+    {
+      "name": "03_outcome_matrix",
+      "file": "03_outcome_matrix.png",
+      "caption": "Outcome of every (matrix, method) pair. Rows sorted by matrix size."
+    },
+    {
+      "name": "04_accuracy_heatmap",
+      "file": "04_accuracy_heatmap.png",
+      "caption": "Relative error per (matrix, method); darker means more accurate."
+    },
+    {
+      "name": "05_runtime_vs_size",
+      "file": "05_runtime_vs_size.png",
+      "caption": "Runtime against matrix size for both method families."
+    },
+    {
+      "name": "06_iterations_direct_vs_iterative",
+      "file": "06_iterations_direct_vs_iterative.png",
+      "caption": "Direct methods sit exactly on steps=n; iterative counts scatter by matrix behaviour."
+    },
+    {
+      "name": "07_conditioning_analysis",
+      "file": "07_conditioning_analysis.png",
+      "caption": "Accuracy and convergence both degrade with condition number."
+    },
+    {
+      "name": "08_jacobi_vs_gauss_seidel",
+      "file": "08_jacobi_vs_gauss_seidel.png",
+      "caption": "The base paper's Jacobi/Gauss-Seidel comparison, re-run on real data."
+    },
+    {
+      "name": "09_solver_scoreboard",
+      "file": "09_solver_scoreboard.png",
+      "caption": "Reliability, accuracy and speed for all ten solvers, including our APK."
+    },
+    {
+      "name": "12_paired_accuracy",
+      "file": "12_paired_accuracy.png",
+      "caption": "APK vs each rival on matrices both solved."
+    },
+    {
+      "name": "10_domain_method_matrix",
+      "file": "10_domain_method_matrix.png",
+      "caption": "Per-domain success rate for each solver."
+    },
+    {
+      "name": "11_residual_vs_error",
+      "file": "11_residual_vs_error.png",
+      "caption": "Residual and error diverge most on ill-conditioned systems."
+    }
+  ]
+}

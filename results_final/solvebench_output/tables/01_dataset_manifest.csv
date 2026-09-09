@@ -1,0 +1,931 @@
+domain,name,rows,cols,nnz,kind
+power_network_problem,1138_bus,1138,1138,2596,power network problem
+power_network_problem,494_bus,494,494,1080,power network problem
+power_network_problem,662_bus,662,662,1568,power network problem
+power_network_problem,685_bus,685,685,1967,power network problem
+power_network_problem,ACTIVSg2000,4000,4000,29336,power network problem
+undirected_weighted_graph,Binaryalphadigs_10NN,1404,1404,9696,undirected weighted graph
+structural_problem,Chebyshev1,261,261,2319,structural problem
+structural_problem,Chebyshev2,2053,2053,18447,structural problem
+structural_problem,Chebyshev3,4101,4101,36879,structural problem
+statistical_mathematical_problem,Chem97ZtZ,2541,2541,4951,statistical/mathematical problem
+computational_fluid_dynamics_problem,DK01R,903,903,11766,computational fluid dynamics problem
+undirected_weighted_graph,Ecoli_10NN,336,336,2280,undirected weighted graph
+undirected_weighted_graph,Fashion_MNIST_norm_10NN,10000,10000,79152,undirected weighted graph
+undirected_weighted_graph,GD97_b,47,47,132,undirected weighted graph
+computational_fluid_dynamics_problem,GT01R,7980,7980,430909,computational fluid dynamics problem
+undirected_weighted_graph,Glass_10NN,214,214,1493,undirected weighted graph
+computational_fluid_dynamics,Goodwin_010,1182,1182,32282,computational fluid dynamics
+computational_fluid_dynamics,Goodwin_013,1965,1965,56069,computational fluid dynamics
+computational_fluid_dynamics,Goodwin_017,3317,3317,97773,computational fluid dynamics
+computational_fluid_dynamics,Goodwin_023,6005,6005,182168,computational fluid dynamics
+circuit_simulation_problem,Hamrle1,32,32,98,circuit simulation problem
+circuit_simulation_problem,Hamrle2,5952,5952,22162,circuit simulation problem
+undirected_weighted_graph,JapaneseVowelsSmall_10NN,9961,9961,65572,undirected weighted graph
+counter_example_problem,Kaufhold,8765,8765,42471,counter-example problem
+structural_problem,Kuu,7102,7102,173651,structural problem
+model_reduction_problem,LF10,18,18,50,model reduction problem
+model_reduction_problem,LFAT5,14,14,30,model reduction problem
+power_network_problem,LeGresley_2508,2508,2508,16727,power network problem
+power_network_problem,LeGresley_4908,4908,4908,30482,power network problem
+eigenvalue_model_reduction_problem,M10PI_n,682,682,1633,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,M10PI_n1,528,528,1317,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,M20PI_n,1182,1182,2881,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,M20PI_n1,1028,1028,2547,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,M40PI_n,2182,2182,5341,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,M40PI_n1,2028,2028,5007,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,M80PI_n,4182,4182,10261,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,M80PI_n1,4028,4028,9927,eigenvalue/model reduction problem
+undirected_weighted_graph,MISKnowledgeMap,2427,2427,28511,undirected weighted graph
+structural_problem,Muu,7102,7102,88618,structural problem
+theoretical_quantum_chemistry_problem,Na5,5832,5832,155731,theoretical/quantum chemistry problem
+undirected_weighted_graph,Olivetti_norm_10NN,400,400,2828,undirected weighted graph
+counter_example_problem,Pd,8081,8081,13036,counter-example problem
+undirected_weighted_graph,Plants_10NN,1600,1600,10965,undirected weighted graph
+eigenvalue_model_reduction_problem,S10PI_n,682,682,1633,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,S10PI_n1,528,528,1317,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,S20PI_n,1182,1182,2881,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,S20PI_n1,1028,1028,2547,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,S40PI_n,2182,2182,5341,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,S40PI_n1,2028,2028,5007,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,S80PI_n,4182,4182,10261,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,S80PI_n1,4028,4028,9927,eigenvalue/model reduction problem
+theoretical_quantum_chemistry_problem,Si2,769,769,9285,theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,SiH4,5041,5041,88472,theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,SiNa,5743,5743,102265,theoretical/quantum chemistry problem
+counter_example_problem,Sieber,2290,2290,14873,counter-example problem
+undirected_weighted_graph,Spectro_10NN,531,531,3711,undirected weighted graph
+counter_example_problem,TS,2142,2142,45262,counter-example problem
+power_network_problem,TSC_OPF_1047,8140,8140,1012521,power network problem
+power_network_problem,TSC_OPF_300,9774,9774,415289,power network problem
+power_network_problem,TSOPF_FS_b9_c1,2454,2454,12831,power network problem
+power_network_problem,TSOPF_RS_b162_c1,5374,5374,205399,power network problem
+power_network_problem,TSOPF_RS_b9_c6,7224,7224,54082,power network problem
+undirected_weighted_graph,USAir97,332,332,2126,undirected weighted graph
+undirected_weighted_graph,Vehicle_10NN,846,846,5447,undirected weighted graph
+undirected_weighted_graph,YaleA_10NN,165,165,1134,undirected weighted graph
+undirected_weighted_graph,YaleB_10NN,2414,2414,17404,undirected weighted graph
+circuit_simulation_problem,add20,2395,2395,17319,circuit simulation problem
+circuit_simulation_problem,add32,4960,4960,23884,circuit simulation problem
+circuit_simulation_problem,adder_dcop_01,1813,1813,11156,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_02,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_03,1813,1813,11148,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_04,1813,1813,11107,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_05,1813,1813,11097,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_06,1813,1813,11224,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_07,1813,1813,11226,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_08,1813,1813,11242,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_09,1813,1813,11239,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_10,1813,1813,11232,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_11,1813,1813,11243,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_12,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_13,1813,1813,11245,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_14,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_15,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_16,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_17,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_18,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_19,1813,1813,11245,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_20,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_21,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_22,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_23,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_24,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_25,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_26,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_27,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_28,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_29,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_30,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_31,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_32,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_33,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_34,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_35,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_36,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_37,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_38,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_39,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_40,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_41,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_42,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_43,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_44,1813,1813,11245,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_45,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_46,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_47,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_48,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_49,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_50,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_51,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_52,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_53,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_54,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_55,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_56,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_57,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_58,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_59,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_60,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_61,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_62,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_63,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_64,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_65,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_66,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_67,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_68,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_dcop_69,1813,1813,11246,subsequent circuit simulation problem
+circuit_simulation_problem,adder_trans_01,1814,1814,14579,circuit simulation problem sequence
+circuit_simulation_problem,adder_trans_02,1814,1814,14579,subsequent circuit simulation problem
+acoustics_problem,aft01,8205,8205,66886,acoustics problem
+materials_problem,arc130,130,130,1282,materials problem
+chemical_process_simulation_problem,b1_ss,7,7,15,chemical process simulation problem
+chemical_process_simulation_problem,b2_ss,1089,1089,4228,chemical process simulation problem
+chemical_process_simulation_problem,b_dyn,1089,1089,4264,chemical process simulation problem
+chemical_process_simulation_problem,bayer03,6747,6747,56196,chemical process simulation problem
+chemical_process_simulation_problem,bayer05,3268,3268,27836,chemical process simulation problem
+chemical_process_simulation_problem,bayer06,3008,3008,27576,chemical process simulation problem
+chemical_process_simulation_problem,bayer07,3268,3268,27836,chemical process simulation problem
+chemical_process_simulation_problem,bayer08,3008,3008,27576,chemical process simulation problem
+chemical_process_simulation_problem,bayer09,3083,3083,21216,chemical process simulation problem
+structural_problem,bcsstk01,48,48,224,structural problem
+structural_problem,bcsstk02,66,66,2211,structural problem
+structural_problem,bcsstk03,112,112,376,structural problem
+structural_problem,bcsstk04,132,132,1890,structural problem
+structural_problem,bcsstk05,153,153,1288,structural problem
+structural_problem,bcsstk06,420,420,4140,structural problem
+structural_problem,bcsstk07,420,420,4140,duplicate structural problem
+structural_problem,bcsstk08,1074,1074,7017,structural problem
+structural_problem,bcsstk09,1083,1083,9760,structural problem
+structural_problem,bcsstk10,1086,1086,11578,structural problem
+structural_problem,bcsstk11,1473,1473,17857,structural problem
+structural_problem,bcsstk12,1473,1473,17857,duplicate structural problem
+computational_fluid_dynamics_problem,bcsstk13,2003,2003,42943,computational fluid dynamics problem
+structural_problem,bcsstk14,1806,1806,32630,structural problem
+structural_problem,bcsstk15,3948,3948,60882,structural problem
+structural_problem,bcsstk16,4884,4884,147631,structural problem
+structural_problem,bcsstk19,817,817,3835,structural problem
+structural_problem,bcsstk20,485,485,1810,structural problem
+structural_problem,bcsstk21,3600,3600,15100,structural problem
+structural_problem,bcsstk22,138,138,417,structural problem
+structural_problem,bcsstk23,3134,3134,24156,structural problem
+structural_problem,bcsstk24,3562,3562,81736,structural problem
+structural_problem,bcsstk26,1922,1922,16129,structural problem
+structural_problem,bcsstk27,1224,1224,28675,structural problem
+structural_problem,bcsstk28,4410,4410,111717,structural problem
+structural_problem,bcsstk34,588,588,11003,structural problem
+structural_problem,bcsstk38,8032,8032,181746,structural problem
+structural_problem,bcsstm02,66,66,66,structural problem
+structural_problem,bcsstm03,112,112,112,structural problem
+structural_problem,bcsstm04,132,132,132,structural problem
+structural_problem,bcsstm05,153,153,153,structural problem
+structural_problem,bcsstm06,420,420,420,structural problem
+structural_problem,bcsstm07,420,420,3836,structural problem
+structural_problem,bcsstm08,1074,1074,1074,structural problem
+structural_problem,bcsstm09,1083,1083,1083,structural problem
+structural_problem,bcsstm10,1086,1086,11589,structural problem
+structural_problem,bcsstm11,1473,1473,1473,structural problem
+structural_problem,bcsstm12,1473,1473,10566,structural problem
+computational_fluid_dynamics_problem,bcsstm13,2003,2003,11973,computational fluid dynamics problem
+structural_problem,bcsstm19,817,817,817,structural problem
+structural_problem,bcsstm20,485,485,485,structural problem
+structural_problem,bcsstm21,3600,3600,3600,structural problem
+structural_problem,bcsstm22,138,138,138,structural problem
+structural_problem,bcsstm23,3134,3134,3134,structural problem
+structural_problem,bcsstm24,3562,3562,3562,structural problem
+structural_problem,bcsstm26,1922,1922,1922,structural problem
+structural_problem,bcsstm27,1224,1224,28675,structural problem
+structural_problem,bcsstm34,588,588,12429,structural problem
+structural_problem,bcsstm38,8032,8032,7842,structural problem
+theoretical_quantum_chemistry_problem,benzene,8219,8219,125444,theoretical/quantum chemistry problem
+electromagnetics_problem,bfwa398,398,398,3678,electromagnetics problem
+electromagnetics_problem,bfwa62,62,62,450,electromagnetics problem
+electromagnetics_problem,bfwa782,782,782,7514,electromagnetics problem
+electromagnetics_problem,bfwb398,398,398,1654,electromagnetics problem
+electromagnetics_problem,bfwb62,62,62,202,electromagnetics problem
+electromagnetics_problem,bfwb782,782,782,3382,electromagnetics problem
+eigenvalue_model_reduction_problem,bips98_1142,9735,9735,40983,eigenvalue/model reduction problem
+eigenvalue_model_reduction_problem,bips98_606,7135,7135,34738,eigenvalue/model reduction problem
+optimization_problem,bp_0,822,822,3276,optimization problem sequence
+optimization_problem,bp_1000,822,822,4661,subsequent optimization problem
+optimization_problem,bp_1200,822,822,4726,subsequent optimization problem
+optimization_problem,bp_1400,822,822,4790,subsequent optimization problem
+optimization_problem,bp_1600,822,822,4841,subsequent optimization problem
+optimization_problem,bp_200,822,822,3802,subsequent optimization problem
+optimization_problem,bp_400,822,822,4028,subsequent optimization problem
+optimization_problem,bp_600,822,822,4172,subsequent optimization problem
+optimization_problem,bp_800,822,822,4534,subsequent optimization problem
+undirected_weighted_graph,breasttissue_10NN,106,106,706,undirected weighted graph
+chemical_process_simulation_problem,bwm200,200,200,796,chemical process simulation problem
+chemical_process_simulation_problem,bwm2000,2000,2000,7996,chemical process simulation problem
+optimization_problem,c-18,2169,2169,8657,optimization problem
+optimization_problem,c-19,2327,2327,12072,optimization problem
+optimization_problem,c-20,2921,2921,12803,optimization problem
+optimization_problem,c-21,3509,3509,17833,optimization problem
+optimization_problem,c-22,3792,3792,16332,optimization problem
+optimization_problem,c-23,3969,3969,17524,optimization problem
+optimization_problem,c-24,4119,4119,19909,optimization problem
+optimization_problem,c-25,3797,3797,26716,optimization problem
+optimization_problem,c-26,4307,4307,19422,optimization problem
+optimization_problem,c-27,4563,4563,17969,optimization problem
+optimization_problem,c-28,4598,4598,17594,optimization problem
+optimization_problem,c-29,5033,5033,24382,optimization problem
+optimization_problem,c-30,5321,5321,35507,optimization problem
+optimization_problem,c-31,5339,5339,41955,optimization problem
+optimization_problem,c-32,5975,5975,30223,optimization problem
+optimization_problem,c-33,6317,6317,31220,optimization problem
+optimization_problem,c-34,6611,6611,35472,optimization problem
+optimization_problem,c-35,6537,6537,34714,optimization problem
+optimization_problem,c-36,7479,7479,36710,optimization problem
+optimization_problem,c-37,8204,8204,41440,optimization problem
+optimization_problem,c-38,8127,8127,42908,optimization problem
+optimization_problem,c-39,9271,9271,73041,optimization problem
+optimization_problem,c-40,9941,9941,45721,optimization problem
+optimization_problem,c-41,9769,9769,55757,optimization problem
+directed_weighted_graph,cage3,5,5,19,directed weighted graph
+directed_weighted_graph,cage4,9,9,49,directed weighted graph
+directed_weighted_graph,cage5,37,37,233,directed weighted graph
+directed_weighted_graph,cage6,93,93,785,directed weighted graph
+directed_weighted_graph,cage7,340,340,3084,directed weighted graph
+directed_weighted_graph,cage8,1015,1015,11003,directed weighted graph
+directed_weighted_graph,cage9,3534,3534,41594,directed weighted graph
+computational_fluid_dynamics_problem,cavity01,317,317,7327,computational fluid dynamics problem sequence
+computational_fluid_dynamics_problem,cavity02,317,317,7327,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity03,317,317,7327,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity04,317,317,7327,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity05,1182,1182,32747,computational fluid dynamics problem sequence
+computational_fluid_dynamics_problem,cavity06,1182,1182,32747,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity07,1182,1182,32747,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity08,1182,1182,32747,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity09,1182,1182,32747,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity10,2597,2597,76367,computational fluid dynamics problem sequence
+computational_fluid_dynamics_problem,cavity11,2597,2597,76367,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity12,2597,2597,76367,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity13,2597,2597,76367,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity14,2597,2597,76367,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity15,2597,2597,76367,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity16,4562,4562,138187,computational fluid dynamics problem sequence
+computational_fluid_dynamics_problem,cavity17,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity18,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity19,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity20,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity21,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity22,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity23,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity24,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity25,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cavity26,4562,4562,138187,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cdde1,961,961,4681,computational fluid dynamics problem sequence
+computational_fluid_dynamics_problem,cdde2,961,961,4681,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cdde3,961,961,4681,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cdde4,961,961,4681,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cdde5,961,961,4681,subsequent computational fluid dynamics problem
+computational_fluid_dynamics_problem,cdde6,961,961,4681,subsequent computational fluid dynamics problem
+directed_weighted_graph,cell1,7055,7055,34855,directed weighted graph
+directed_weighted_graph,cell2,7055,7055,34855,directed weighted graph
+circuit_simulation_problem,circuit204,1020,1020,5883,circuit simulation problem
+circuit_simulation_problem,circuit_1,2624,2624,35823,circuit simulation problem
+circuit_simulation_problem,circuit_2,4510,4510,21199,circuit simulation problem
+2d_3d_problem,ck104,104,104,992,2D/3D problem
+2d_3d_problem,ck400,400,400,2860,2D/3D problem
+2d_3d_problem,ck656,656,656,3884,2D/3D problem
+undirected_weighted_graph,cnae9_10NN,1080,1080,9139,undirected weighted graph
+computational_fluid_dynamics_problem,coater1,1348,1348,19457,computational fluid dynamics problem
+computational_fluid_dynamics_problem,coater2,9540,9540,207308,computational fluid dynamics problem
+undirected_weighted_graph,collins_15NN,1000,1000,8246,undirected weighted graph
+structural_problem,comsol,1500,1500,97645,structural problem
+materials_problem,cryg10000,10000,10000,49699,materials problem
+materials_problem,cryg2500,2500,2500,12349,materials problem
+materials_problem,crystk01,4875,4875,160383,materials problem
+materials_problem,crystm01,4875,4875,55107,materials problem
+2d_3d_problem,cz1268,1268,1268,12786,2D/3D problem
+2d_3d_problem,cz148,148,148,1527,2D/3D problem
+2d_3d_problem,cz2548,2548,2548,25674,2D/3D problem
+2d_3d_problem,cz308,308,308,3182,2D/3D problem
+2d_3d_problem,cz5108,5108,5108,51412,2D/3D problem
+2d_3d_problem,cz628,628,628,6346,2D/3D problem
+chemical_process_simulation_problem,d_dyn,87,87,238,chemical process simulation problem
+chemical_process_simulation_problem,d_dyn1,87,87,238,chemical process simulation problem
+chemical_process_simulation_problem,d_ss,53,53,149,chemical process simulation problem
+undirected_weighted_graph,dataset12mfeatfactors_10NN,2000,2000,13721,undirected weighted graph
+undirected_weighted_graph,dataset16mfeatkarhunen_10NN,2000,2000,13834,undirected weighted graph
+undirected_weighted_graph,dataset18mfeatmorphological_10NN,2000,2000,11416,undirected weighted graph
+undirected_weighted_graph,dataset20mfeatpixel_10NN,2000,2000,13966,undirected weighted graph
+undirected_weighted_graph,dataset22mfeatzernike_10NN,2000,2000,13707,undirected weighted graph
+computational_chemistry_problem,dendrimer,730,730,31877,computational chemistry problem
+undirected_weighted_graph,dermatology_5NN,366,366,1220,undirected weighted graph
+electromagnetics_problem,dw1024,2048,2048,10114,electromagnetics problem
+electromagnetics_problem,dw2048,2048,2048,10114,electromagnetics problem
+electromagnetics_problem,dw256A,512,512,2480,electromagnetics problem
+electromagnetics_problem,dw256B,512,512,2500,electromagnetics problem
+electromagnetics_problem,dw4096,8192,8192,41746,electromagnetics problem
+electromagnetics_problem,dw8192,8192,8192,41746,electromagnetics problem
+electromagnetics_problem,dwa512,512,512,2480,electromagnetics problem
+electromagnetics_problem,dwb512,512,512,2500,electromagnetics problem
+optimal_control_problem,dynamicSoaringProblem_1,647,647,2865,optimal control problem
+optimal_control_problem,dynamicSoaringProblem_2,1591,1591,8241,optimal control problem
+optimal_control_problem,dynamicSoaringProblem_3,2871,2871,16818,optimal control problem
+optimal_control_problem,dynamicSoaringProblem_4,3191,3191,19155,optimal control problem
+optimal_control_problem,dynamicSoaringProblem_5,3271,3271,19314,optimal control problem
+optimal_control_problem,dynamicSoaringProblem_6,3431,3431,19335,optimal control problem
+optimal_control_problem,dynamicSoaringProblem_7,3511,3511,19827,optimal control problem
+optimal_control_problem,dynamicSoaringProblem_8,3543,3543,20064,optimal control problem
+thermal_problem,epb0,1794,1794,7764,thermal problem
+economic_problem,eurqsa,7245,7245,25633,economic problem
+computational_fluid_dynamics_problem,ex10,2410,2410,28625,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex10hs,2548,2548,29928,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex12,3973,3973,42092,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex13,2568,2568,39098,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex14,3251,3251,35013,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex15,6867,6867,52769,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex18,5773,5773,71805,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex20,2203,2203,69981,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex21,656,656,19144,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex22,839,839,22715,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex23,1409,1409,43703,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex24,2283,2283,48737,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex25,848,848,24612,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex26,2163,2163,94033,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex27,974,974,40782,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex28,2603,2603,77781,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex29,2870,2870,23754,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex31,3909,3909,115357,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex32,1159,1159,6251,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex33,1733,1733,11961,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex36,3079,3079,53843,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex37,3565,3565,67591,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex40,7740,7740,458012,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex7,1633,1633,54543,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex8,3096,3096,106344,computational fluid dynamics problem
+computational_fluid_dynamics_problem,ex9,3363,3363,51417,computational fluid dynamics problem
+optimization_problem,exdata_1,6001,6001,1137751,optimization problem
+chemical_process_simulation_problem,extr1,2837,2837,11407,chemical process simulation problem
+chemical_process_simulation_problem,extr1b,2836,2836,11404,chemical process simulation problem sequence
+materials_problem,fd12,7500,7500,28462,materials problem
+model_reduction_problem,filter2D,1668,1668,6209,model reduction problem
+model_reduction_problem,flowmeter0,9669,9669,38530,model reduction problem
+model_reduction_problem,flowmeter5,9669,9669,67391,model reduction problem
+electromagnetics_problem,fp,7548,7548,848553,electromagnetics problem
+circuit_simulation_problem,fpga_dcop_01,1220,1220,5892,circuit simulation problem sequence
+circuit_simulation_problem,fpga_dcop_02,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_03,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_04,1220,1220,5884,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_05,1220,1220,5852,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_06,1220,1220,5860,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_07,1220,1220,5855,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_08,1220,1220,5888,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_09,1220,1220,5888,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_10,1220,1220,5884,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_11,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_12,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_13,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_14,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_15,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_16,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_17,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_18,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_19,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_20,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_21,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_22,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_23,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_24,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_25,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_26,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_27,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_28,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_29,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_30,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_31,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_32,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_33,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_34,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_35,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_36,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_37,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_38,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_39,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_40,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_41,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_42,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_43,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_44,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_45,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_46,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_47,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_48,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_49,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_50,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_dcop_51,1220,1220,5892,subsequent circuit simulation problem
+circuit_simulation_problem,fpga_trans_01,1220,1220,7382,circuit simulation problem sequence
+circuit_simulation_problem,fpga_trans_02,1220,1220,7382,subsequent circuit simulation problem
+optimal_control_problem,freeFlyingRobot_1,798,798,2861,optimal control problem
+optimal_control_problem,freeFlyingRobot_10,5218,5218,21604,optimal control problem
+optimal_control_problem,freeFlyingRobot_11,5438,5438,21657,optimal control problem
+optimal_control_problem,freeFlyingRobot_12,5578,5578,22642,optimal control problem
+optimal_control_problem,freeFlyingRobot_13,5718,5718,23711,optimal control problem
+optimal_control_problem,freeFlyingRobot_14,5958,5958,23435,optimal control problem
+optimal_control_problem,freeFlyingRobot_15,6038,6038,23499,optimal control problem
+optimal_control_problem,freeFlyingRobot_16,6078,6078,23825,optimal control problem
+optimal_control_problem,freeFlyingRobot_2,1338,1338,6200,optimal control problem
+optimal_control_problem,freeFlyingRobot_3,1718,1718,6975,optimal control problem
+optimal_control_problem,freeFlyingRobot_4,2358,2358,9815,optimal control problem
+optimal_control_problem,freeFlyingRobot_5,2878,2878,13153,optimal control problem
+optimal_control_problem,freeFlyingRobot_6,3358,3358,14521,optimal control problem
+optimal_control_problem,freeFlyingRobot_7,3918,3918,16697,optimal control problem
+optimal_control_problem,freeFlyingRobot_8,4398,4398,18797,optimal control problem
+optimal_control_problem,freeFlyingRobot_9,4778,4778,21414,optimal control problem
+2d_3d_problem,fs_183_1,183,183,1069,2D/3D problem sequence
+2d_3d_problem,fs_183_3,183,183,1069,subsequent 2D/3D problem
+2d_3d_problem,fs_183_4,183,183,1069,subsequent 2D/3D problem
+2d_3d_problem,fs_183_6,183,183,1069,subsequent 2D/3D problem
+2d_3d_problem,fs_541_1,541,541,4285,2D/3D problem sequence
+2d_3d_problem,fs_541_2,541,541,4285,subsequent 2D/3D problem
+2d_3d_problem,fs_541_3,541,541,4285,subsequent 2D/3D problem
+2d_3d_problem,fs_541_4,541,541,4285,subsequent 2D/3D problem
+2d_3d_problem,fs_680_1,680,680,2646,2D/3D problem sequence
+2d_3d_problem,fs_680_2,680,680,2646,subsequent 2D/3D problem
+2d_3d_problem,fs_680_3,680,680,2646,subsequent 2D/3D problem
+2d_3d_problem,fs_760_1,760,760,5976,2D/3D problem sequence
+2d_3d_problem,fs_760_2,760,760,5976,subsequent 2D/3D problem
+2d_3d_problem,fs_760_3,760,760,5976,subsequent 2D/3D problem
+2d_3d_problem,fv1,9604,9604,47434,2D/3D problem
+2d_3d_problem,fv2,9801,9801,48413,2D/3D problem
+2d_3d_problem,fv3,9801,9801,48413,2D/3D problem
+economic_problem,g7jac010,2880,2880,19635,economic problem
+economic_problem,g7jac010sc,2880,2880,19635,economic problem
+economic_problem,g7jac020,5850,5850,45465,economic problem
+economic_problem,g7jac020sc,5850,5850,45465,economic problem
+computational_fluid_dynamics_problem,garon1,3175,3175,88927,computational fluid dynamics problem
+power_network_problem,gemat11,4929,4929,33185,power network problem sequence
+power_network_problem,gemat12,4929,4929,33111,subsequent power network problem
+optimal_control_problem,goddardRocketProblem_1,831,831,4457,optimal control problem
+optimal_control_problem,goddardRocketProblem_2,867,867,4746,optimal control problem
+computational_fluid_dynamics_problem,goodwin,7320,7320,324784,computational fluid dynamics problem
+computational_fluid_dynamics_problem,graham1,9035,9035,335504,computational fluid dynamics problem
+directed_weighted_graph,gre_1107,1107,1107,5664,directed weighted graph
+directed_weighted_graph,gre_115,115,115,421,directed weighted graph
+directed_weighted_graph,gre_185,185,185,1005,directed weighted graph
+directed_weighted_graph,gre_216a,216,216,876,directed weighted graph
+directed_weighted_graph,gre_216b,216,216,876,directed weighted graph
+directed_weighted_graph,gre_343,343,343,1435,directed weighted graph
+directed_weighted_graph,gre_512,512,512,2192,directed weighted graph
+optimal_control_problem,hangGlider_1,360,360,1838,optimal control problem
+optimal_control_problem,hangGlider_2,1647,1647,7834,optimal control problem
+2d_3d_problem,heart1,3557,3557,1387773,2D/3D problem
+2d_3d_problem,heart2,2339,2339,682797,2D/3D problem
+2d_3d_problem,heart3,2339,2339,682797,2D/3D problem
+undirected_weighted_graph,hep-th,8361,8361,15751,undirected weighted graph
+directed_weighted_graph,hor_131,434,434,4710,directed weighted graph
+chemical_process_simulation_problem,hydr1,5308,5308,23752,chemical process simulation problem
+chemical_process_simulation_problem,hydr1c,5308,5308,23752,chemical process simulation problem sequence
+chemical_process_simulation_problem,impcol_a,207,207,572,chemical process simulation problem
+chemical_process_simulation_problem,impcol_b,59,59,312,chemical process simulation problem
+chemical_process_simulation_problem,impcol_c,137,137,411,chemical process simulation problem
+chemical_process_simulation_problem,impcol_d,425,425,1339,chemical process simulation problem
+chemical_process_simulation_problem,impcol_e,225,225,1308,chemical process simulation problem
+undirected_weighted_graph,indianpines_10NN,9144,9144,62328,undirected weighted graph
+circuit_simulation_problem,init_adder1,1813,1813,11156,circuit simulation problem sequence
+linear_programming_problem,iprob,3001,3001,9000,linear programming problem
+undirected_weighted_graph,iris_dataset_30NN,150,150,2759,undirected weighted graph
+economic_problem,jan99jac020,6774,6774,38692,economic problem
+economic_problem,jan99jac020sc,6774,6774,38692,economic problem
+optimal_control_problem,kineticBatchReactor_1,2052,2052,10836,optimal control problem
+optimal_control_problem,kineticBatchReactor_2,4361,4361,23559,optimal control problem
+optimal_control_problem,kineticBatchReactor_3,5082,5082,27937,optimal control problem
+optimal_control_problem,kineticBatchReactor_4,7105,7105,39290,optimal control problem
+optimal_control_problem,kineticBatchReactor_5,7641,7641,42379,optimal control problem
+optimal_control_problem,kineticBatchReactor_6,7773,7773,43280,optimal control problem
+optimal_control_problem,kineticBatchReactor_7,7968,7968,44335,optimal control problem
+optimal_control_problem,kineticBatchReactor_8,8052,8052,44700,optimal control problem
+optimal_control_problem,kineticBatchReactor_9,8115,8115,45211,optimal control problem
+undirected_weighted_graph,kmnist_norm_10NN,10000,10000,78466,undirected weighted graph
+materials_problem,laser,3002,3002,5000,materials problem
+chemical_process_simulation_problem,lhr01,1477,1477,18592,chemical process simulation problem
+chemical_process_simulation_problem,lhr02,2954,2954,37206,chemical process simulation problem
+chemical_process_simulation_problem,lhr04,4101,4101,82682,chemical process simulation problem
+chemical_process_simulation_problem,lhr04c,4101,4101,82682,chemical process simulation problem
+chemical_process_simulation_problem,lhr07,7337,7337,156508,chemical process simulation problem
+chemical_process_simulation_problem,lhr07c,7337,7337,156508,chemical process simulation problem
+computational_fluid_dynamics_problem,lns_131,131,131,536,computational fluid dynamics problem
+computational_fluid_dynamics_problem,lns_3937,3937,3937,25407,computational fluid dynamics problem
+computational_fluid_dynamics_problem,lns_511,511,511,2796,computational fluid dynamics problem
+computational_fluid_dynamics_problem,lnsp3937,3937,3937,25407,computational fluid dynamics problem
+computational_fluid_dynamics_problem,lnsp_131,131,131,536,computational fluid dynamics problem
+computational_fluid_dynamics_problem,lnsp_511,511,511,2796,computational fluid dynamics problem
+statistical_mathematical_problem,lop163,163,163,935,statistical/mathematical problem
+optimal_control_problem,lowThrust_1,584,584,3314,optimal control problem
+optimal_control_problem,lowThrust_2,2312,2312,13772,optimal control problem
+optimal_control_problem,lowThrust_3,7064,7064,42284,optimal control problem
+structural_problem,lund_a,147,147,1298,structural problem
+structural_problem,lund_b,147,147,1294,structural problem
+computational_fluid_dynamics_problem,lung1,1650,1650,7419,computational fluid dynamics problem
+economic_problem,mahindas,1258,1258,7682,economic problem
+economic_problem,mark3jac020,9129,9129,56175,economic problem
+economic_problem,mark3jac020sc,9129,9129,56175,economic problem
+economic_problem,mbeacxc,496,496,49920,economic problem
+economic_problem,mbeaflw,496,496,49920,economic problem
+economic_problem,mbeause,496,496,41063,economic problem
+2d_3d_problem,mcca,180,180,2659,2D/3D problem
+2d_3d_problem,mcfe,765,765,24382,2D/3D problem
+circuit_simulation_problem,meg1,2904,2904,58142,circuit simulation problem
+circuit_simulation_problem,meg4,5860,5860,26324,circuit simulation problem
+structural_problem,mesh1e1,48,48,177,structural problem
+structural_problem,mesh1em1,48,48,177,structural problem
+structural_problem,mesh1em6,48,48,177,structural problem
+structural_problem,mesh2e1,306,306,1162,structural problem
+structural_problem,mesh2em5,306,306,1162,structural problem
+structural_problem,mesh3e1,289,289,1089,structural problem
+structural_problem,mesh3em5,289,289,1089,structural problem
+electromagnetics_problem,mhd3200a,3200,3200,68026,electromagnetics problem
+electromagnetics_problem,mhd3200b,3200,3200,10758,electromagnetics problem
+electromagnetics_problem,mhd4800a,4800,4800,102252,electromagnetics problem
+electromagnetics_problem,mhd4800b,4800,4800,16160,electromagnetics problem
+electromagnetics_problem,mhda416,416,416,8562,electromagnetics problem
+electromagnetics_problem,mhdb416,416,416,1364,electromagnetics problem
+undirected_weighted_graph,mice_10NN,1077,1077,6742,undirected weighted graph
+undirected_weighted_graph,micromass_10NN,571,571,4834,undirected weighted graph
+undirected_weighted_graph,mnist_test_norm_10NN,10000,10000,72800,undirected weighted graph
+structural_problem,msc00726,726,726,17622,structural problem
+structural_problem,msc01050,1050,1050,15103,structural problem
+structural_problem,msc01440,1440,1440,23855,structural problem
+structural_problem,msc04515,4515,4515,51111,structural problem
+structural_problem,nasa1824,1824,1824,20516,duplicate structural problem
+structural_problem,nasa2146,2146,2146,37198,structural problem
+2d_3d_problem,nd3k,9000,9000,1644345,2D/3D problem
+theoretical_quantum_chemistry_problem,nemeth01,9506,9506,367280,theoretical/quantum chemistry problem sequence
+theoretical_quantum_chemistry_problem,nemeth02,9506,9506,202157,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth03,9506,9506,202157,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth04,9506,9506,202157,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth05,9506,9506,202157,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth06,9506,9506,202157,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth07,9506,9506,202159,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth08,9506,9506,202161,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth09,9506,9506,202506,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth10,9506,9506,205477,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth11,9506,9506,208885,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth12,9506,9506,228162,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth13,9506,9506,241989,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth14,9506,9506,252825,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth15,9506,9506,274654,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth16,9506,9506,298259,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth17,9506,9506,319563,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth18,9506,9506,352370,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth19,9506,9506,413904,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth20,9506,9506,490688,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth21,9506,9506,591626,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth22,9506,9506,684169,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth23,9506,9506,758158,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth24,9506,9506,758028,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth25,9506,9506,760632,subsequent theoretical/quantum chemistry problem
+theoretical_quantum_chemistry_problem,nemeth26,9506,9506,760633,subsequent theoretical/quantum chemistry problem
+undirected_weighted_graph,netscience,1589,1589,2742,undirected weighted graph
+2d_3d_problem,nnc1374,1374,1374,8606,2D/3D problem
+2d_3d_problem,nnc261,261,261,1500,2D/3D problem
+2d_3d_problem,nnc666,666,666,4044,2D/3D problem
+structural_problem,nos2,957,957,2547,structural problem
+structural_problem,nos3,960,960,8402,structural problem
+structural_problem,nos4,100,100,347,structural problem
+structural_problem,nos5,468,468,2820,structural problem
+2d_3d_problem,nos6,675,675,1965,2D/3D problem
+2d_3d_problem,nos7,729,729,2673,2D/3D problem
+2d_3d_problem,odepa400,400,400,1201,2D/3D problem
+2d_3d_problem,odepb400,400,400,399,2D/3D problem
+computational_fluid_dynamics_problem,olm100,100,100,396,computational fluid dynamics problem
+computational_fluid_dynamics_problem,olm1000,1000,1000,3996,computational fluid dynamics problem
+computational_fluid_dynamics_problem,olm2000,2000,2000,7996,computational fluid dynamics problem
+computational_fluid_dynamics_problem,olm500,500,500,1996,computational fluid dynamics problem
+computational_fluid_dynamics_problem,olm5000,5000,5000,19996,computational fluid dynamics problem
+undirected_weighted_graph,optdigits_10NN,5620,5620,39825,undirected weighted graph
+economic_problem,orani678,2529,2529,90158,economic problem
+optimal_control_problem,orbitRaising_1,442,442,1573,optimal control problem
+optimal_control_problem,orbitRaising_2,739,739,3464,optimal control problem
+optimal_control_problem,orbitRaising_3,761,761,3256,optimal control problem
+optimal_control_problem,orbitRaising_4,915,915,4144,optimal control problem
+computational_fluid_dynamics_problem,orsirr_1,1030,1030,6858,computational fluid dynamics problem
+computational_fluid_dynamics_problem,orsirr_2,886,886,5970,computational fluid dynamics problem
+computational_fluid_dynamics_problem,orsreg_1,2205,2205,14133,computational fluid dynamics problem
+circuit_simulation_problem,oscil_dcop_01,430,430,1544,circuit simulation problem sequence
+circuit_simulation_problem,oscil_dcop_02,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_03,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_04,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_05,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_06,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_07,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_08,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_09,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_10,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_11,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_12,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_13,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_14,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_15,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_16,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_17,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_18,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_19,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_20,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_21,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_22,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_23,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_24,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_25,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_26,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_27,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_28,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_29,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_30,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_31,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_32,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_33,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_34,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_35,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_36,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_37,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_38,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_39,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_40,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_41,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_42,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_43,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_44,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_45,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_46,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_47,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_48,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_49,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_50,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_51,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_52,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_53,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_54,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_55,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_56,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_dcop_57,430,430,1544,subsequent circuit simulation problem
+circuit_simulation_problem,oscil_trans_01,430,430,1614,circuit simulation problem
+2d_3d_problem,pde225,225,225,1065,2D/3D problem
+2d_3d_problem,pde2961,2961,2961,14585,2D/3D problem
+2d_3d_problem,pde900,900,900,4380,2D/3D problem
+model_reduction_problem,piston,2025,2025,100015,model reduction problem
+statistical_mathematical_problem,pivtol,102,102,306,statistical/mathematical problem
+undirected_weighted_graph,plantsmargin_12NN,1600,1600,12741,undirected weighted graph
+undirected_weighted_graph,plantstexture_10NN,1599,1599,10602,undirected weighted graph
+2d_3d_problem,plat1919,1919,1919,17159,2D/3D problem
+2d_3d_problem,plat362,362,362,3074,2D/3D problem
+structural_problem,plbuckle,1282,1282,15963,structural problem
+2d_3d_problem,plsk1919,1919,1919,4831,2D/3D problem
+2d_3d_problem,plskz362,362,362,880,2D/3D problem
+computational_fluid_dynamics_problem,poisson2D,367,367,2417,computational fluid dynamics problem
+economic_problem,poli,4008,4008,8188,economic problem
+computational_fluid_dynamics_problem,pores_1,30,30,180,computational fluid dynamics problem
+computational_fluid_dynamics_problem,pores_2,1224,1224,9613,computational fluid dynamics problem
+computational_fluid_dynamics_problem,pores_3,532,532,3474,computational fluid dynamics problem
+2d_3d_problem,problem1,415,415,2779,2D/3D problem
+economic_problem,psmigr_2,3140,3140,540022,economic problem
+economic_problem,psmigr_3,3140,3140,543162,economic problem
+power_network_problem,qh1484,1484,1484,6110,power network problem
+power_network_problem,qh768,768,768,2934,power network problem
+power_network_problem,qh882,882,882,3354,power network problem
+chemical_process_simulation_problem,radfr1,1048,1048,13299,chemical process simulation problem
+computational_fluid_dynamics_problem,raefsky1,3242,3242,294276,computational fluid dynamics problem sequence
+computational_fluid_dynamics_problem,raefsky2,3242,3242,294276,subsequent computational fluid dynamics problem
+structural_problem,raefsky5,6316,6316,168658,structural problem
+structural_problem,raefsky6,3402,3402,137845,structural problem
+model_reduction_problem,rail_1357,1357,1357,5171,model reduction problem
+model_reduction_problem,rail_5177,5177,5177,20181,model reduction problem
+circuit_simulation_problem,rajat03,7602,7602,32653,circuit simulation problem
+circuit_simulation_problem,rajat04,1041,1041,9642,circuit simulation problem
+circuit_simulation_problem,rajat05,301,301,1384,circuit simulation problem
+circuit_simulation_problem,rajat11,135,135,812,circuit simulation problem
+circuit_simulation_problem,rajat12,1879,1879,12926,circuit simulation problem
+circuit_simulation_problem,rajat13,7598,7598,48922,circuit simulation problem
+circuit_simulation_problem,rajat14,180,180,1503,circuit simulation problem
+circuit_simulation_problem,rajat19,1157,1157,5399,circuit simulation problem
+computational_fluid_dynamics_problem,rdb1250,1250,1250,7300,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb1250l,1250,1250,7300,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb200,200,200,1120,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb200l,200,200,1120,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb2048,2048,2048,12032,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb2048_noL,2048,2048,12032,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb3200l,3200,3200,18880,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb450,450,450,2580,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb450l,450,450,2580,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb5000,5000,5000,29600,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb800l,800,800,4640,computational fluid dynamics problem
+computational_fluid_dynamics_problem,rdb968,968,968,5632,computational fluid dynamics problem
+chemical_process_simulation_problem,rdist1,4134,4134,94408,chemical process simulation problem
+chemical_process_simulation_problem,rdist2,3198,3198,56934,chemical process simulation problem
+chemical_process_simulation_problem,rdist3a,2398,2398,61896,chemical process simulation problem
+optimal_control_problem,reorientation_1,677,677,3861,optimal control problem
+optimal_control_problem,reorientation_2,1544,1544,9408,optimal control problem
+optimal_control_problem,reorientation_3,2513,2513,16821,optimal control problem
+optimal_control_problem,reorientation_4,2717,2717,17613,optimal control problem
+optimal_control_problem,reorientation_5,2904,2904,18648,optimal control problem
+optimal_control_problem,reorientation_6,3006,3006,19554,optimal control problem
+optimal_control_problem,reorientation_7,3057,3057,19473,optimal control problem
+optimal_control_problem,reorientation_8,3108,3108,19860,optimal control problem
+robotics_problem,robot,120,120,870,robotics problem
+structural_problem,rotor1,100,100,708,structural problem
+structural_problem,rotor2,791,791,10685,structural problem
+statistical_mathematical_problem,rw136,136,136,479,statistical/mathematical problem
+statistical_mathematical_problem,rw496,496,496,1859,statistical/mathematical problem
+statistical_mathematical_problem,rw5151,5151,5151,20199,statistical/mathematical problem
+structural_problem,s1rmq4m1,5489,5489,143300,structural problem
+structural_problem,s1rmt3m1,5489,5489,112505,structural problem
+structural_problem,s2rmq4m1,5489,5489,143300,structural problem
+structural_problem,s2rmt3m1,5489,5489,112505,structural problem
+structural_problem,s3rmq4m1,5489,5489,143300,structural problem
+structural_problem,s3rmt3m1,5489,5489,112505,structural problem
+structural_problem,s3rmt3m3,5357,5357,106526,structural problem
+computational_fluid_dynamics_problem,saylr1,238,238,1128,computational fluid dynamics problem
+computational_fluid_dynamics_problem,saylr3,1000,1000,2375,computational fluid dynamics problem
+computational_fluid_dynamics_problem,saylr4,3564,3564,12940,computational fluid dynamics problem
+undirected_weighted_graph,semeion_10NN,1593,1593,11113,undirected weighted graph
+computational_fluid_dynamics_problem,sherman1,1000,1000,2375,computational fluid dynamics problem
+computational_fluid_dynamics_problem,sherman2,1080,1080,23094,computational fluid dynamics problem
+computational_fluid_dynamics_problem,sherman3,5005,5005,20033,computational fluid dynamics problem
+computational_fluid_dynamics_problem,sherman4,1104,1104,3786,computational fluid dynamics problem
+computational_fluid_dynamics_problem,sherman5,3312,3312,20793,computational fluid dynamics problem
+2d_3d_problem,shermanACa,3432,3432,25220,2D/3D problem
+2d_3d_problem,shermanACd,6136,6136,53329,2D/3D problem
+computational_fluid_dynamics_problem,shyy41,4720,4720,20042,computational fluid dynamics problem
+materials_problem,sinc12,7500,7500,294986,materials problem
+optimal_control_problem,spaceShuttleEntry_1,560,560,3605,optimal control problem
+optimal_control_problem,spaceShuttleEntry_2,1428,1428,12444,optimal control problem
+optimal_control_problem,spaceShuttleEntry_3,1834,1834,14902,optimal control problem
+optimal_control_problem,spaceShuttleEntry_4,2450,2450,20534,optimal control problem
+optimal_control_problem,spaceStation_1,99,99,489,optimal control problem
+optimal_control_problem,spaceStation_10,1272,1272,9096,optimal control problem
+optimal_control_problem,spaceStation_11,1364,1364,9860,optimal control problem
+optimal_control_problem,spaceStation_12,1410,1410,10260,optimal control problem
+optimal_control_problem,spaceStation_13,1617,1617,12279,optimal control problem
+optimal_control_problem,spaceStation_14,1640,1640,12623,optimal control problem
+optimal_control_problem,spaceStation_2,329,329,2999,optimal control problem
+optimal_control_problem,spaceStation_3,467,467,2681,optimal control problem
+optimal_control_problem,spaceStation_4,950,950,7079,optimal control problem
+optimal_control_problem,spaceStation_5,1019,1019,7895,optimal control problem
+optimal_control_problem,spaceStation_6,1111,1111,9109,optimal control problem
+optimal_control_problem,spaceStation_7,1134,1134,9444,optimal control problem
+optimal_control_problem,spaceStation_8,1157,1157,9797,optimal control problem
+optimal_control_problem,spaceStation_9,1180,1180,10168,optimal control problem
+model_reduction_problem,spiral,1434,1434,9831,model reduction problem
+computational_fluid_dynamics_problem,steam1,240,240,3762,computational fluid dynamics problem
+computational_fluid_dynamics_problem,steam2,600,600,13760,computational fluid dynamics problem
+computational_fluid_dynamics_problem,steam3,80,80,928,computational fluid dynamics problem
+optimization_problem,str_0,363,363,2454,optimization problem sequence
+optimization_problem,str_200,363,363,3068,subsequent optimization problem
+optimization_problem,str_400,363,363,3157,subsequent optimization problem
+optimization_problem,str_600,363,363,3279,subsequent optimization problem
+structural_problem,sts4098,4098,4098,38227,structural problem
+semiconductor_device_problem,swang1,3169,3169,20841,semiconductor device problem sequence
+semiconductor_device_problem,swang2,3169,3169,20841,subsequent semiconductor device problem
+structural_problem,t2d_q4,9801,9801,87025,structural problem sequence
+structural_problem,t2d_q9,9801,9801,87025,structural problem sequence
+model_reduction_problem,t2dal,4257,4257,20861,model reduction problem
+model_reduction_problem,t2dal_a,4257,4257,20861,duplicate model reduction problem
+model_reduction_problem,t2dal_bci,4257,4257,20861,model reduction problem
+model_reduction_problem,t2dal_e,4257,4257,4257,duplicate model reduction problem
+thermal_problem,thermal,3456,3456,66528,thermal problem
+computational_fluid_dynamics_problem,tols1090,1090,1090,3546,computational fluid dynamics problem
+computational_fluid_dynamics_problem,tols2000,2000,2000,5184,computational fluid dynamics problem
+computational_fluid_dynamics_problem,tols340,340,340,2196,computational fluid dynamics problem
+computational_fluid_dynamics_problem,tols4000,4000,4000,8784,computational fluid dynamics problem
+computational_fluid_dynamics_problem,tols90,90,90,1746,computational fluid dynamics problem
+computer_graphics_vision_problem,tomography,500,500,28726,computer graphics/vision problem
+computational_fluid_dynamics_problem,tub100,100,100,396,computational fluid dynamics problem
+computational_fluid_dynamics_problem,tub1000,1000,1000,3996,computational fluid dynamics problem
+optimal_control_problem,tumorAntiAngiogenesis_1,205,205,953,optimal control problem
+optimal_control_problem,tumorAntiAngiogenesis_2,305,305,1441,optimal control problem
+optimal_control_problem,tumorAntiAngiogenesis_3,410,410,2099,optimal control problem
+optimal_control_problem,tumorAntiAngiogenesis_4,455,455,2433,optimal control problem
+optimal_control_problem,tumorAntiAngiogenesis_5,460,460,2483,optimal control problem
+optimal_control_problem,tumorAntiAngiogenesis_6,465,465,2537,optimal control problem
+optimal_control_problem,tumorAntiAngiogenesis_7,475,475,2441,optimal control problem
+optimal_control_problem,tumorAntiAngiogenesis_8,490,490,2535,optimal control problem
+undirected_weighted_graph,umistfacesnorm_10NN,575,575,3495,undirected weighted graph
+electromagnetics_problem,utm1700b,1700,1700,21509,electromagnetics problem
+electromagnetics_problem,utm300,300,300,3155,electromagnetics problem
+electromagnetics_problem,utm3060,3060,3060,42211,electromagnetics problem
+electromagnetics_problem,utm5940,5940,5940,83842,electromagnetics problem
+materials_problem,viscoplastic1,4326,4326,61166,materials problem
+semiconductor_device_problem,wang1,2903,2903,19093,semiconductor device problem sequence
+semiconductor_device_problem,wang2,2903,2903,19093,subsequent semiconductor device problem
+computational_fluid_dynamics_problem,watt_1,1856,1856,11360,computational fluid dynamics problem
+computational_fluid_dynamics_problem,watt_2,1856,1856,11550,computational fluid dynamics problem
+chemical_process_simulation_problem,west0067,67,67,294,chemical process simulation problem
+chemical_process_simulation_problem,west0132,132,132,414,chemical process simulation problem
+chemical_process_simulation_problem,west0156,156,156,371,chemical process simulation problem
+chemical_process_simulation_problem,west0167,167,167,507,chemical process simulation problem
+chemical_process_simulation_problem,west0381,381,381,2157,chemical process simulation problem
+chemical_process_simulation_problem,west0479,479,479,1910,chemical process simulation problem
+chemical_process_simulation_problem,west0497,497,497,1727,chemical process simulation problem
+chemical_process_simulation_problem,west0655,655,655,2854,chemical process simulation problem
+chemical_process_simulation_problem,west0989,989,989,3537,chemical process simulation problem
+chemical_process_simulation_problem,west1505,1505,1505,5445,chemical process simulation problem
+chemical_process_simulation_problem,west2021,2021,2021,7353,chemical process simulation problem
+computational_fluid_dynamics_problem,windtunnel_evap2d,8256,8256,233468,computational fluid dynamics problem
+eigenvalue_model_reduction_problem,ww_36_pmec_36,66,66,1194,eigenvalue/model reduction problem
+undirected_weighted_graph,yeast_30NN,1484,1484,31175,undirected weighted graph
+acoustics_problem,young3c,841,841,3988,acoustics problem
+optimization_problem,zenios,2873,2873,15032,optimization problem
+random_matrices,rand_001_n5,5,5,25,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_002_n6,6,6,36,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_003_n7,7,7,49,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_004_n8,8,8,64,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_005_n9,9,9,81,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_006_n10,10,10,100,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_007_n11,11,11,121,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_008_n12,12,12,144,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_009_n13,13,13,169,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_010_n13,13,13,169,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_011_n14,14,14,196,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_012_n15,15,15,225,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_013_n16,16,16,256,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_014_n17,17,17,289,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_015_n18,18,18,324,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_016_n19,19,19,361,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_017_n20,20,20,400,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_018_n21,21,21,441,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_019_n22,22,22,484,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_020_n23,23,23,529,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_021_n24,24,24,576,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_022_n25,25,25,625,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_023_n26,26,26,676,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_024_n27,27,27,729,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_025_n28,28,28,784,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_026_n30,30,30,900,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_027_n31,31,31,961,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_028_n32,32,32,1024,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_029_n34,34,34,1156,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_030_n35,35,35,1225,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_031_n36,36,36,1296,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_032_n38,38,38,1444,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_033_n38,38,38,1444,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_034_n40,40,40,1600,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_035_n41,41,41,1681,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_036_n43,43,43,1849,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_037_n45,45,45,2025,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_038_n47,47,47,2209,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_039_n48,48,48,2304,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_040_n49,49,49,2401,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_041_n51,51,51,2601,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_042_n51,51,51,2601,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_043_n53,53,53,2809,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_044_n55,55,55,3025,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_045_n57,57,57,3249,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_046_n60,60,60,3600,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_047_n62,62,62,3844,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_048_n65,65,65,4225,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_049_n68,68,68,4624,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_050_n71,71,71,5041,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_051_n74,74,74,5476,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_052_n76,76,76,5776,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_053_n77,77,77,5929,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_054_n80,80,80,6400,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_055_n83,83,83,6889,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_056_n83,83,83,6889,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_057_n87,87,87,7569,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_058_n90,90,90,8100,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_059_n94,94,94,8836,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_060_n98,98,98,9604,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_061_n98,98,98,9604,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_062_n102,102,102,10404,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_063_n107,107,107,11449,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_064_n111,111,111,12321,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_065_n113,113,113,12769,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_066_n116,116,116,13456,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_067_n121,121,121,14641,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_068_n126,126,126,15876,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_069_n131,131,131,17161,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_070_n137,137,137,18769,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_071_n143,143,143,20449,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_072_n149,149,149,22201,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_073_n155,155,155,24025,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_074_n161,161,161,25921,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_075_n168,168,168,28224,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_076_n175,175,175,30625,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_077_n183,183,183,33489,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_078_n190,190,190,36100,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_079_n198,198,198,39204,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_080_n207,207,207,42849,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_081_n208,208,208,43264,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_082_n215,215,215,46225,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_083_n218,218,218,47524,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_084_n223,223,223,49729,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_085_n225,225,225,50625,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_086_n229,229,229,52441,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_087_n234,234,234,54756,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_088_n239,239,239,57121,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_089_n244,244,244,59536,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_090_n254,254,254,64516,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_091_n259,259,259,67081,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_092_n261,261,261,68121,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_093_n262,262,262,68644,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_094_n265,265,265,70225,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_095_n276,276,276,76176,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_096_n277,277,277,76729,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_097_n280,280,280,78400,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_098_n288,288,288,82944,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_099_n293,293,293,85849,"random matrix (uniform [-100,100], base-paper scheme)"
+random_matrices,rand_100_n300,300,300,90000,"random matrix (uniform [-100,100], base-paper scheme)"

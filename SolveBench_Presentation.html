@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolveBench</title>
+<style>
+  :root{
+    --paper:#F6F2E7;
+    --panel:#FBF8F0;
+    --ink:#14283C;
+    --ink-soft:#4B5A68;
+    --teal:#146E78;
+    --gold:#B9812E;
+    --green:#2B7A52;
+    --red:#AC3B3B;
+    --grid:rgba(20,40,60,0.09);
+    --rule:rgba(20,40,60,0.22);
+    --rule-soft:rgba(20,40,60,0.13);
+    --shadow:rgba(20,40,60,0.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0B2A40;
+      --panel:#0F3350;
+      --ink:#EAF2F5;
+      --ink-soft:#9FB6C4;
+      --teal:#5FCBD8;
+      --gold:#E7B75F;
+      --green:#74D0A2;
+      --red:#E58A8A;
+      --grid:rgba(234,242,245,0.075);
+      --rule:rgba(234,242,245,0.28);
+      --rule-soft:rgba(234,242,245,0.14);
+      --shadow:rgba(0,0,0,0.45);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0B2A40;
+    --panel:#0F3350;
+    --ink:#EAF2F5;
+    --ink-soft:#9FB6C4;
+    --teal:#5FCBD8;
+    --gold:#E7B75F;
+    --green:#74D0A2;
+    --red:#E58A8A;
+    --grid:rgba(234,242,245,0.075);
+    --rule:rgba(234,242,245,0.28);
+    --rule-soft:rgba(234,242,245,0.14);
+    --shadow:rgba(0,0,0,0.45);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    overflow:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important;transition-duration:0.001ms !important;}
+  }
+
+  .deck{
+    position:relative;
+    width:100%;
+    height:100vh;
+    min-height:560px;
+    background-image:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 32px);
+  }
+
+  .crosshair{position:absolute;width:22px;height:22px;pointer-events:none;z-index:5;opacity:.55;}
+  .crosshair::before,.crosshair::after{content:'';position:absolute;background:var(--rule);}
+  .crosshair::before{left:50%;top:0;width:1px;height:100%;transform:translateX(-50%);}
+  .crosshair::after{top:50%;left:0;height:1px;width:100%;transform:translateY(-50%);}
+  .crosshair.tl{top:14px;left:14px;}
+  .crosshair.tr{top:14px;right:14px;}
+  .crosshair.bl{bottom:64px;left:14px;}
+  .crosshair.br{bottom:64px;right:14px;}
+
+  .track{
+    display:flex;
+    height:calc(100% - 50px);
+    transition:transform .6s cubic-bezier(.65,0,.35,1);
+    will-change:transform;
+  }
+  .slide{
+    flex:0 0 100%;
+    height:100%;
+    overflow-y:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(20px,4vw,56px);
+  }
+  .sheet{
+    width:100%;
+    max-width:980px;
+    opacity:0;
+    transform:translateY(10px);
+    animation:rise .55s ease forwards;
+    animation-delay:.08s;
+  }
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+
+  .eyebrow{
+    font-family:ui-monospace,'Cascadia Code','SF Mono',Consolas,monospace;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--teal);
+    font-weight:600;
+    margin:0 0 14px;
+  }
+  h1,h2{
+    font-family:Georgia,'Iowan Old Style','Palatino Linotype',Palatino,serif;
+    text-wrap:balance;
+    margin:0;
+    color:var(--ink);
+  }
+  p{line-height:1.55;color:var(--ink-soft);margin:0;}
+
+  /* ---------- SLIDE 1 : TITLE ---------- */
+  .s1-mark{font-family:ui-monospace,'Cascadia Code',monospace;font-size:.8rem;letter-spacing:.22em;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  .s1-brand{font-size:clamp(2.6rem,7vw,4.4rem);font-weight:700;letter-spacing:-.01em;line-height:1;}
+  .s1-eq{font-size:clamp(1.3rem,3.2vw,1.9rem);font-style:italic;color:var(--teal);margin:.5em 0 .15em;font-weight:600;}
+  .s1-sub{font-size:clamp(1.05rem,2.4vw,1.35rem);color:var(--ink-soft);margin-bottom:1.1em;max-width:34ch;}
+  .s1-tagline{max-width:56ch;font-size:1rem;padding-left:18px;border-left:3px solid var(--gold);}
+  .s1-rule{height:1px;background:var(--rule-soft);margin:1.6em 0;}
+
+  /* ---------- SLIDE 2 : BASE PAPER ---------- */
+  .cite{
+    background:var(--panel);
+    border:1px solid var(--rule-soft);
+    border-left:4px solid var(--teal);
+    padding:16px 20px;
+    margin:20px 0 22px;
+    font-size:.92rem;
+  }
+  .cite b{color:var(--ink);}
+  .domain-tag{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-top:8px;display:block;}
+  ul.findings{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:14px;}
+  ul.findings li{position:relative;padding-left:28px;font-size:.95rem;color:var(--ink);}
+  ul.findings li::before{content:'';position:absolute;left:0;top:.35em;width:9px;height:9px;border:2px solid var(--teal);transform:rotate(45deg);}
+  .gap-box{
+    background:var(--panel);
+    border:1px dashed var(--rule);
+    padding:16px 20px;
+    font-size:.92rem;
+  }
+  .gap-box .label{font-family:ui-monospace,monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);display:block;margin-bottom:6px;font-weight:700;}
+
+  /* ---------- SLIDE 3 : SCOPE ---------- */
+  .pill{
+    display:inline-block;
+    font-family:ui-monospace,monospace;
+    font-size:.72rem;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--paper);
+    background:var(--teal);
+    padding:7px 14px;
+    font-weight:700;
+    margin:16px 0 20px;
+  }
+  .problem-p{font-size:1rem;max-width:66ch;}
+  .table-wrap{overflow-x:auto;margin-top:20px;border:1px solid var(--rule-soft);}
+  table{width:100%;border-collapse:collapse;min-width:560px;font-size:.88rem;}
+  thead th{
+    background:var(--ink);
+    color:var(--paper);
+    text-align:left;
+    font-family:ui-monospace,monospace;
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:10px 14px;
+    font-weight:600;
+  }
+  tbody td{padding:12px 14px;border-top:1px solid var(--rule-soft);vertical-align:top;color:var(--ink-soft);}
+  tbody td:first-child{color:var(--ink);font-weight:600;}
+  tbody td.num{font-variant-numeric:tabular-nums;color:var(--gold);font-weight:700;}
+  tbody tr:nth-child(even){background:var(--panel);}
+  .footnote{margin-top:16px;font-size:.82rem;color:var(--ink-soft);}
+  .footnote b{color:var(--gold);}
+
+  /* ---------- SLIDE 4 : METHODOLOGY ---------- */
+  .pipeline-wrap{overflow-x:auto;margin:26px 0 24px;padding-bottom:8px;}
+  .pipeline{display:flex;align-items:center;gap:0;min-width:760px;}
+  .node{
+    border:1px solid var(--rule);
+    background:var(--panel);
+    padding:12px 16px;
+    min-width:150px;
+    text-align:center;
+  }
+  .node .t{font-size:.78rem;font-weight:700;color:var(--ink);}
+  .node .st{font-family:ui-monospace,monospace;font-size:.66rem;color:var(--ink-soft);margin-top:4px;letter-spacing:.02em;}
+  .node.out{border-color:var(--green);border-width:2px;}
+  .node.out .t{color:var(--green);}
+  .branch{display:flex;flex-direction:column;gap:10px;}
+  .connector{flex:0 0 30px;height:2px;background:var(--rule);position:relative;}
+  .connector::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:7px solid var(--rule);}
+  ul.method-points{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:16px 28px;}
+  ul.method-points li{font-size:.9rem;color:var(--ink-soft);padding-left:16px;border-left:2px solid var(--rule-soft);}
+  ul.method-points li b{display:block;color:var(--ink);font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;font-family:ui-monospace,monospace;margin-bottom:4px;}
+  @media(max-width:640px){ul.method-points{grid-template-columns:1fr;}}
+
+  h2.slide-title{font-size:clamp(1.5rem,3.6vw,2.1rem);margin-bottom:4px;}
+
+  /* ---------- TITLE BLOCK / NAV ---------- */
+  .titleblock{
+    height:50px;
+    display:flex;
+    align-items:stretch;
+    border-top:1px solid var(--rule);
+    background:var(--panel);
+    font-family:ui-monospace,'Cascadia Code',monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+  }
+  .tb-seg{display:flex;align-items:center;padding:0 16px;border-right:1px solid var(--rule-soft);white-space:nowrap;}
+  .tb-seg.grow{flex:1;justify-content:center;gap:10px;}
+  .tb-seg b{color:var(--ink);letter-spacing:.06em;margin-right:6px;}
+  .navbtn{
+    appearance:none;border:none;background:transparent;color:var(--ink);
+    font-size:1.1rem;line-height:1;cursor:pointer;padding:0 18px;
+    font-family:inherit;
+  }
+  .navbtn:hover{color:var(--teal);}
+  .navbtn:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;}
+  .navbtn:disabled{opacity:.25;cursor:default;color:var(--ink);}
+  .dots{display:flex;gap:7px;align-items:center;}
+  .dot{width:7px;height:7px;border:1.4px solid var(--rule);background:transparent;cursor:pointer;padding:0;}
+  .dot:focus-visible{outline:2px solid var(--teal);}
+  .dot.active{background:var(--gold);border-color:var(--gold);}
+  .tb-right{margin-left:auto;display:flex;align-items:center;}
+</style>
+</head>
+<body>
+
+<div class="deck">
+  <div class="crosshair tl"></div>
+  <div class="crosshair tr"></div>
+  <div class="crosshair bl"></div>
+  <div class="crosshair br"></div>
+
+  <div class="track" id="track">
+
+    <!-- SLIDE 1 — TITLE -->
+    <section class="slide">
+      <div class="sheet">
+        <div class="s1-mark">CSE&nbsp;402 &middot; NUMERICAL ANALYSIS LAB &middot; PROJECT PROPOSAL</div>
+        <div class="s1-brand">SolveBench</div>
+        <div class="s1-eq">Solving A&#8407;x = b&#8407; at Scale</div>
+        <div class="s1-sub">Direct vs. Iterative Solvers on Real Engineering Data</div>
+        <div class="s1-rule"></div>
+        <p class="s1-tagline">Every blackout-prevention study and every bridge safety check reduces to this exact equation. We find out which numerical method should be trusted to solve it &mdash; and when.</p>
+      </div>
+    </section>
+
+    <!-- SLIDE 2 — BASE PAPER -->
+    <section class="slide">
+      <div class="sheet">
+        <p class="eyebrow">01 &middot; Base Paper</p>
+        <h2 class="slide-title">What It Studies</h2>
+        <div class="cite">
+          <b>P. Khrapov &amp; N. Volkov (2023).</b> Comparative Analysis of Jacobi and Gauss&ndash;Seidel Iterative Methods. <i>arXiv:2307.09809 [math.NA]</i>
+          <span class="domain-tag">Domain &mdash; Numerical Linear Algebra, Iterative Methods for SLAEs (Syllabus Weeks 5&ndash;6)</span>
+        </div>
+        <ul class="findings">
+          <li>Derives the <b>exact convergence range</b> of the Jacobi and Gauss&ndash;Seidel methods by tracking where the roots of a characteristic polynomial &mdash; a Hurwitz-style stability criterion &mdash; fall inside the unit circle.</li>
+          <li>Works this out fully for small SLAEs &mdash; <b>2 and 3 unknowns</b> &mdash; with complex and real coefficients, then backs the theory with a statistical Python comparison of convergence for matrices from 2 to 5 unknowns.</li>
+          <li>Shows the two methods do <i>not</i> always share the same convergence region &mdash; which method wins depends on the structure of the matrix.</li>
+        </ul>
+        <div class="gap-box">
+          <span class="label">The gap this leaves open</span>
+          The analysis stops at toy systems of 5 unknowns or fewer, using only two solvers. Real engineering systems have thousands of unknowns &mdash; nobody in the paper tests these convergence claims on real data.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3 — PROBLEM & SCOPE -->
+    <section class="slide">
+      <div class="sheet">
+        <p class="eyebrow">02 &middot; Problem &amp; Scope</p>
+        <h2 class="slide-title">Problem Statement &amp; Scope</h2>
+        <p class="problem-p" style="margin-top:14px;">Every simulation that models a power grid or checks a structure's safety must, at its core, pick a solver for A&#8407;x = b&#8407;. Pick wrong, and a simulation that should take milliseconds either crawls &mdash; or fails to converge at all.</p>
+        <span class="pill">Category &middot; Exploratory &amp; Comparative Study</span>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Domain</th><th>Systems</th><th>Size range</th><th>Real-world meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Power-grid admittance</td>
+                <td class="num">11</td>
+                <td class="num">118&ndash;1,723 buses</td>
+                <td>The linear system solved every time a utility models its own grid.</td>
+              </tr>
+              <tr>
+                <td>Structural stiffness</td>
+                <td class="num">24</td>
+                <td class="num">112&ndash;4,884 DOF</td>
+                <td>The linear system solved to check if a real building or bridge design holds.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote"><b>50</b> real matrices already downloaded from the SuiteSparse Matrix Collection (2,904 available) &mdash; freely scalable to more for extra depth.</p>
+      </div>
+    </section>
+
+    <!-- SLIDE 4 — METHODOLOGY -->
+    <section class="slide">
+      <div class="sheet">
+        <p class="eyebrow">03 &middot; Methodology</p>
+        <h2 class="slide-title">Expected Methodology</h2>
+        <div class="pipeline-wrap">
+          <div class="pipeline">
+            <div class="node"><div class="t">Real sparse matrix</div><div class="st">SuiteSparse .mtx</div></div>
+            <div class="connector"></div>
+            <div class="branch">
+              <div class="node"><div class="t">Direct solvers</div><div class="st">Gauss Elim &middot; Gauss&ndash;Jordan &middot; LU</div></div>
+              <div class="node"><div class="t">Iterative solvers</div><div class="st">Jacobi &middot; Gauss&ndash;Seidel &middot; CG</div></div>
+            </div>
+            <div class="connector"></div>
+            <div class="node"><div class="t">Benchmark harness</div><div class="st">runtime &middot; iterations &middot; residual &middot; cond. no.</div></div>
+            <div class="connector"></div>
+            <div class="node out"><div class="t">Results dashboard</div><div class="st">heatmaps &middot; plots &middot; solver guide</div></div>
+          </div>
+        </div>
+        <ul class="method-points">
+          <li><b>Ground truth</b>Generate a known x&#8407;, compute b&#8407;=Ax&#8407;, solve with every method, measure the residual &mdash; fully deterministic, no ambiguity in what "correct" means.</li>
+          <li><b>Scale</b>Sweep across all 50 matrices (112 to 4,884 unknowns), spanning both real domains, correlated against sparsity and condition number.</li>
+          <li><b>Team of 5</b>One member per domain-and-solver-family pair, plus one owning the benchmarking harness and visualization dashboard.</li>
+          <li><b>Payoff</b>A concrete, evidence-based answer to "which solver, for which real system" &mdash; the exact question every engineering simulation has to answer first.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SLIDE 5 — EXPANDED SCOPE -->
+    <section class="slide">
+      <div class="sheet">
+        <p class="eyebrow">04 &middot; Scale Expansion</p>
+        <h2 class="slide-title">Expanded Scope: 27 Engineering Domains</h2>
+        <div class="cite" style="border-left-color:var(--gold);margin:14px 0 16px;">
+          <b>Scaled Benchmark: 930 Real Matrices across 27 Engineering &amp; Scientific Domains</b><br>
+          <span style="font-size:0.88rem;color:var(--ink-soft);">Expanded from the initial 48-matrix pilot to a massive dataset spanning $n = 5$ to $10{,}000$ unknowns with up to 1M+ nonzeros.</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Domain Category</th>
+                <th class="num">Matrices</th>
+                <th>Representative Real-World Systems &amp; Physics</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Circuit Simulation</b></td>
+                <td class="num">200</td>
+                <td>SPICE models, VLSI interconnects, nonlinear DC &amp; transient nodal equations.</td>
+              </tr>
+              <tr>
+                <td><b>Computational Fluid Dynamics (CFD)</b></td>
+                <td class="num">126</td>
+                <td>Navier&ndash;Stokes discretization, aerodynamic flow, turbulence modeling.</td>
+              </tr>
+              <tr>
+                <td><b>Structural Mechanics &amp; FEM</b></td>
+                <td class="num">87</td>
+                <td>Civil/mechanical stiffness &amp; mass matrices, structural deformation.</td>
+              </tr>
+              <tr>
+                <td><b>Optimal Control &amp; Optimization</b></td>
+                <td class="num">117</td>
+                <td>Dynamic trajectory planning, robotics kinematics, linear programming.</td>
+              </tr>
+              <tr>
+                <td><b>Chemical &amp; Quantum Physics</b></td>
+                <td class="num">75</td>
+                <td>Chemical reactor kinetics, molecular orbital theory, materials science.</td>
+              </tr>
+              <tr>
+                <td><b>Power Networks, Acoustics &amp; Graphs</b></td>
+                <td class="num">125+</td>
+                <td>Grid bus admittance, wave propagation, network topology graphs.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote"><b>Why 27 Domains:</b> Real matrices exhibit radically different mathematical properties (symmetry, condition number $\kappa(A)$, diagonal dominance). This scale stress-tests solver stability and generalizability across all computational science.</p>
+      </div>
+    </section>
+
+    <!-- SLIDE 6 — ADDRESSING TEACHER FEEDBACK -->
+    <section class="slide">
+      <div class="sheet">
+        <p class="eyebrow">05 &middot; Evaluation &amp; Rigor</p>
+        <h2 class="slide-title">Addressing Teacher Feedback</h2>
+        <div class="cite" style="border-left-color:var(--gold);margin:14px 0 18px;">
+          <b>Systematic Performance &amp; Failure-Mode Analysis</b><br>
+          <span style="font-size:0.88rem;color:var(--ink-soft);">Moving beyond raw benchmark numbers to explain the mathematical root causes of solver behavior.</span>
+        </div>
+        <ul class="findings" style="gap:20px;">
+          <li><b>Which methods perform well (and when)</b>Identify which solvers achieve the best speed, accuracy, and stability for each specific domain and matrix structure.</li>
+          <li><b>Which methods fail (and where)</b>Examine and catalog exactly where solvers diverge, break down, or lose numerical precision across different physical systems.</li>
+          <li><b>Why methods succeed or fail</b>Trace performance directly to underlying mathematical properties, including condition number $\kappa(A)$, symmetry, diagonal dominance, and sparsity.</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="titleblock">
+    <button class="navbtn" id="prevBtn" aria-label="Previous slide">&#8249;</button>
+    <div class="tb-seg"><b>SOLVEBENCH</b></div>
+    <div class="tb-seg grow">
+      <span id="sheetLabel">SHEET 01/04</span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="tb-seg tb-right">SCALE&nbsp;&mdash;&nbsp;NOT TO SCALE</div>
+    <button class="navbtn" id="nextBtn" aria-label="Next slide">&#8250;</button>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var track = document.getElementById('track');
+    var slides = track.children.length;
+    var idx = 0;
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    var sheetLabel = document.getElementById('sheetLabel');
+    var dotsWrap = document.getElementById('dots');
+
+    for(var i=0;i<slides;i++){
+      var d = document.createElement('button');
+      d.className = 'dot' + (i===0?' active':'');
+      d.setAttribute('aria-label','Go to slide '+(i+1));
+      d.addEventListener('click', (function(n){return function(){go(n);};})(i));
+      dotsWrap.appendChild(d);
+    }
+
+    function render(){
+      track.style.transform = 'translateX(-' + (idx*100) + '%)';
+      sheetLabel.textContent = 'SHEET ' + String(idx+1).padStart(2,'0') + '/' + String(slides).padStart(2,'0');
+      prevBtn.disabled = idx===0;
+      nextBtn.disabled = idx===slides-1;
+      var dots = dotsWrap.children;
+      for(var i=0;i<dots.length;i++){ dots[i].className = 'dot' + (i===idx?' active':''); }
+    }
+    function go(n){
+      idx = Math.max(0, Math.min(slides-1, n));
+      render();
+    }
+    prevBtn.addEventListener('click', function(){ go(idx-1); });
+    nextBtn.addEventListener('click', function(){ go(idx+1); });
+    document.addEventListener('keydown', function(e){
+      if(e.key==='ArrowRight'){ go(idx+1); }
+      else if(e.key==='ArrowLeft'){ go(idx-1); }
+    });
+    render();
+  })();
+</script>
+
+</body>
+</html>

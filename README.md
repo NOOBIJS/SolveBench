@@ -1,0 +1,85 @@
+# SolveBench
+
+Benchmarking direct and iterative solvers for `Ax = b` on real sparse matrices from
+the [SuiteSparse Matrix Collection](https://sparse.tamu.edu/), across 27 scientific
+and engineering domains.
+
+CSE 402 (Numerical Analysis Lab) course project, BUET, Section A2.
+Base paper: P. Khrapov and N. Volkov, *Comparative Analysis of Jacobi and
+Gauss-Seidel Iterative Methods*, International Journal of Open Information
+Technologies, vol. 12, no. 2, pp. 23-34, 2024.
+
+The base paper derives exact convergence regions for Jacobi and Gauss-Seidel at
+2 and 3 unknowns and validates them statistically on random matrices up to 5
+unknowns. It never touches real data. This project asks whether its conclusions
+survive on matrices practitioners actually solve, at sizes up to n = 10,000.
+
+## Status
+
+The benchmark has been run end to end (930 matrices x 10 methods on Kaggle).
+**The analysis is currently being redone**, because an audit of the released
+numbers found defects serious enough to invalidate several headline results:
+
+- success was recorded without ever checking the answer -- direct methods were
+  marked `ok` whenever the call did not raise, which passed 57 solves whose
+  relative residual reached 9.71e+12;
+- success rates were divided by the full corpus rather than by the matrices a
+  method is actually defined on (Jacobi and Gauss-Seidel are undefined on 491 of
+  930 -- zero diagonal entry);
+- iterative refinement was applied to one method and no other, which is what
+  produced that method's accuracy advantage;
+- Gauss-Seidel and SOR re-analysed their triangular factor on every iteration,
+  inflating their measured runtime by 11-14x;
+- no sparse direct solver (`spsolve`/SuperLU) or GMRES was ever run as a
+  baseline.
+
+Findings and the fix plan: [`Publication_Analysis_Bangla.md`](Publication_Analysis_Bangla.md)
+(Bangla, English technical terms).
+
+## Layout
+
+```
+src/solvebench/          the library -- single source of truth for what runs
+  config.py              every tolerance, cap and constant
+  metrics.py             the one success predicate; applicability vs conditional success
+  direct_solvers.py      hand-written Gauss elimination, Gauss-Jordan, LU, Cholesky
+  iterative_solvers.py   Jacobi, Gauss-Seidel, SOR, CG, BiCGSTAB, GMRES, ILU
+  reference_solvers.py   spsolve/SuperLU and the ILU-Krylov baselines
+  refinement.py          iterative refinement, applicable to any solver
+tools/build_notebook.py  generates the Kaggle notebook from the library
+tests/                   local harness -- run before pushing anything to Kaggle
+results_final/           figures, tables and reports from the completed sweep
+```
+
+## Method contract
+
+Every solver returns `(x, iterations, reported_converged, work)`.
+
+`reported_converged` is the solver's own opinion. It is recorded and never
+trusted: `metrics.score()` decides success afterwards from the residual measured
+externally from `A`, `x` and `b`, with one tolerance applied identically to all
+methods.
+
+`work` counts matrix-vector products, triangular solves and preconditioner
+applications. This is the primary cost metric rather than wall-clock time, which
+is not reproducible on shared hardware, or iteration count, which is not
+comparable across methods -- one ILU-preconditioned step does the work of many
+Jacobi steps.
+
+## Data
+
+The matrix corpus (~2.6 GB) is not in this repository. It is fully identified by
+`results_final/solvebench_output/tables/01_dataset_manifest.csv` and can be
+re-downloaded from the SuiteSparse Matrix Collection.
+
+## Running
+
+```bash
+pip install -r requirements.txt
+python -m pytest tests/                       # verify the library
+python tools/build_notebook.py                # regenerate the Kaggle notebook
+```
+
+A `kaggle.json` API token is required to push to Kaggle. It is git-ignored and
+must never be committed -- if it ever is, expire the token in Kaggle Settings
+rather than rewriting history.
