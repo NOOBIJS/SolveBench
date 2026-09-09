@@ -76,3 +76,5 @@ venv/
 Thumbs.db
 results/output/
 results/figures/
+results_v2/*/solvebench/
+results_v2/*/*.log

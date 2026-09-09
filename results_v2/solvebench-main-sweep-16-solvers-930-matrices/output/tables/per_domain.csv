@@ -1,0 +1,433 @@
+domain,method,n,applicable,solved
+2d_3d_problem,BiCGSTAB,49,48,27
+2d_3d_problem,Cholesky,49,5,3
+2d_3d_problem,Conjugate Gradient,49,9,5
+2d_3d_problem,GMRES(30),49,48,16
+2d_3d_problem,Gauss elimination,49,34,32
+2d_3d_problem,Gauss-Jordan,49,33,29
+2d_3d_problem,Gauss-Seidel,49,40,20
+2d_3d_problem,ILU only,49,44,4
+2d_3d_problem,ILU-BiCGSTAB,49,44,38
+2d_3d_problem,ILU-GMRES(30),49,44,37
+2d_3d_problem,ILU-Krylov (dispatched),49,44,38
+2d_3d_problem,Jacobi,49,40,15
+2d_3d_problem,LU,49,34,32
+2d_3d_problem,SOR,49,40,19
+2d_3d_problem,splu (SuperLU),49,48,45
+2d_3d_problem,spsolve (SuperLU),49,48,45
+acoustics_problem,BiCGSTAB,2,2,2
+acoustics_problem,Cholesky,2,0,0
+acoustics_problem,Conjugate Gradient,2,1,1
+acoustics_problem,GMRES(30),2,2,2
+acoustics_problem,Gauss elimination,2,1,1
+acoustics_problem,Gauss-Jordan,2,1,1
+acoustics_problem,Gauss-Seidel,2,2,1
+acoustics_problem,ILU only,2,2,1
+acoustics_problem,ILU-BiCGSTAB,2,2,2
+acoustics_problem,ILU-GMRES(30),2,2,2
+acoustics_problem,ILU-Krylov (dispatched),2,2,2
+acoustics_problem,Jacobi,2,2,1
+acoustics_problem,LU,2,1,1
+acoustics_problem,SOR,2,2,1
+acoustics_problem,splu (SuperLU),2,2,2
+acoustics_problem,spsolve (SuperLU),2,2,2
+chemical_process_simulation_problem,BiCGSTAB,44,44,4
+chemical_process_simulation_problem,Cholesky,44,0,0
+chemical_process_simulation_problem,Conjugate Gradient,44,0,0
+chemical_process_simulation_problem,GMRES(30),44,44,1
+chemical_process_simulation_problem,Gauss elimination,44,24,24
+chemical_process_simulation_problem,Gauss-Jordan,44,24,24
+chemical_process_simulation_problem,Gauss-Seidel,44,2,1
+chemical_process_simulation_problem,ILU only,44,19,4
+chemical_process_simulation_problem,ILU-BiCGSTAB,44,19,18
+chemical_process_simulation_problem,ILU-GMRES(30),44,19,19
+chemical_process_simulation_problem,ILU-Krylov (dispatched),44,19,18
+chemical_process_simulation_problem,Jacobi,44,2,1
+chemical_process_simulation_problem,LU,44,24,24
+chemical_process_simulation_problem,SOR,44,2,1
+chemical_process_simulation_problem,splu (SuperLU),44,44,44
+chemical_process_simulation_problem,spsolve (SuperLU),44,44,44
+circuit_simulation_problem,BiCGSTAB,200,200,49
+circuit_simulation_problem,Cholesky,200,0,0
+circuit_simulation_problem,Conjugate Gradient,200,0,0
+circuit_simulation_problem,GMRES(30),200,200,37
+circuit_simulation_problem,Gauss elimination,200,191,190
+circuit_simulation_problem,Gauss-Jordan,200,191,150
+circuit_simulation_problem,Gauss-Seidel,200,2,1
+circuit_simulation_problem,ILU only,200,133,0
+circuit_simulation_problem,ILU-BiCGSTAB,200,133,133
+circuit_simulation_problem,ILU-GMRES(30),200,133,133
+circuit_simulation_problem,ILU-Krylov (dispatched),200,133,133
+circuit_simulation_problem,Jacobi,200,2,1
+circuit_simulation_problem,LU,200,191,190
+circuit_simulation_problem,SOR,200,2,2
+circuit_simulation_problem,splu (SuperLU),200,200,199
+circuit_simulation_problem,spsolve (SuperLU),200,200,199
+computational_chemistry_problem,BiCGSTAB,1,1,0
+computational_chemistry_problem,Cholesky,1,0,0
+computational_chemistry_problem,Conjugate Gradient,1,0,0
+computational_chemistry_problem,GMRES(30),1,1,0
+computational_chemistry_problem,Gauss elimination,1,1,1
+computational_chemistry_problem,Gauss-Jordan,1,1,1
+computational_chemistry_problem,Gauss-Seidel,1,1,0
+computational_chemistry_problem,ILU only,1,1,0
+computational_chemistry_problem,ILU-BiCGSTAB,1,1,1
+computational_chemistry_problem,ILU-GMRES(30),1,1,0
+computational_chemistry_problem,ILU-Krylov (dispatched),1,1,1
+computational_chemistry_problem,Jacobi,1,1,0
+computational_chemistry_problem,LU,1,1,1
+computational_chemistry_problem,SOR,1,1,0
+computational_chemistry_problem,splu (SuperLU),1,1,1
+computational_chemistry_problem,spsolve (SuperLU),1,1,1
+computational_fluid_dynamics,BiCGSTAB,4,4,4
+computational_fluid_dynamics,Cholesky,4,0,0
+computational_fluid_dynamics,Conjugate Gradient,4,0,0
+computational_fluid_dynamics,GMRES(30),4,4,1
+computational_fluid_dynamics,Gauss elimination,4,2,2
+computational_fluid_dynamics,Gauss-Jordan,4,2,2
+computational_fluid_dynamics,Gauss-Seidel,4,0,0
+computational_fluid_dynamics,ILU only,4,4,0
+computational_fluid_dynamics,ILU-BiCGSTAB,4,4,4
+computational_fluid_dynamics,ILU-GMRES(30),4,4,4
+computational_fluid_dynamics,ILU-Krylov (dispatched),4,4,4
+computational_fluid_dynamics,Jacobi,4,0,0
+computational_fluid_dynamics,LU,4,2,2
+computational_fluid_dynamics,SOR,4,0,0
+computational_fluid_dynamics,splu (SuperLU),4,4,4
+computational_fluid_dynamics,spsolve (SuperLU),4,4,4
+computational_fluid_dynamics_problem,BiCGSTAB,122,119,57
+computational_fluid_dynamics_problem,Cholesky,122,1,1
+computational_fluid_dynamics_problem,Conjugate Gradient,122,9,8
+computational_fluid_dynamics_problem,GMRES(30),122,119,40
+computational_fluid_dynamics_problem,Gauss elimination,122,61,61
+computational_fluid_dynamics_problem,Gauss-Jordan,122,61,60
+computational_fluid_dynamics_problem,Gauss-Seidel,122,62,11
+computational_fluid_dynamics_problem,ILU only,122,111,1
+computational_fluid_dynamics_problem,ILU-BiCGSTAB,122,111,70
+computational_fluid_dynamics_problem,ILU-GMRES(30),122,111,65
+computational_fluid_dynamics_problem,ILU-Krylov (dispatched),122,111,70
+computational_fluid_dynamics_problem,Jacobi,122,62,7
+computational_fluid_dynamics_problem,LU,122,61,61
+computational_fluid_dynamics_problem,SOR,122,62,9
+computational_fluid_dynamics_problem,splu (SuperLU),122,117,116
+computational_fluid_dynamics_problem,spsolve (SuperLU),122,119,116
+computer_graphics_vision_problem,BiCGSTAB,1,1,1
+computer_graphics_vision_problem,Cholesky,1,1,1
+computer_graphics_vision_problem,Conjugate Gradient,1,1,1
+computer_graphics_vision_problem,GMRES(30),1,1,1
+computer_graphics_vision_problem,Gauss elimination,1,1,1
+computer_graphics_vision_problem,Gauss-Jordan,1,1,1
+computer_graphics_vision_problem,Gauss-Seidel,1,1,1
+computer_graphics_vision_problem,ILU only,1,1,0
+computer_graphics_vision_problem,ILU-BiCGSTAB,1,1,1
+computer_graphics_vision_problem,ILU-GMRES(30),1,1,1
+computer_graphics_vision_problem,ILU-Krylov (dispatched),1,1,1
+computer_graphics_vision_problem,Jacobi,1,1,1
+computer_graphics_vision_problem,LU,1,1,1
+computer_graphics_vision_problem,SOR,1,1,1
+computer_graphics_vision_problem,splu (SuperLU),1,1,1
+computer_graphics_vision_problem,spsolve (SuperLU),1,1,1
+counter_example_problem,BiCGSTAB,4,4,2
+counter_example_problem,Cholesky,4,0,0
+counter_example_problem,Conjugate Gradient,4,0,0
+counter_example_problem,GMRES(30),4,4,0
+counter_example_problem,Gauss elimination,4,0,0
+counter_example_problem,Gauss-Jordan,4,0,0
+counter_example_problem,Gauss-Seidel,4,2,1
+counter_example_problem,ILU only,4,3,1
+counter_example_problem,ILU-BiCGSTAB,4,3,3
+counter_example_problem,ILU-GMRES(30),4,3,3
+counter_example_problem,ILU-Krylov (dispatched),4,3,3
+counter_example_problem,Jacobi,4,2,1
+counter_example_problem,LU,4,0,0
+counter_example_problem,SOR,4,2,0
+counter_example_problem,splu (SuperLU),4,3,3
+counter_example_problem,spsolve (SuperLU),4,4,3
+directed_weighted_graph,BiCGSTAB,17,17,10
+directed_weighted_graph,Cholesky,17,0,0
+directed_weighted_graph,Conjugate Gradient,17,0,0
+directed_weighted_graph,GMRES(30),17,17,8
+directed_weighted_graph,Gauss elimination,17,14,14
+directed_weighted_graph,Gauss-Jordan,17,13,13
+directed_weighted_graph,Gauss-Seidel,17,12,10
+directed_weighted_graph,ILU only,17,16,2
+directed_weighted_graph,ILU-BiCGSTAB,17,16,15
+directed_weighted_graph,ILU-GMRES(30),17,16,15
+directed_weighted_graph,ILU-Krylov (dispatched),17,16,15
+directed_weighted_graph,Jacobi,17,12,3
+directed_weighted_graph,LU,17,14,14
+directed_weighted_graph,SOR,17,12,8
+directed_weighted_graph,splu (SuperLU),17,17,17
+directed_weighted_graph,spsolve (SuperLU),17,17,17
+economic_problem,BiCGSTAB,17,13,2
+economic_problem,Cholesky,17,0,0
+economic_problem,Conjugate Gradient,17,0,0
+economic_problem,GMRES(30),17,13,2
+economic_problem,Gauss elimination,17,1,1
+economic_problem,Gauss-Jordan,17,1,1
+economic_problem,Gauss-Seidel,17,1,1
+economic_problem,ILU only,17,7,0
+economic_problem,ILU-BiCGSTAB,17,7,5
+economic_problem,ILU-GMRES(30),17,7,4
+economic_problem,ILU-Krylov (dispatched),17,7,5
+economic_problem,Jacobi,17,1,1
+economic_problem,LU,17,1,1
+economic_problem,SOR,17,1,1
+economic_problem,splu (SuperLU),17,12,12
+economic_problem,spsolve (SuperLU),17,13,12
+eigenvalue_model_reduction_problem,BiCGSTAB,19,11,3
+eigenvalue_model_reduction_problem,Cholesky,19,0,0
+eigenvalue_model_reduction_problem,Conjugate Gradient,19,0,0
+eigenvalue_model_reduction_problem,GMRES(30),19,11,2
+eigenvalue_model_reduction_problem,Gauss elimination,19,1,1
+eigenvalue_model_reduction_problem,Gauss-Jordan,19,1,1
+eigenvalue_model_reduction_problem,Gauss-Seidel,19,0,0
+eigenvalue_model_reduction_problem,ILU only,19,2,1
+eigenvalue_model_reduction_problem,ILU-BiCGSTAB,19,2,2
+eigenvalue_model_reduction_problem,ILU-GMRES(30),19,2,2
+eigenvalue_model_reduction_problem,ILU-Krylov (dispatched),19,2,2
+eigenvalue_model_reduction_problem,Jacobi,19,0,0
+eigenvalue_model_reduction_problem,LU,19,1,1
+eigenvalue_model_reduction_problem,SOR,19,0,0
+eigenvalue_model_reduction_problem,splu (SuperLU),19,3,3
+eigenvalue_model_reduction_problem,spsolve (SuperLU),19,11,3
+electromagnetics_problem,BiCGSTAB,25,25,17
+electromagnetics_problem,Cholesky,25,1,1
+electromagnetics_problem,Conjugate Gradient,25,3,2
+electromagnetics_problem,GMRES(30),25,25,9
+electromagnetics_problem,Gauss elimination,25,13,13
+electromagnetics_problem,Gauss-Jordan,25,13,13
+electromagnetics_problem,Gauss-Seidel,25,22,8
+electromagnetics_problem,ILU only,25,25,1
+electromagnetics_problem,ILU-BiCGSTAB,25,25,19
+electromagnetics_problem,ILU-GMRES(30),25,25,19
+electromagnetics_problem,ILU-Krylov (dispatched),25,25,19
+electromagnetics_problem,Jacobi,25,22,2
+electromagnetics_problem,LU,25,13,13
+electromagnetics_problem,SOR,25,22,8
+electromagnetics_problem,splu (SuperLU),25,25,23
+electromagnetics_problem,spsolve (SuperLU),25,25,23
+linear_programming_problem,BiCGSTAB,1,1,0
+linear_programming_problem,Cholesky,1,0,0
+linear_programming_problem,Conjugate Gradient,1,0,0
+linear_programming_problem,GMRES(30),1,1,1
+linear_programming_problem,Gauss elimination,1,0,0
+linear_programming_problem,Gauss-Jordan,1,0,0
+linear_programming_problem,Gauss-Seidel,1,0,0
+linear_programming_problem,ILU only,1,1,0
+linear_programming_problem,ILU-BiCGSTAB,1,1,1
+linear_programming_problem,ILU-GMRES(30),1,1,1
+linear_programming_problem,ILU-Krylov (dispatched),1,1,1
+linear_programming_problem,Jacobi,1,0,0
+linear_programming_problem,LU,1,0,0
+linear_programming_problem,SOR,1,0,0
+linear_programming_problem,splu (SuperLU),1,1,1
+linear_programming_problem,spsolve (SuperLU),1,1,1
+materials_problem,BiCGSTAB,9,9,2
+materials_problem,Cholesky,9,0,0
+materials_problem,Conjugate Gradient,9,1,1
+materials_problem,GMRES(30),9,9,4
+materials_problem,Gauss elimination,9,1,1
+materials_problem,Gauss-Jordan,9,1,1
+materials_problem,Gauss-Seidel,9,6,2
+materials_problem,ILU only,9,6,0
+materials_problem,ILU-BiCGSTAB,9,6,2
+materials_problem,ILU-GMRES(30),9,6,3
+materials_problem,ILU-Krylov (dispatched),9,6,2
+materials_problem,Jacobi,9,6,1
+materials_problem,LU,9,1,1
+materials_problem,SOR,9,6,2
+materials_problem,splu (SuperLU),9,8,7
+materials_problem,spsolve (SuperLU),9,9,7
+model_reduction_problem,BiCGSTAB,13,13,5
+model_reduction_problem,Cholesky,13,2,2
+model_reduction_problem,Conjugate Gradient,13,3,3
+model_reduction_problem,GMRES(30),13,13,4
+model_reduction_problem,Gauss elimination,13,5,5
+model_reduction_problem,Gauss-Jordan,13,5,5
+model_reduction_problem,Gauss-Seidel,13,13,2
+model_reduction_problem,ILU only,13,13,3
+model_reduction_problem,ILU-BiCGSTAB,13,13,9
+model_reduction_problem,ILU-GMRES(30),13,13,9
+model_reduction_problem,ILU-Krylov (dispatched),13,13,9
+model_reduction_problem,Jacobi,13,13,2
+model_reduction_problem,LU,13,5,5
+model_reduction_problem,SOR,13,13,3
+model_reduction_problem,splu (SuperLU),13,13,10
+model_reduction_problem,spsolve (SuperLU),13,13,10
+optimal_control_problem,BiCGSTAB,78,77,11
+optimal_control_problem,Cholesky,78,0,0
+optimal_control_problem,Conjugate Gradient,78,6,6
+optimal_control_problem,GMRES(30),78,77,7
+optimal_control_problem,Gauss elimination,78,40,40
+optimal_control_problem,Gauss-Jordan,78,40,29
+optimal_control_problem,Gauss-Seidel,78,0,0
+optimal_control_problem,ILU only,78,44,0
+optimal_control_problem,ILU-BiCGSTAB,78,44,28
+optimal_control_problem,ILU-GMRES(30),78,44,27
+optimal_control_problem,ILU-Krylov (dispatched),78,44,28
+optimal_control_problem,Jacobi,78,0,0
+optimal_control_problem,LU,78,40,40
+optimal_control_problem,SOR,78,0,0
+optimal_control_problem,splu (SuperLU),78,77,77
+optimal_control_problem,spsolve (SuperLU),78,77,77
+optimization_problem,BiCGSTAB,39,39,2
+optimization_problem,Cholesky,39,0,0
+optimization_problem,Conjugate Gradient,39,0,0
+optimization_problem,GMRES(30),39,39,1
+optimization_problem,Gauss elimination,39,13,13
+optimization_problem,Gauss-Jordan,39,13,13
+optimization_problem,Gauss-Seidel,39,24,0
+optimization_problem,ILU only,39,38,0
+optimization_problem,ILU-BiCGSTAB,39,38,27
+optimization_problem,ILU-GMRES(30),39,38,26
+optimization_problem,ILU-Krylov (dispatched),39,38,27
+optimization_problem,Jacobi,39,24,0
+optimization_problem,LU,39,13,13
+optimization_problem,SOR,39,24,0
+optimization_problem,splu (SuperLU),39,38,38
+optimization_problem,spsolve (SuperLU),39,39,38
+power_network_problem,BiCGSTAB,17,17,5
+power_network_problem,Cholesky,17,4,4
+power_network_problem,Conjugate Gradient,17,4,4
+power_network_problem,GMRES(30),17,17,1
+power_network_problem,Gauss elimination,17,7,7
+power_network_problem,Gauss-Jordan,17,7,7
+power_network_problem,Gauss-Seidel,17,6,0
+power_network_problem,ILU only,17,17,0
+power_network_problem,ILU-BiCGSTAB,17,17,15
+power_network_problem,ILU-GMRES(30),17,17,13
+power_network_problem,ILU-Krylov (dispatched),17,17,15
+power_network_problem,Jacobi,17,6,0
+power_network_problem,LU,17,7,7
+power_network_problem,SOR,17,6,0
+power_network_problem,splu (SuperLU),17,17,17
+power_network_problem,spsolve (SuperLU),17,17,17
+random_matrices,BiCGSTAB,100,100,30
+random_matrices,Cholesky,100,0,0
+random_matrices,Conjugate Gradient,100,0,0
+random_matrices,GMRES(30),100,100,27
+random_matrices,Gauss elimination,100,100,100
+random_matrices,Gauss-Jordan,100,100,100
+random_matrices,Gauss-Seidel,100,100,0
+random_matrices,ILU only,100,100,48
+random_matrices,ILU-BiCGSTAB,100,100,100
+random_matrices,ILU-GMRES(30),100,100,100
+random_matrices,ILU-Krylov (dispatched),100,100,100
+random_matrices,Jacobi,100,100,0
+random_matrices,LU,100,100,100
+random_matrices,SOR,100,100,0
+random_matrices,splu (SuperLU),100,100,100
+random_matrices,spsolve (SuperLU),100,100,100
+robotics_problem,BiCGSTAB,1,1,0
+robotics_problem,Cholesky,1,0,0
+robotics_problem,Conjugate Gradient,1,0,0
+robotics_problem,GMRES(30),1,1,0
+robotics_problem,Gauss elimination,1,1,1
+robotics_problem,Gauss-Jordan,1,1,1
+robotics_problem,Gauss-Seidel,1,0,0
+robotics_problem,ILU only,1,1,0
+robotics_problem,ILU-BiCGSTAB,1,1,0
+robotics_problem,ILU-GMRES(30),1,1,0
+robotics_problem,ILU-Krylov (dispatched),1,1,0
+robotics_problem,Jacobi,1,0,0
+robotics_problem,LU,1,1,1
+robotics_problem,SOR,1,0,0
+robotics_problem,splu (SuperLU),1,1,1
+robotics_problem,spsolve (SuperLU),1,1,1
+semiconductor_device_problem,BiCGSTAB,4,4,4
+semiconductor_device_problem,Cholesky,4,0,0
+semiconductor_device_problem,Conjugate Gradient,4,0,0
+semiconductor_device_problem,GMRES(30),4,4,4
+semiconductor_device_problem,Gauss elimination,4,0,0
+semiconductor_device_problem,Gauss-Jordan,4,0,0
+semiconductor_device_problem,Gauss-Seidel,4,4,4
+semiconductor_device_problem,ILU only,4,4,0
+semiconductor_device_problem,ILU-BiCGSTAB,4,4,4
+semiconductor_device_problem,ILU-GMRES(30),4,4,4
+semiconductor_device_problem,ILU-Krylov (dispatched),4,4,4
+semiconductor_device_problem,Jacobi,4,4,3
+semiconductor_device_problem,LU,4,0,0
+semiconductor_device_problem,SOR,4,4,4
+semiconductor_device_problem,splu (SuperLU),4,4,4
+semiconductor_device_problem,spsolve (SuperLU),4,4,4
+statistical_mathematical_problem,BiCGSTAB,6,6,3
+statistical_mathematical_problem,Cholesky,6,0,0
+statistical_mathematical_problem,Conjugate Gradient,6,1,1
+statistical_mathematical_problem,GMRES(30),6,6,4
+statistical_mathematical_problem,Gauss elimination,6,4,4
+statistical_mathematical_problem,Gauss-Jordan,6,4,4
+statistical_mathematical_problem,Gauss-Seidel,6,3,1
+statistical_mathematical_problem,ILU only,6,6,0
+statistical_mathematical_problem,ILU-BiCGSTAB,6,6,4
+statistical_mathematical_problem,ILU-GMRES(30),6,6,4
+statistical_mathematical_problem,ILU-Krylov (dispatched),6,6,4
+statistical_mathematical_problem,Jacobi,6,3,1
+statistical_mathematical_problem,LU,6,4,4
+statistical_mathematical_problem,SOR,6,3,1
+statistical_mathematical_problem,splu (SuperLU),6,6,5
+statistical_mathematical_problem,spsolve (SuperLU),6,6,5
+structural_problem,BiCGSTAB,87,86,62
+structural_problem,Cholesky,87,48,48
+structural_problem,Conjugate Gradient,87,72,61
+structural_problem,GMRES(30),87,86,39
+structural_problem,Gauss elimination,87,56,56
+structural_problem,Gauss-Jordan,87,56,56
+structural_problem,Gauss-Seidel,87,82,44
+structural_problem,ILU only,87,82,13
+structural_problem,ILU-BiCGSTAB,87,82,72
+structural_problem,ILU-GMRES(30),87,82,71
+structural_problem,ILU-Krylov (dispatched),87,82,73
+structural_problem,Jacobi,87,82,23
+structural_problem,LU,87,56,56
+structural_problem,SOR,87,82,46
+structural_problem,splu (SuperLU),87,84,84
+structural_problem,spsolve (SuperLU),87,86,84
+theoretical_quantum_chemistry_problem,BiCGSTAB,31,27,27
+theoretical_quantum_chemistry_problem,Cholesky,31,0,0
+theoretical_quantum_chemistry_problem,Conjugate Gradient,31,0,0
+theoretical_quantum_chemistry_problem,GMRES(30),31,27,27
+theoretical_quantum_chemistry_problem,Gauss elimination,31,1,1
+theoretical_quantum_chemistry_problem,Gauss-Jordan,31,1,1
+theoretical_quantum_chemistry_problem,Gauss-Seidel,31,27,12
+theoretical_quantum_chemistry_problem,ILU only,31,27,0
+theoretical_quantum_chemistry_problem,ILU-BiCGSTAB,31,27,27
+theoretical_quantum_chemistry_problem,ILU-GMRES(30),31,27,27
+theoretical_quantum_chemistry_problem,ILU-Krylov (dispatched),31,27,27
+theoretical_quantum_chemistry_problem,Jacobi,31,27,12
+theoretical_quantum_chemistry_problem,LU,31,1,1
+theoretical_quantum_chemistry_problem,SOR,31,27,12
+theoretical_quantum_chemistry_problem,splu (SuperLU),31,27,27
+theoretical_quantum_chemistry_problem,spsolve (SuperLU),31,27,27
+thermal_problem,BiCGSTAB,2,2,2
+thermal_problem,Cholesky,2,0,0
+thermal_problem,Conjugate Gradient,2,0,0
+thermal_problem,GMRES(30),2,2,1
+thermal_problem,Gauss elimination,2,1,1
+thermal_problem,Gauss-Jordan,2,1,1
+thermal_problem,Gauss-Seidel,2,2,1
+thermal_problem,ILU only,2,2,0
+thermal_problem,ILU-BiCGSTAB,2,2,2
+thermal_problem,ILU-GMRES(30),2,2,2
+thermal_problem,ILU-Krylov (dispatched),2,2,2
+thermal_problem,Jacobi,2,2,0
+thermal_problem,LU,2,1,1
+thermal_problem,SOR,2,2,1
+thermal_problem,splu (SuperLU),2,2,2
+thermal_problem,spsolve (SuperLU),2,2,2
+undirected_weighted_graph,BiCGSTAB,37,34,12
+undirected_weighted_graph,Cholesky,37,0,0
+undirected_weighted_graph,Conjugate Gradient,37,0,0
+undirected_weighted_graph,GMRES(30),37,34,1
+undirected_weighted_graph,Gauss elimination,37,25,25
+undirected_weighted_graph,Gauss-Jordan,37,25,25
+undirected_weighted_graph,Gauss-Seidel,37,0,0
+undirected_weighted_graph,ILU only,37,30,0
+undirected_weighted_graph,ILU-BiCGSTAB,37,30,16
+undirected_weighted_graph,ILU-GMRES(30),37,30,13
+undirected_weighted_graph,ILU-Krylov (dispatched),37,30,16
+undirected_weighted_graph,Jacobi,37,0,0
+undirected_weighted_graph,LU,37,25,25
+undirected_weighted_graph,SOR,37,0,0
+undirected_weighted_graph,splu (SuperLU),37,33,33
+undirected_weighted_graph,spsolve (SuperLU),37,33,33
