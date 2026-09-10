@@ -48,11 +48,17 @@ OBJECTIVES = ("bottleneck", "minsum", "mc64", "best", "none")
 #: all of them and picks by direct spectral estimate.
 PORTFOLIO = ("none", "mc64", "minsum", "bottleneck")
 
-#: Both assignment objectives are solved densely up to this size, which needs an n x n
-#: array: 200 MB and about two seconds here, against 800 MB at n = 10,000. Above it,
-#: MC64 falls back to the sparse routine and min-sum is not offered at all, so the
-#: portfolio simply chooses among fewer candidates. 130 of 927 matrices are affected.
-DENSE_ASSIGNMENT_CAP = 5000
+#: Every assignment is solved densely up to this size. Set above the corpus maximum of
+#: n = 10,000 deliberately, because the earlier cap of 5,000 was the bug rather than the
+#: safeguard: it left the sparse routines in play for the largest matrices, and rw5151
+#: (n = 5,151, 151 past the cap) then hung the bottleneck search.
+#:
+#: Measured cost of the dense route at n = 10,000, an 800 MB array:
+#:   min-cost assignment (MC64, min-sum)   7.9 s, once per matrix
+#:   0/1 feasibility test (bottleneck)     0.5 s, about ten times per matrix
+#: Kaggle offers roughly 30 GB, so the array is affordable and the time is not the
+#: bottleneck. Past this size the sparse fallback returns, with the risk that implies.
+DENSE_ASSIGNMENT_CAP = 12000
 
 
 def row_ratios(A):

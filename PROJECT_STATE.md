@@ -64,7 +64,7 @@ This cost more time than anything else in the project and is worth stating plain
 | Routine | Failure |
 |---|---|
 | `min_weight_full_bipartite_matching` | hung on `nnc261` with raw ratios; hung on `west0067` (67×67, 294 nnz) under the log transform introduced to fix the first hang; 9.7 s on `oscil_dcop_23` (n=430) |
-| `maximum_bipartite_matching` | 7.2 s for one call on `bcsstk19` (n=817, 3,764 edges), and the bottleneck search makes ten. Slowest exactly when a matching *does* exist |
+| `maximum_bipartite_matching` | 7.2 s for one call on `bcsstk19` (n=817, 3,764 edges), and the bottleneck search makes ten. Slowest exactly when a matching *does* exist. Hung outright on `rw5151` |
 
 All three now go through `scipy.optimize.linear_sum_assignment` on a dense array — MC64 and
 min-sum as minimum-cost assignments, bottleneck feasibility as a 0/1 assignment where a
@@ -75,9 +75,13 @@ bcsstk19      bottleneck   90 s+ hang  →  0.07 s
 oscil_dcop_23 mc64              9.7 s  →  0.006 s      1,600x
 ```
 
-Above `DENSE_ASSIGNMENT_CAP = 5000` the n×n array is too big: MC64 falls back to the sparse
-routine, min-sum is not offered, and the portfolio picks among fewer candidates. 130 of 927
-matrices are affected.
+A fourth hang followed, and the cap was the cause of it. With `DENSE_ASSIGNMENT_CAP = 5000`
+the sparse routines were still in play for the largest matrices, and `rw5151` — n = 5,151,
+just 151 past the cap — hung the bottleneck search. The cap is now **12,000**, above the
+corpus maximum, so nothing falls back. Measured at n = 10,000 on an 800 MB array:
+min-cost assignment 7.9 s once per matrix, the 0/1 feasibility test 0.5 s about ten times.
+Kaggle offers roughly 30 GB, so this is affordable. Worst real case: `TSC_OPF_1047`
+(n = 8,140, 2.0 M nnz) at 20.4 s for the bottleneck.
 
 **A hang cannot be interrupted from Python.** The only defence is to try every matrix
 locally first — `tools/preflight_reordering.py`.
@@ -136,8 +140,9 @@ systems into Jacobi's "diverges" column.
 
 ## 6. Open threads
 
-1. **Preflight** over all 930 matrices is running locally. Worst call so far 2.41 s
-   (`laser`, n=3002); no stalls since the fix. Must finish clean before anything is pushed.
+1. **Preflight** over all 930 matrices is running locally, on its fourth attempt — each
+   earlier one found a hang the previous fix had not covered (`west0067`, `bcsstk19`,
+   `rw5151`). Must run to completion before anything is pushed.
 2. **Re-run the reordering study** on `ijsasif` once preflight passes. Needs the user's
    confirmation before pushing, as always.
 3. **99 missing matrices.** SuiteSparse has 930 usable matrices at n ≤ 10,000; the corpus
