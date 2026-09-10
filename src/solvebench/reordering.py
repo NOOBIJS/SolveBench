@@ -73,6 +73,28 @@ def row_ratios(A):
     return R
 
 
+def worst_row_ratio(A):
+    """``max_i (sum_{j != i} |a_ij|) / |a_ii|`` for the diagonal ``A`` currently has.
+
+    Below 1 is strict diagonal dominance, which guarantees BOTH Jacobi and Gauss-Seidel
+    converge -- so this one number says whether a permutation bought a convergence
+    guarantee or merely a better-looking diagonal. Infinite when any diagonal entry is
+    zero, which is the case the stationary methods are undefined on.
+
+    O(nnz), read from the stored diagonal directly. It must NOT go through
+    ``row_ratios(A).diagonal()``: a structurally absent a_ii has no entry there, so that
+    route reports a ratio of 0 -- perfect dominance -- for exactly the matrices that have
+    no usable diagonal at all.
+    """
+    M = abs(A).tocsr()
+    rowsum = np.asarray(M.sum(axis=1)).ravel()
+    d = np.abs(A.diagonal())
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r = (rowsum - d) / d
+    r[d == 0] = np.inf
+    return float(np.max(r)) if r.size else np.inf
+
+
 def _perm_from_matching(match_rows_to_cols, n):
     """Row r assigned column c must sit at position c, so ``p[c] = r`` and ``A[p, :]``
     puts the chosen entry on the diagonal."""
@@ -108,8 +130,7 @@ def bottleneck_permutation(A):
     # before the search starts.
     mc_perm, _ = mc64_permutation(A)
     if mc_perm is not None:
-        upper = float(np.max(np.diag(row_ratios(A[mc_perm, :]).toarray()))) if n <= 2000 \
-            else float(np.max(row_ratios(A[mc_perm, :]).diagonal()))
+        upper = worst_row_ratio(A[mc_perm, :])
         if np.isfinite(upper):
             kept = candidates[candidates <= upper]
             if kept.size:
@@ -248,7 +269,8 @@ def select_diagonal(A, b=None, objective="bottleneck"):
     """
     n = A.shape[0]
     info = {"objective": objective, "permuted": False, "cost": np.nan,
-            "zero_diagonal_before": int((np.abs(A.diagonal()) < 1e-14).sum())}
+            "zero_diagonal_before": int((np.abs(A.diagonal()) < 1e-14).sum()),
+            "worst_ratio_before": worst_row_ratio(A)}
 
     if objective == "none":
         return A, b, info
@@ -268,8 +290,7 @@ def select_diagonal(A, b=None, objective="bottleneck"):
     b2 = None if b is None else b[p]
     info.update(permuted=not np.array_equal(p, np.arange(n)), cost=cost,
                 zero_diagonal_after=int((np.abs(A2.diagonal()) < 1e-14).sum()),
-                worst_ratio_after=float(np.max(np.diag(row_ratios(A2).toarray()))
-                                        if n <= 2000 else np.nan))
+                worst_ratio_after=worst_row_ratio(A2))
     return A2, b2, info
 
 
@@ -306,7 +327,7 @@ def _select_best(A, b, info):
     rho(T_GS). Strictly at least as good as any fixed choice, because "no permutation"
     is itself one of the candidates."""
     best = (np.inf, None, None, "none")
-    tried = {}
+    tried, ratios = {}, {}
     for name in PORTFOLIO:
         if name == "none":
             cand = A
@@ -316,6 +337,11 @@ def _select_best(A, b, info):
             if p is None:
                 continue
             cand = A[p, :].tocsr()
+        # Every candidate's worst row ratio, recorded whether or not it wins. This is
+        # what lets the write-up compare the objectives on the quantity the convergence
+        # guarantee is stated in, without paying for a fourth condition in the sweep --
+        # the permutations are already computed here.
+        ratios[name] = worst_row_ratio(cand)
         if np.any(np.abs(cand.diagonal()) < 1e-14):
             tried[name] = np.inf                 # still undefined, unusable
             continue
@@ -325,12 +351,13 @@ def _select_best(A, b, info):
             best = (rho, cand, None if name == "none" else p, name)
 
     rho, cand, p, name = best
-    info.update(chosen=name, estimated_rho_gs=rho, candidates=tried,
+    info.update(chosen=name, estimated_rho_gs=rho, candidates=tried, ratios=ratios,
                 permuted=name != "none")
     if cand is None:
         info["note"] = "no candidate produced a usable diagonal"
         return A, b, info
     info["zero_diagonal_after"] = 0
+    info["worst_ratio_after"] = worst_row_ratio(cand)
     return cand, (b if p is None or b is None else b[p]), info
 
 

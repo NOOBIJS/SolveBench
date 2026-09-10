@@ -365,3 +365,60 @@ def test_divergence_guard_survives_a_transient_hump():
     assert rho < 1.0
     x, _, converged, _ = it.jacobi(A, b, max_iter=20000)
     assert converged, f"rho={rho:.4f} < 1 but the guard stopped the run"
+
+
+def test_worst_row_ratio_reports_infinity_for_a_missing_diagonal():
+    """A structurally absent a_ii must read as infinite, not as zero.
+
+    The tempting implementation, ``row_ratios(A).diagonal()``, has no entry where the
+    diagonal is not stored and so returns 0.0 -- a perfect ratio -- for precisely the
+    matrices on which the stationary methods are undefined. That would have reported the
+    491 zero-diagonal systems as ideally conditioned.
+    """
+    from solvebench import reordering as ro
+    A = sp.csr_matrix(np.array([[0.0, 2.0], [1.0, 4.0]]))
+    assert np.isinf(ro.worst_row_ratio(A))
+
+    B = sp.csr_matrix(np.array([[4.0, 1.0], [1.0, 4.0]]))
+    assert ro.worst_row_ratio(B) == pytest.approx(0.25)
+
+
+def test_bottleneck_attains_the_minimum_worst_ratio():
+    """The claim the method rests on: bottleneck assignment does not merely improve the
+    worst row ratio, it *minimises* it. So a permutation making the matrix strictly
+    diagonally dominant -- ratio < 1, which guarantees both Jacobi and Gauss-Seidel
+    converge -- is found whenever one exists at all.
+
+    Checked against brute force over every permutation on matrices small enough to
+    enumerate, half of them built by shuffling the rows of a dominant matrix so that a
+    dominant order is known to exist.
+    """
+    from solvebench import reordering as ro
+    import itertools
+
+    rng = np.random.default_rng(7)
+    dominant_cases = 0
+    for trial in range(120):
+        n = int(rng.integers(3, 6))
+        if trial % 2 == 0:
+            M = rng.normal(size=(n, n)) * 0.1
+            M[np.arange(n), np.arange(n)] = 1.0 + rng.random(n)
+            M = M[rng.permutation(n), :]
+        else:
+            M = rng.normal(size=(n, n)) * (rng.random((n, n)) < 0.7)
+        A = sp.csr_matrix(M)
+        if A.nnz == 0:
+            continue
+
+        brute = min(ro.worst_row_ratio(A[list(p), :].tocsr())
+                    for p in itertools.permutations(range(n)))
+        p, _ = ro.bottleneck_permutation(A)
+        got = np.inf if p is None else ro.worst_row_ratio(A[p, :].tocsr())
+
+        assert np.isclose(got, brute, rtol=1e-9) or (np.isinf(got) and np.isinf(brute)), \
+            f"bottleneck gave {got}, brute force reaches {brute}"
+        if brute < 1:
+            dominant_cases += 1
+            assert got < 1, "a dominant permutation exists but was not found"
+
+    assert dominant_cases > 20, "test lost its coverage of the dominant case"

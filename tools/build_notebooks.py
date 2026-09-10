@@ -395,9 +395,20 @@ for i, entry in enumerate(order, 1):
                 pass
 
         for mname, fn in STATIONARY.items():
+            # worst_ratio_* is the quantity the method is actually optimising, and the
+            # one the convergence guarantee is stated in: below 1 the permuted matrix is
+            # strictly diagonally dominant, so Jacobi AND Gauss-Seidel are guaranteed to
+            # converge. Recording it for every matrix is what turns "the permutation
+            # helped" into "the permutation bought a guarantee, on this many matrices".
             row = {**base, "condition": cond, "method": mname,
                    "chosen": info.get("chosen", cond), "setup_sec": setup,
-                   "zero_diagonal": zeros, "rho_jacobi": rho_j, "rho_gauss_seidel": rho_g}
+                   "zero_diagonal": zeros, "rho_jacobi": rho_j, "rho_gauss_seidel": rho_g,
+                   "permuted": info.get("permuted", False),
+                   "perm_cost": info.get("cost", float("nan")),
+                   "worst_ratio_before": info.get("worst_ratio_before", float("nan")),
+                   "worst_ratio_after": info.get("worst_ratio_after", float("nan")),
+                   **{f"ratio_{k}": v
+                      for k, v in info.get("ratios", {}).items()}}
             if zeros:
                 row.update(metrics.blank(metrics.STATUS_NOT_APPLICABLE, "zero diagonal"))
                 rows.append(row)
@@ -469,6 +480,30 @@ if len(sp_rows):
         print(f"  matrices measured both ways  : {len(w)}")
         print(f"  rho >= 1 as given, < 1 after : {int(crossed)}")
         print(f"  median change in rho         : {(w['best'] - w['none']).median():.4g}")
+
+one = ok[ok.condition == "best"].drop_duplicates("matrix")
+have = [c for c in ("ratio_none", "ratio_mc64", "ratio_minsum", "ratio_bottleneck")
+        if c in one.columns]
+if have:
+    print("\\n=== strict diagonal dominance, bought by permutation ===")
+    print("A worst row ratio below 1 IS strict diagonal dominance, which guarantees both")
+    print("Jacobi and Gauss-Seidel converge. The bottleneck objective minimises exactly")
+    print("that ratio, so if any row permutation makes the matrix dominant, it finds one:")
+    print("the guarantee is reachable precisely when ratio_bottleneck < 1. MC64 maximises")
+    print("the product of |diagonal| instead and carries no such statement.")
+    for col in have:
+        v = pd.to_numeric(one[col], errors="coerce")
+        fin = v.replace([np.inf, -np.inf], np.nan)
+        print(f"  {col[6:]:<11} dominant {int((v < 1).sum()):>4} / {int(v.notna().sum()):>4}"
+              f"   median ratio {fin.median():.4g}"
+              f"   undefined {int(np.isinf(v).sum()):>4}")
+    if {"ratio_none", "ratio_bottleneck"} <= set(one.columns):
+        a = pd.to_numeric(one.ratio_none, errors="coerce")
+        c = pd.to_numeric(one.ratio_bottleneck, errors="coerce")
+        print(f"\\n  not dominant as given, dominant after bottleneck : "
+              f"{int(((a >= 1) & (c < 1)).sum())}")
+        print(f"  dominant as given, lost by bottleneck            : "
+              f"{int(((a < 1) & (c >= 1)).sum())}")
 
 piv.to_csv(OUT_DIR / "tables" / "reordering_pivot.csv")'''
 

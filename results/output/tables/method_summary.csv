@@ -1,17 +1,17 @@
 method,corpus,applicable,solved,applicability,conditional_success
-Gauss elimination,3,3,3,1.0,1.0
-Gauss-Jordan,3,3,3,1.0,1.0
-LU,3,3,3,1.0,1.0
-Cholesky,3,0,0,0.0,
-spsolve (SuperLU),3,3,3,1.0,1.0
-splu (SuperLU),3,3,3,1.0,1.0
-Jacobi,3,3,0,1.0,0.0
-Gauss-Seidel,3,3,1,1.0,0.3333333333333333
-SOR,3,3,2,1.0,0.6666666666666666
-Conjugate Gradient,3,0,0,0.0,
-BiCGSTAB,3,3,3,1.0,1.0
-GMRES(30),3,3,1,1.0,0.3333333333333333
-ILU only,3,3,0,1.0,0.0
-ILU-BiCGSTAB,3,3,3,1.0,1.0
-ILU-GMRES(30),3,3,3,1.0,1.0
-ILU-Krylov (dispatched),3,3,3,1.0,1.0
+Gauss elimination,4,4,4,1.0,1.0
+Gauss-Jordan,4,4,4,1.0,1.0
+LU,4,4,4,1.0,1.0
+Cholesky,4,0,0,0.0,
+spsolve (SuperLU),4,4,4,1.0,1.0
+splu (SuperLU),4,4,4,1.0,1.0
+Jacobi,4,4,0,1.0,0.0
+Gauss-Seidel,4,4,1,1.0,0.25
+SOR,4,4,2,1.0,0.5
+Conjugate Gradient,4,0,0,0.0,
+BiCGSTAB,4,4,4,1.0,1.0
+GMRES(30),4,4,1,1.0,0.25
+ILU only,4,4,0,1.0,0.0
+ILU-BiCGSTAB,4,4,4,1.0,1.0
+ILU-GMRES(30),4,4,4,1.0,1.0
+ILU-Krylov (dispatched),4,4,4,1.0,1.0

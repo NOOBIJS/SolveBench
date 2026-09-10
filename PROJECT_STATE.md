@@ -152,11 +152,12 @@ systems into Jacobi's "diverges" column.
 
 ## 6. Open threads
 
-1. **Preflight** over all 930 matrices is running locally, on its fourth attempt — each
-   earlier one found a hang the previous fix had not covered (`west0067`, `bcsstk19`,
-   `rw5151`). Must run to completion before anything is pushed.
-2. **Re-run the reordering study** on `ijsasif` once preflight passes. Needs the user's
-   confirmation before pushing, as always.
+1. ~~**Preflight**~~ **PASSED.** All 930 matrices, 66.5 min, no hang, on the fourth
+   attempt — each earlier one found a hang the previous fix had not covered
+   (`west0067`, `bcsstk19`, `rw5151`). Results in §8.
+2. **Re-run the reordering study** on `ijsasif`. Needs the user's confirmation before
+   pushing, as always. **Budget is the open question** — see §8; the probe should go
+   first.
 3. **99 missing matrices.** SuiteSparse has 930 usable matrices at n ≤ 10,000; the corpus
    has 831. Downloading the rest (73 MB, 2.9 M nnz) would make it a *complete census* rather
    than a sample — a much stronger claim — and adds 6 domains that were never downloaded at
@@ -193,3 +194,52 @@ systems into Jacobi's "diverges" column.
 * `tools/test_notebooks.py` executes every generated cell locally. Nothing goes to Kaggle
   without it passing; it has caught a missing import and two hangs.
 * `kaggle.json` is git-ignored and must stay that way.
+
+---
+
+## 8. Preflight result — the permutation layer is now trusted
+
+All 930 matrices, three objectives each, **66.5 minutes, no hang and no stall**. The class
+of failure that cost a twelve-hour session is closed.
+
+| objective | total | slowest call |
+|---|---|---|
+| mc64 | 6.4 min | 15.6 s on `mark3jac020sc` |
+| minsum | 6.8 min | 16.2 s on `mark3jac020sc` |
+| **bottleneck** | **59.9 min** | **380.7 s on `graham1`** |
+| all three | 73.1 min | |
+
+**Bottleneck costs 82% of the permutation budget**, and has a long tail: 380 s, 126 s,
+104 s, 104 s, 86 s. `graham1` (n = 9,035, nnz = 335,504) alone spent 6.3 minutes and looked
+exactly like a hang while it ran — it was not one. Everything else about that matrix is
+cheap: mc64 11.5 s, min-sum 11.5 s.
+
+Setup cost on Kaggle: `mc64` needs one objective (6.4 min), `best` needs all four
+(73.1 min), `none` is free — about **80 minutes of the 12-hour session** before a single
+system is solved.
+
+**The solve cost is the unknown, and it is the whole risk.** In the main sweep the three
+stationary methods cost 15.5 min of 294, because 1,473 of their 2,781 attempts returned
+`not_applicable` instantly on a zero diagonal. Under `mc64` and `best` those 491 systems
+have a working diagonal and actually run, and they are the hardest matrices in the corpus.
+The added work is roughly 5,500 real solves that previously cost nothing; at 5 s each that
+is 7.6 h and fits, at 15 s each it is 23 h and does not. **Run the 200-matrix probe first
+and measure the rate** rather than gambling a second session.
+
+### Six corpus files are truncated downloads
+
+They fail to load, and the preflight is what surfaced them. Each header declares far more
+nonzeros than the file contains:
+
+| matrix | declared nnz | lines present |
+|---|---|---|
+| `cavity20` | 138,187 | 81,344 |
+| `nemeth25` | 760,632 | 113,059 |
+| `nemeth22` | 684,169 | 141,323 |
+| `nemeth17` | 319,563 | 230,692 |
+| `psmigr_2` | 540,022 | 442,453 |
+| `nemeth23` | 758,158 | 615,965 |
+
+The source data is fine; the downloads are incomplete. Re-fetch these six along with the
+99 missing matrices in §6.3. Until then the usable corpus is **924 files**, not 930 — which
+matches the count the first completed sweep reported.
