@@ -75,13 +75,25 @@ bcsstk19      bottleneck   90 s+ hang  →  0.07 s
 oscil_dcop_23 mc64              9.7 s  →  0.006 s      1,600x
 ```
 
-A fourth hang followed, and the cap was the cause of it. With `DENSE_ASSIGNMENT_CAP = 5000`
-the sparse routines were still in play for the largest matrices, and `rw5151` — n = 5,151,
-just 151 past the cap — hung the bottleneck search. The cap is now **12,000**, above the
-corpus maximum, so nothing falls back. Measured at n = 10,000 on an 800 MB array:
-min-cost assignment 7.9 s once per matrix, the 0/1 feasibility test 0.5 s about ten times.
-Kaggle offers roughly 30 GB, so this is affordable. Worst real case: `TSC_OPF_1047`
-(n = 8,140, 2.0 M nnz) at 20.4 s for the bottleneck.
+A fourth hang followed, and **the cap itself was the cause**. With
+`DENSE_ASSIGNMENT_CAP = 5000` the sparse routines were still reachable for the largest
+matrices, and `rw5151` — n = 5,151, just 151 past the cap — hung the bottleneck search.
+The cap that existed to save memory was quietly routing the hardest matrices into the code
+known to be undependable.
+
+Two changes followed. The cap is now **12,000**, above the corpus maximum of n = 8,361, and
+the fallbacks are **deleted rather than merely unreached**: past the cap `mc64_permutation`
+and `bottleneck_permutation` now return `(None, inf)` exactly as `minsum_permutation`
+always did, the import is gone, and no call to either routine survives anywhere in the
+library. The portfolio copes, because `none` is always one of its candidates. Leaving dead
+fallbacks in place is what turned a memory guard into the fourth hang.
+
+Measured at n = 10,000 on an 800 MB array: min-cost assignment 7.9 s once per matrix, the
+0/1 feasibility test 0.5 s about ten times. Kaggle offers roughly 30 GB, so this is
+affordable. Worst real case: `TSC_OPF_1047` (n = 8,140, 2.0 M nnz) at 20.4 s.
+
+All four matrices that once hung now complete: `nnc261` 0.01 s, `west0067` 0.00 s,
+`bcsstk19` 0.07 s, `rw5151` 7.2 s (bottleneck, measured under load).
 
 **A hang cannot be interrupted from Python.** The only defence is to try every matrix
 locally first — `tools/preflight_reordering.py`.
@@ -167,6 +179,17 @@ systems into Jacobi's "diverges" column.
 * Refinement is an orthogonal factor available to every method, not one method's feature.
 * The notebook is generated from `src/solvebench/` by `tools/build_notebooks.py`. Never edit
   a notebook directly — that is how the library and the notebook drifted apart before.
+* **`src/solvebench/` is the library; a top-level `solvebench/` is not.** Every notebook
+  unpacks its embedded copy into `./solvebench/` when run off Kaggle, so the safety check
+  leaves one behind — and because the working directory precedes `src` on `sys.path`, a
+  plain `python` run from the project root imports *that* copy. It was tracked in git for a
+  while, which is the drift trap in a second form. It is now ignored. `pytest` is safe
+  (`pytest.ini` sets `pythonpath = src`); scripts must insert `src` themselves, as
+  `tools/*.py` do.
+* **Never point `tools/make_figures.py` at `results/output/`.** The real, corrected results
+  are `results_v2/tables/` (14,882 benchmark rows). `results/output/` holds 48 rows — the
+  leftovers of a `tools/test_notebooks.py` run, which overwrites it every time. It is the
+  script's default argument, which makes it a genuine trap.
 * `tools/test_notebooks.py` executes every generated cell locally. Nothing goes to Kaggle
   without it passing; it has caught a missing import and two hangs.
 * `kaggle.json` is git-ignored and must stay that way.

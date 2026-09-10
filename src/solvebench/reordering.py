@@ -35,9 +35,7 @@ Everything here works on the sparse pattern: the ratio matrix has exactly the no
 A, so cost is O(nnz), not O(n^2).
 """
 import numpy as np
-import scipy.sparse as sp
 from scipy.optimize import linear_sum_assignment
-from scipy.sparse.csgraph import maximum_bipartite_matching, min_weight_full_bipartite_matching
 
 OBJECTIVES = ("bottleneck", "minsum", "mc64", "best", "none")
 
@@ -91,8 +89,11 @@ def bottleneck_permutation(A):
     ``(perm, worst_ratio)``, or ``(None, inf)`` if no perfect matching exists at all
     (then no permutation can give a nonzero diagonal).
     """
-    R = row_ratios(A)
     n = A.shape[0]
+    if n > DENSE_ASSIGNMENT_CAP:
+        return None, np.inf          # see DENSE_ASSIGNMENT_CAP; the portfolio copes
+
+    R = row_ratios(A)
     if R.nnz == 0:
         return None, np.inf
 
@@ -121,23 +122,20 @@ def bottleneck_permutation(A):
     if candidates.size > 1024:
         candidates = np.unique(np.quantile(candidates, np.linspace(0, 1, 1024)))
 
-    dense = R.toarray() if n <= DENSE_ASSIGNMENT_CAP else None
-    pattern = abs(A).toarray() > 0 if dense is not None else None
+    dense = R.toarray()
+    pattern = abs(A).toarray() > 0
 
     def feasible(threshold):
         """Does a perfect matching exist using only entries at or below `threshold`?
 
-        Dense where affordable. maximum_bipartite_matching is the third scipy routine in
-        this module to misbehave on real inputs: on bcsstk19 -- n = 817, 6,853 nonzeros --
-        a single call took 7.2 seconds on a 3,764-edge subgraph, and the search makes ten
+        Always dense. maximum_bipartite_matching was the third scipy routine in this
+        module to misbehave on real inputs: on bcsstk19 -- n = 817, 6,853 nonzeros -- a
+        single call took 7.2 seconds on a 3,764-edge subgraph, and the search makes ten
         such calls. It is slowest precisely when a matching does exist, which is the case
         the search spends most of its time in. The dense form answers the same question
         by assignment with 0/1 costs: a total of zero means every row found an allowed
         column.
         """
-        if dense is None:
-            m = maximum_bipartite_matching(_mask(R, R.data <= threshold), perm_type="column")
-            return (m >= 0).all(), m
         allowed = pattern & (dense <= threshold)
         cost = np.where(allowed, 0.0, 1.0)
         rows, cols = linear_sum_assignment(cost)
@@ -160,14 +158,6 @@ def bottleneck_permutation(A):
         return None, np.inf
     m, worst = best
     return _perm_from_matching(m, n), float(worst)
-
-
-def _mask(R, keep):
-    """R restricted to the entries `keep` selects, as a boolean pattern."""
-    out = sp.csr_matrix((keep.astype(bool), R.indices.copy(), R.indptr.copy()),
-                        shape=R.shape)
-    out.eliminate_zeros()
-    return out
 
 
 def minsum_permutation(A):
@@ -242,16 +232,7 @@ def mc64_permutation(A):
         C[mask] -= C[mask].min() - 1.0          # strictly positive weights
         return _dense_assignment(C, mask, n)
 
-    C = M.copy()                                # past the cap the dense array is too big
-    with np.errstate(divide="ignore"):
-        C.data = -np.log(M.data)
-    C.data = C.data - C.data.min() + 1.0
-    try:
-        rows, cols = min_weight_full_bipartite_matching(C)
-    except ValueError:
-        return None, np.inf
-    order = np.argsort(rows)
-    return _perm_from_matching(cols[order], n), float(C[rows, cols].sum())
+    return None, np.inf              # see DENSE_ASSIGNMENT_CAP; the portfolio copes
 
 
 def apply_permutation(A, b, p):
