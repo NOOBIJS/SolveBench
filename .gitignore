@@ -78,16 +78,17 @@ results/output/
 results/figures/
 
 # Written by the notebooks themselves: each unpacks its embedded copy of the library
-# into ./solvebench/
-
-# Raw Kaggle download: the canonical copies live in results_v2/. It also carries its own
-# unpacked solvebench/ package and __pycache__, i.e. the shadowing copy all over again.
-results_reorder/ when executed off Kaggle, so tools/test_notebooks.py leaves one
-# behind. It is generated, and tracking it is how the library and the notebook drifted
-# apart before -- a plain `python` run from the project root imports THIS copy, not
-# src/solvebench/, because the working directory comes first on sys.path. pytest is
-# safe (pytest.ini sets pythonpath = src); nothing else is.
+# into a solvebench/ directory when executed off Kaggle, so tools/test_notebooks.py
+# leaves one behind. It is generated, and tracking it is how the library and the
+# notebook drifted apart before -- a plain `python` run from the project root imports
+# THAT copy, not src/solvebench/, because the working directory comes first on
+# sys.path. pytest is safe (pytest.ini sets pythonpath = src); nothing else is.
 /solvebench/
+
+# Raw Kaggle download. The canonical copies live in results_v2/tables/, and this tree
+# carries its own unpacked solvebench/ package and __pycache__ -- the shadowing copy
+# again, one directory deeper.
+/results_reorder/
 results_v2/*/solvebench/
 results_v2/*/*.log
 
