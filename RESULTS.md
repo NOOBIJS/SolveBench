@@ -196,6 +196,32 @@ The textbook criterion is binary (ρ < 1 or not) and cannot express `too_slow`.
 Worst case found: `nos7`, ρ(T_J) = 0.999999984536822 — provably convergent, and
 1,191,260,985 iterations from a 1e-8 residual.
 
+### One prediction "failure" that was ours, not the theory's
+
+The `converges` column shows 70 of 71 for Jacobi. The single miss is `cdde6`, and it is
+not a theory failure:
+
+```
+rho(T_J) = 0.717092          ||T_J||_2 = 1.244        <- non-normal
+residual at iteration   1 :  1.00e+00
+residual at iteration  73 :  4.48e+04   <- peak, 44,764x the start
+residual at iteration 178 :  9.35e-09   <- converged
+our divergence guard aborted it at iteration 61, on the way up
+```
+
+rho(T) governs the *asymptotic* rate. When the iteration matrix is non-normal, ||T^k||
+can grow a long way before it decays, so a run can look divergent for a hundred
+iterations and still converge. The guard fired at 1e4 times the running best; the hump
+peaks at 4.5e4.
+
+Measured cost across the three stationary methods: about **23 legitimate convergences
+lost**, 17 of them SOR, since over-relaxation amplifies exactly this transient. The guard
+is otherwise doing its job -- on genuinely divergent runs it fires at a median of
+**2 iterations**. The threshold is now 1e12, which still catches true divergence within a
+few extra iterations because those grow by orders of magnitude per step.
+
+Corrected, theory's `converges` column is 71 of 71 for Jacobi.
+
 ---
 
 ## 6. Refinement, given to every method

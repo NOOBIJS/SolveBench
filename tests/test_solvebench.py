@@ -346,3 +346,22 @@ def test_correction_leaves_other_domains_alone():
     df = pd.DataFrame({"matrix": ["a", "b"],
                        "domain": ["structural_problem", "circuit_simulation_problem"]})
     assert list(corpus.apply(df).domain) == ["structural_problem", "circuit_simulation_problem"]
+
+
+def test_divergence_guard_survives_a_transient_hump():
+    """rho(T) is the asymptotic rate. With a non-normal iteration matrix ||T^k|| can
+    climb a long way before it decays, and an over-eager guard kills the run on the way
+    up. cdde6 has rho(T_J) = 0.717, peaks at 44,764x its starting residual by iteration
+    73, and converges at 178; the old 1e4 threshold aborted it at 61."""
+    from solvebench import config
+    assert config.DIVERGENCE_GROWTH > 4.5e4, "must clear the measured transient peak"
+
+    # A small non-normal system whose Jacobi iteration grows before it settles.
+    n = 40
+    A = sp.diags([np.full(n, 4.0), np.full(n - 1, -3.9), np.full(n - 1, 0.5)],
+                 [0, 1, -1], format="csr")
+    b = A @ np.ones(n)
+    rho, _ = spectral.spectral_radius(A, "jacobi")
+    assert rho < 1.0
+    x, _, converged, _ = it.jacobi(A, b, max_iter=20000)
+    assert converged, f"rho={rho:.4f} < 1 but the guard stopped the run"

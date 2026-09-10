@@ -11,10 +11,22 @@ MAX_ITERATIONS = 10_000     # cap before a stationary/Krylov method is called no
 TOLERANCE = 1e-8            # relative residual an iterative method is asked to reach
 SOR_OMEGA = 1.25            # fixed relaxation factor (1.0 would reduce SOR to Gauss-Seidel)
 
-# A run whose residual climbs past this multiple of its own best is abandoned
-# early: it is diverging, and letting it burn the full iteration cap teaches us
-# nothing. 2,022,191 of the iterations in the previous sweep were spent this way.
-DIVERGENCE_GROWTH = 1e4
+# A run whose residual climbs past this multiple of its own best is abandoned early:
+# it is diverging, and letting it burn the full iteration cap teaches us nothing.
+# 2,022,191 of the iterations in the first sweep were spent this way.
+#
+# Raised from 1e4 after it was caught aborting genuine convergences. rho(T) governs the
+# *asymptotic* rate; when the iteration matrix is non-normal, ||T^k|| can grow a long way
+# before it decays. cdde6 has rho(T_J) = 0.717 and ||T_J||_2 = 1.244: its residual climbs
+# to 44,764x the starting value by iteration 73 and then converges at iteration 178. The
+# old threshold killed it at 61, on the way up the hump.
+#
+# Measured cost of the old value: about 23 legitimate convergences lost across the three
+# stationary methods, 17 of them SOR -- over-relaxation amplifies exactly this transient.
+# Measured cost of the new one: genuinely divergent runs are caught at a median of 2
+# iterations and grow by orders of magnitude per step, so they still abort within a few
+# extra iterations.
+DIVERGENCE_GROWTH = 1e12
 
 # --- iterative refinement ----------------------------------------------------
 # Refinement is an ORTHOGONAL factor, not a property of one solver. The previous
