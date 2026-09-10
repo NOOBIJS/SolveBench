@@ -771,6 +771,182 @@ def fig_dominance(reo):
          "diagonal) under some objective.".format(n_inf))
 
 
+# ------------------------------------- benchmark axes the proposal promised
+
+#: One representative per family, so the overall comparisons carry five series
+#: rather than sixteen. Chosen as the family's best by systems solved.
+REPS = [("spsolve (SuperLU)", "sparse direct", C1),
+        ("ILU-Krylov (dispatched)", "ILU + Krylov", C2),
+        ("BiCGSTAB", "Krylov, no preconditioner", C3),
+        ("Gauss-Seidel", "stationary", "#8b5cf6"),
+        ("LU", "dense direct", "#b45309")]
+DASH = [(), (5, 2), (1, 1.8), (6, 2, 1, 2), (3, 1.5)]
+
+
+def fig_performance_profile(res):
+    """Dolan-More performance profile: the standard single-picture comparison.
+
+    For each matrix, every solver's runtime is divided by the fastest runtime any
+    solver achieved on it. The curve for a solver is the fraction of matrices it
+    handled within a factor tau of the best. Two readings, both useful:
+
+        at tau = 1   how often this solver IS the fastest
+        as tau grows how much of the corpus it can solve at all
+
+    A solver that starts low and ends high is slow but reliable; one that starts high
+    and plateaus early is fast where it works and useless elsewhere. No other single
+    figure separates speed from robustness without dropping one of them.
+    """
+    ok = res[(res.refinement_passes == 0) & (res.status == "solved")
+             & (res.runtime_sec > 0)]
+    if ok.empty:
+        return
+    best = ok.groupby("matrix").runtime_sec.min()
+    universe = sorted(set(ok.matrix))
+    fig, ax = plt.subplots(figsize=(7.4, 4.2))
+    for (m, label, colour), dash in zip(REPS, DASH):
+        s = ok[ok.method == m].set_index("matrix").runtime_sec
+        if s.empty:
+            continue
+        ratio = np.sort((s / best.reindex(s.index)).values)
+        xs = np.concatenate([[1.0], ratio])
+        ys = np.concatenate([[0.0], np.arange(1, len(ratio) + 1) / len(universe)])
+        line, = ax.step(xs, ys, where="post", color=colour, lw=1.9, label=label)
+        if dash:
+            line.set_dashes(list(dash))
+        ax.text(xs[-1], ys[-1], f" {ys[-1] * 100:.0f}%", color=INK2, fontsize=8,
+                va="center")
+    ax.set_xscale("log")
+    ax.set_xlim(1, None)
+    ax.set_ylim(0, 1.02)
+    ax.xaxis.set_minor_formatter(mticker.NullFormatter())
+    ax.set_xlabel("tau  —  runtime, as a multiple of the fastest solver on that matrix")
+    ax.set_ylabel("fraction of the corpus")
+    ax.set_title("Performance profile: speed and robustness in one picture")
+    ax.legend(loc="lower right")
+    save(fig, "17_performance_profile",
+         f"Dolan-More profile over the {len(universe)} matrices at least one method "
+         "solved, one representative per family. Height at tau = 1 is how often that "
+         "method is the outright fastest; the right-hand plateau is how much of the "
+         "corpus it solves at all. Runtime is used here rather than the matvec count "
+         "the rest of this report prefers, because matvecs are zero by construction "
+         "for direct methods and a profile needs one cost every family can be measured "
+         "in. Kaggle runtimes are not reproducible in absolute terms; the ratio to the "
+         "per-matrix best is far more stable than the seconds themselves.")
+
+
+def fig_runtime_scaling(res):
+    """Runtime against problem size, on matrices every family plotted here solves.
+
+    The obvious version of this chart -- each method's median over its own successes --
+    shows Krylov and the stationary methods getting FASTER as the matrices grow. They do
+    not. At large sizes those methods succeed only on the easy matrices, so the median
+    of their survivors falls while the difficulty they can actually handle falls faster.
+    Survivorship, drawn as a trend, and pointing the wrong way.
+
+    A shared denominator removes it: only matrices all four families solve. Dense LU is
+    dropped rather than included, as in figure 04 -- it is capped at n = 2,000 by
+    construction, so including it would cut the size range to a third and reintroduce
+    the same bias in another form.
+    """
+    ok = res[(res.refinement_passes == 0) & (res.status == "solved")
+             & (res.runtime_sec > 0)]
+    if ok.empty:
+        return
+    fams = [r for r in REPS if r[1] != "dense direct"]
+    sets = [set(ok[ok.method == m].matrix) for m, _, _ in fams]
+    if not all(sets):
+        return
+    common = set.intersection(*sets)
+    if len(common) < 20:
+        return
+    ok = ok[ok.matrix.isin(common)]
+
+    MIN_PER_BIN = 5      # a median over three points is noise, not a trend
+    edges = np.logspace(np.log10(max(ok.nnz.min(), 1)), np.log10(ok.nnz.max()), 7)
+    centres = np.sqrt(edges[:-1] * edges[1:])
+    fig, ax = plt.subplots(figsize=(7.4, 4.2))
+    counts, bin_x = None, []
+    for (m, label, colour), dash in zip(fams, DASH):
+        s_ = ok[ok.method == m]
+        idx = np.digitize(s_.nnz, edges) - 1
+        xs, ys, ns = [], [], []
+        for k in range(len(centres)):
+            sel = s_.runtime_sec[idx == k]
+            if len(sel) >= MIN_PER_BIN:
+                xs.append(centres[k])
+                ys.append(sel.median())
+                ns.append(len(sel))
+        if len(xs) < 2:
+            continue
+        if counts is None:
+            counts, bin_x = ns, xs
+        line, = ax.plot(xs, ys, color=colour, lw=1.9, marker="o", ms=4.5, label=label)
+        if dash:
+            line.set_dashes(list(dash))
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    # How many matrices stand behind each point. The rightmost bin is both thin and
+    # selected for easiness -- a large matrix is in the common set only because every
+    # family solved it -- so its dip is a property of the sample, not of the methods.
+    if counts:
+        lo = ax.get_ylim()[0]
+        for cx, cn in zip(bin_x, counts):
+            ax.text(cx, lo, f"n={cn}", ha="center", va="bottom", fontsize=7,
+                    color=MUTED)
+    ax.set_xlabel(f"nonzeros   (the {len(common)} matrices all four families solve)")
+    ax.set_ylabel("runtime, seconds (median per size bin)")
+    ax.set_title("How each family scales, on a common set of problems")
+    ax.legend(loc="upper left")
+    save(fig, "18_runtime_scaling",
+         f"Median runtime within each nonzero bin, restricted to the {len(common)} "
+         "matrices every family shown here solves, so the curves describe the same "
+         "problems at every size. Without that restriction the Krylov and stationary "
+         "curves bend downward at the right -- not because those methods speed up, but "
+         "because at large sizes they only succeed on the easy matrices. Dense LU is "
+         "omitted: its n = 2,000 cap would shrink the size range to a third. Slope is "
+         "the readable quantity; absolute seconds on shared Kaggle hardware are not "
+         "reproducible.")
+
+
+def fig_iteration_counts(res):
+    """How many iterations each iterative method needs when it does converge.
+
+    Distributions, not means: these are bimodal by construction, since a run either
+    converges early or grinds to the 10,000 cap, and a mean lands in the empty middle.
+    """
+    meth = [("Jacobi", C1), ("Gauss-Seidel", C2), ("SOR", C3),
+            ("BiCGSTAB", "#8b5cf6"), ("ILU-BiCGSTAB", "#b45309")]
+    ok = res[(res.refinement_passes == 0) & (res.status == "solved")
+             & (res.iterations > 0)]
+    if ok.empty:
+        return
+    fig, ax = plt.subplots(figsize=(7.4, 4.0))
+    for (m, colour), dash in zip(meth, DASH):
+        s = ok[ok.method == m].iterations
+        if len(s) < 5:
+            continue
+        xs = np.sort(s.values)
+        line, = ax.step(xs, np.arange(1, len(xs) + 1) / len(xs), where="post",
+                        color=colour, lw=1.9,
+                        label=f"{m}  (n={len(xs)}, median {int(np.median(xs))})")
+        if dash:
+            line.set_dashes(list(dash))
+    ax.set_xscale("log")
+    ax.set_ylim(0, 1.02)
+    ax.xaxis.set_minor_formatter(mticker.NullFormatter())
+    ax.set_xlabel("iterations to reach the tolerance")
+    ax.set_ylabel("fraction of that method's successes")
+    ax.set_title("Iterations needed, where the method succeeds at all")
+    ax.legend(loc="lower right", fontsize=8)
+    save(fig, "19_iteration_counts",
+         "Each curve is conditioned on that method's own successes, so the vertical "
+         "axis is not comparable across methods as a success rate -- n is printed in "
+         "the legend for that reason. One preconditioned ILU-BiCGSTAB step does far "
+         "more arithmetic than one Jacobi step, so a lower curve here means fewer "
+         "steps, not less work; figure 04 counts the work.")
+
+
 # --------------------------------------------------------------- driver
 
 def main():
@@ -812,6 +988,9 @@ def main():
         fig_conditioning(res)
         fig_dispatch_ablation(res)
         fig_base_paper_test(res, spec)
+        fig_performance_profile(res)
+        fig_runtime_scaling(res)
+        fig_iteration_counts(res)
     if spec is not None:
         fig_spectral(spec)
         fig_hypothesis_coverage(spec)
