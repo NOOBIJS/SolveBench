@@ -508,8 +508,12 @@ def fig_refinement(study):
                  x=0.02, ha="left", fontsize=11, color=INK)
     axes[1].legend(loc="upper center", bbox_to_anchor=(-0.05, -0.09), ncols=3)
     save(fig, "10_refinement_effect",
-         "In the first sweep only one method received refinement, and that is "
-         "where its accuracy advantage came from.")
+         "Refinement applied to every method, not to one. Given the same wrapper, Jacobi "
+         "becomes the most accurate method in the benchmark and the dispatched ILU-Krylov "
+         "does not -- but Jacobi pays roughly twenty times the work for it, which is why "
+         "cost is plotted beside accuracy rather than left to a footnote. In the first "
+         "sweep only one method received refinement, and that is where its accuracy "
+         "advantage came from.")
 
 
 def fig_base_paper_test(res, spec):

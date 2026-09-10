@@ -10,4 +10,4 @@
 - `07_spectral_radius.png` -- The quantity the base paper exists to characterise, computed here for every matrix in the corpus.
 - `08_hypothesis_coverage.png` -- Stein-Rosenberg (1948) forbids Jacobi-converges-while-Gauss-Seidel-does-not for M-matrices; Householder-John (1958) guarantees Gauss-Seidel for SPD. Coverage of these classes is what explains the benchmark's own headline.
 - `09_prediction_vs_observation.png` -- 'too_slow' is the case the textbook criterion cannot express: rho < 1, so convergence is guaranteed, but not within any usable iteration budget.
-- `10_refinement_effect.png` -- In the first sweep only one method received refinement, and that is where its accuracy advantage came from.
+- `10_refinement_effect.png` -- Refinement applied to every method, not to one. Given the same wrapper, Jacobi becomes the most accurate method in the benchmark and the dispatched ILU-Krylov does not -- but Jacobi pays roughly twenty times the work for it, which is why cost is plotted beside accuracy rather than left to a footnote. In the first sweep only one method received refinement, and that is where its accuracy advantage came from.
