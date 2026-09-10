@@ -42,10 +42,19 @@ ROOT = Path(__file__).resolve().parent.parent
 C1, C2, C3 = "#2a78d6", "#eb6834", "#1baf7a"
 SEQ = ["#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7",
        "#3987e5", "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b"]
-STATUS = {"solved": "#0ca30c", "inaccurate": "#d03b3b", "did_not_converge": "#fab219",
-          "diverged": "#ec835a", "not_applicable": "#898781",
-          "structurally_singular": "#c3c2b7", "skipped_too_large": "#e1e0d9",
-          "error": "#52514e", "load_failed": "#383835"}
+# Four real outcomes in status colours, then two neutrals. The neutrals are a full
+# lightness step apart (OKLCH L about 0.62 against 0.88) so they separate under any
+# colour vision; the four greys they replace did not.
+STATUS = {"solved": "#0ca30c",            # good
+          "inaccurate": "#d03b3b",        # critical: claimed success, wrong answer
+          "did_not_converge": "#fab219",  # warning: admitted failure
+          "diverged": "#ec835a",          # serious: blew up
+          "not_applicable": "#8a8880",    # the method is undefined on this matrix
+          "excluded": "#dcdbd3"}          # corpus/harness, says nothing about the solver
+
+#: Reasons that are properties of the corpus or the harness rather than results.
+EXCLUDED_AS = {"structurally_singular": "excluded", "skipped_too_large": "excluded",
+               "load_failed": "excluded", "error": "excluded"}
 
 SURFACE, INK, INK2, MUTED = "#fcfcfb", "#0b0b0b", "#52514e", "#898781"
 GRID, AXIS = "#e1e0d9", "#c3c2b7"
@@ -140,10 +149,19 @@ def fig_scoreboard(res):
 
 
 def fig_outcomes(res):
-    """Every attempt accounted for, including the ones that never ran."""
+    """Every attempt accounted for, including the ones that never ran.
+
+    Eight colour classes was one or two too many: `structurally_singular`,
+    `skipped_too_large` and `load_failed` were three light greys nobody could tell
+    apart. They are also the three that say nothing about the solver -- a broken file
+    and a matrix with no unique solution are properties of the corpus, not results.
+    They collapse into one "excluded" class, leaving six: four real outcomes,
+    "not applicable" where the method is undefined, and "excluded".
+    """
     from collections import OrderedDict
     order = list(OrderedDict.fromkeys(res["method"]))
-    counts = (res.groupby(["method", "status"]).size().unstack(fill_value=0)
+    grouped = res.assign(status=res.status.map(lambda s: EXCLUDED_AS.get(s, s)))
+    counts = (grouped.groupby(["method", "status"]).size().unstack(fill_value=0)
               .reindex(order))
     present = [s for s in STATUS if s in counts.columns]
     counts = counts[present]
