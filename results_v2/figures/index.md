@@ -3,7 +3,7 @@
 - `01_method_scoreboard.png` -- Applicability (how much of the corpus a method is defined on) against conditional success (how much of that it solves). Multiplying the two into one rate is what understated several baselines.
 - `02_outcomes.png` -- 'inaccurate' is the category that did not exist before: the solver returned without complaint and the residual says the answer is wrong.
 - `03_domain_heatmap.png` -- Grey cells are domains where a method is defined on nothing. Rates are conditional; per-domain denominators are in per_domain.csv.
-- `04_cost_profile.png` -- Counted work rather than wall-clock time. Direct methods sit at a constant: they do a fixed amount of work regardless of conditioning.
+- `04_cost_profile.png` -- Counted work rather than wall-clock time, which is not reproducible on shared hardware. Direct methods are absent by construction: they perform no matrix-vector products at all, so their cost is the factorisation instead.
 - `05_conditioning.png` -- Pooling the two strata is what let dataset ill-conditioning masquerade as solver inaccuracy in the earlier error medians.
 - `06_dispatch_ablation.png` -- If the dispatched bar matches always-BiCGSTAB, the dispatch rule adds nothing. Earlier probes put both at 51/70.
 - `11_jacobi_vs_gauss_seidel.png` -- The denominator is matrices where both methods are defined, not the whole corpus -- Jacobi and Gauss-Seidel are undefined wherever the diagonal carries a zero.

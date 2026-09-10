@@ -202,27 +202,38 @@ def fig_cost_profile(res):
     faceted rather than overlaid. Matrix-vector products rather than seconds:
     wall-clock on a shared machine is not reproducible.
     """
-    ok = res[(res.status == "solved") & res.matvecs.notna() & (res.n > 0)]
+    # Iterative families only. A direct method never forms A*v -- it factorises and
+    # back-substitutes -- so its matvec count is exactly 0 for every solve, and on a log
+    # axis those points land on whatever floor the plot clips to. That was a straight
+    # line of artefacts, not a measurement. Direct cost lives in the factorisation.
+    ok = res[(res.status == "solved") & res.matvecs.notna() & (res.n > 0)
+             & (res.matvecs > 0)]
     if ok.empty:
         return
-    fams = [f for f in ["direct-handwritten", "direct-library", "stationary",
-                        "krylov", "preconditioned"] if f in set(ok.family)]
-    fig, axes = plt.subplots(1, len(fams), figsize=(2.9 * len(fams), 3.2),
+    fams = [f for f in ["stationary", "krylov", "preconditioned"] if f in set(ok.family)]
+    fig, axes = plt.subplots(1, len(fams), figsize=(3.2 * len(fams), 3.4),
                              sharex=True, sharey=True)
     axes = np.atleast_1d(axes)
     for ax, fam in zip(axes, fams):
         s = ok[ok.family == fam]
-        ax.scatter(s.n, s.matvecs.clip(lower=0.5), s=9, color=C1, alpha=0.55,
-                   linewidths=0.5, edgecolors=SURFACE)
+        ax.scatter(s.n, s.matvecs, s=9, color=C1, alpha=0.5,
+                   linewidths=0.4, edgecolors=SURFACE)
+        ax.axhline(s.matvecs.median(), color=C2, lw=1.2, zorder=3)
+        # Top-left: the bottom-right corner is dense with data in every panel.
+        ax.text(0.03, 0.95, f"median {s.matvecs.median():.0f}",
+                transform=ax.transAxes, ha="left", va="top", fontsize=8, color=C2)
+        ax.text(0.03, 0.88, f"n={len(s)} solves",
+                transform=ax.transAxes, ha="left", va="top", fontsize=7.5, color=MUTED)
         ax.set_xscale("log"); ax.set_yscale("log")
-        ax.set_title(fam, fontsize=9, color=INK2)
-        ax.set_xlabel("n")
+        ax.set_title(fam, fontsize=9.5, color=INK2)
+        ax.set_xlabel("matrix size n")
     axes[0].set_ylabel("matrix-vector products")
-    fig.suptitle("Cost of a successful solve, by method family", x=0.02, ha="left",
-                 fontsize=11, color=INK)
+    fig.suptitle("Cost of a successful solve, iterative families only",
+                 x=0.02, ha="left", fontsize=11, color=INK)
     save(fig, "04_cost_profile",
-         "Counted work rather than wall-clock time. Direct methods sit at a "
-         "constant: they do a fixed amount of work regardless of conditioning.")
+         "Counted work rather than wall-clock time, which is not reproducible on shared "
+         "hardware. Direct methods are absent by construction: they perform no "
+         "matrix-vector products at all, so their cost is the factorisation instead.")
 
 
 def fig_conditioning(res):
