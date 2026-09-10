@@ -14,6 +14,23 @@ The base paper derives exact convergence regions for Jacobi and Gauss-Seidel at
 unknowns. It never touches real data. This project asks whether its conclusions
 survive on matrices practitioners actually solve, at sizes up to n = 10,000.
 
+## The result
+
+A preprocessing pipeline that raises the success rate of the stationary solvers by
+**55-72%** across 927 real sparse matrices, by choosing which entries sit on the
+diagonal before the solver runs:
+
+| method | as given | with the pipeline | |
+|---|---|---|---|
+| Jacobi | 75 | **124** | +65% |
+| Gauss-Seidel | 121 | **208** | +72% |
+| SOR | 119 | **184** | +55% |
+
+199 systems recovered, none lost. The solvers themselves are unmodified: the pipeline
+runs a row permutation, chosen by assignment among four competing objectives, and picks
+the relaxation factor from an estimate of rho(T_J). Details and limits:
+[`SCOPE.md`](SCOPE.md) section 7.
+
 ## Status
 
 The benchmark has been run end to end (930 matrices x 10 methods on Kaggle).

@@ -270,7 +270,12 @@ Other corrections:
 
 ---
 
-## 8. The novel method — convergence-oriented diagonal selection
+## 8. The contribution — a convergence-oriented preprocessing pipeline
+
+**Headline: the pipeline raises stationary solver success by 55-72% across 927 real
+matrices — Jacobi 75 to 124, Gauss-Seidel 121 to 208, SOR 119 to 184. 199 systems
+recovered, none lost.** Everything below is the evidence for that, and the limits of it.
+
 
 Run completed 2026-09-10 on Kaggle: **927 matrices, 3 conditions, 3 methods, 114.7
 minutes**. `results_v2/tables/reordering_study.csv`.

@@ -135,47 +135,72 @@ correcting them changed the headline results.
 
 ---
 
-## 7. The group's own contribution — convergence-oriented diagonal selection
+## 7. The contribution — a convergence-oriented preprocessing pipeline
+
+**We built a preprocessing pipeline that raises the success rate of the stationary
+solvers by 55-72%, measured across 927 real sparse matrices.**
+
+| method | as given | with the pipeline | |
+|---|---|---|---|
+| Jacobi | 75 | **124** | **+65%** |
+| Gauss-Seidel | 121 | **208** | **+72%** |
+| SOR | 119 | **184** | **+55%** |
+
+199 systems recovered. **None lost** — the pipeline cannot score below the control,
+because "change nothing" is one of the candidates it chooses among.
+
+### What the pipeline does
 
 A stationary method divides by `a_ii`, so its behaviour is decided by which entries sit
-on the diagonal — and that came from the order the rows happened to arrive in.
+on the diagonal — and on a real matrix that was decided by the order the rows happened
+to arrive in, not by anything to do with convergence. Two steps run before the solver,
+which is left untouched:
 
 ```
-Proved       row permutation is the ONLY lever
-             row scaling leaves T_J identical; column scaling is a similarity
-             transform; symmetric permutation moves rho(T_GS) in the 5th decimal
-
-Objective    min over permutations of  max_i  ( sum_{j!=i} |a_ij| / |a_ii| )
-             MC64, the established tool, instead maximises  prod |a_ii|
-
-Algorithm    bottleneck assignment, solved exactly
-             binary search on a threshold + assignment feasibility
-             verified against brute force: 400/400 attain the true minimum
-
-Theorem      ratio < 1 IS strict diagonal dominance, which forces both Jacobi and
-             Gauss-Seidel to converge; minimising the ratio therefore finds a
-             dominance-restoring permutation whenever one exists (210/210)
+step 1   choose the diagonal      a row permutation, solved as an assignment problem
+step 2   choose omega             from a power-iteration estimate of rho(T_J)
+step 3   run the solver           Jacobi / Gauss-Seidel / SOR / ILU-Krylov, unmodified
 ```
 
-**Result, on 927 matrices:**
+Step 1 runs four objectives in competition and keeps whichever gives the smallest
+estimated `rho(T_GS)`:
 
-| | |
-|---|---|
-| systems solved, as given → after reordering | 317 → **516** (199 rescued, 0 lost) |
-| beats MC64 on the ratio it targets | **367 – 0**, 506 ties |
-| net gain over MC64 in systems solved | **+2** (4 gained, 2 lost) |
-| matrices made diagonally dominant by permutation | **0** (43 already were) |
+```
+none        change nothing            the control, and the guarantee we cannot lose
+mc64        max prod |a_ii|           the established tool (Duff & Koster)
+minsum      min sum log(1 + ratio)    proved here to be MC64 under another name
+bottleneck  min max row ratio         ours
+```
 
-The method does what it is designed to do, one-sidedly. It does not convert that into
-more solved systems, and the threshold where its guarantee would bite is unreachable on
-real matrices. **Both halves are in scope and both are reported.**
+Row permutation is the only lever available, and that is proved rather than assumed: row
+scaling leaves `T_J` algebraically identical, column scaling is a similarity transform,
+and symmetric permutation moves `rho(T_GS)` only in the fifth decimal on real matrices.
 
-A second, smaller result: **min-sum is MC64 algebraically**, since
-`Σ log(1+ratio) = Σ log(rowsum) − Σ log|a_ii|` and the first term is
-permutation-independent. Verified 193/193. The portfolio has two distinct objectives,
-not the three it was described as having.
+### What is ours, precisely
 
----
+* **The pipeline itself** — the two preprocessing steps, the portfolio, the selector, and
+  the evaluation of all of it on a full corpus. MC64 is a component it uses, the way any
+  numerical code uses BLAS; the pipeline is not a reimplementation of MC64.
+* **The bottleneck objective** — minimising the worst row ratio rather than maximising
+  the product of the diagonal. It beats MC64 on the quantity it targets **367-0** with
+  506 ties, and it is solved exactly: verified against brute force on every permutation
+  of matrices small enough to enumerate, 400/400.
+* **The diagnosis of the ILU hole** — 166 matrices on which no incomplete factorization
+  can be built, which takes the entire preconditioned family down at once. Step 1 makes
+  150 of them constructible.
+* **min-sum is MC64** — `sum log(1 + ratio) = sum log(rowsum) - sum log|a_ii|`, and the
+  first term does not depend on the permutation. Verified 193/193.
+
+### Honest limits, stated with the result
+
+* Against MC64 alone the portfolio is worth **+2** systems. The reordering *idea* carries
+  the 199; the new objective is a small part of it. What the bottleneck objective wins
+  outright is the ratio it optimises, not the count.
+* Choosing omega adaptively (step 2) recovers **8 of the ~20 systems** where the
+  relaxation factor decides the outcome at all. Young's formula assumes consistent
+  ordering, which most of this corpus does not have.
+* Reordering cannot manufacture diagonal dominance: 43 matrices already have it, and no
+  permutation brings a single further matrix under the threshold.
 
 ## 8. Out of scope
 
