@@ -259,17 +259,20 @@ def fig_dispatch_ablation(res):
     counts = [(res[(res.method == m) & (res.status == "solved")].shape[0]) for m in have]
     colours = [C1 if m != "ILU-Krylov (dispatched)" else C2 for m in have]
 
-    fig, ax = plt.subplots(figsize=(6.6, 3.2))
+    applicable = int(res[res.method == have[0]].status.isin(APPLICABLE).sum())
+    fig, ax = plt.subplots(figsize=(6.8, 3.6))
     bars = ax.bar(range(len(have)), counts, width=0.6, color=colours)
+    ax.set_ylim(0, max(counts) * 1.18)      # headroom so the labels clear the legend
     for b, c in zip(bars, counts):
         ax.text(b.get_x() + b.get_width() / 2, c, f"{c}", ha="center", va="bottom",
                 fontsize=9, color=INK2)
     ax.set_xticks(range(len(have)), [m.replace("ILU-", "ILU-\n") for m in have], fontsize=8.5)
-    ax.set_ylabel("matrices solved")
+    ax.set_ylabel(f"matrices solved  (of {applicable} applicable)")
     ax.set_title("The dispatch rule against always running one Krylov method", loc="left", pad=12)
+    # Below the axes: inside, it sat on top of the tallest bar's value label.
     ax.legend(handles=[Patch(color=C2, label="dispatched (the rule proposed as novel)"),
                        Patch(color=C1, label="fixed choice, no dispatch")],
-              loc="upper left")
+              loc="upper center", bbox_to_anchor=(0.5, -0.18), ncols=2)
     _hide_grid_x(ax); ax.grid(axis="x", visible=False); ax.grid(axis="y", visible=True)
     save(fig, "06_dispatch_ablation",
          "If the dispatched bar matches always-BiCGSTAB, the dispatch rule adds "
