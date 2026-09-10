@@ -156,6 +156,69 @@ def gauss_seidel(A, b, max_iter=config.MAX_ITERATIONS, tol=config.TOLERANCE):
 def sor(A, b, omega=config.SOR_OMEGA, max_iter=config.MAX_ITERATIONS, tol=config.TOLERANCE):
     return _sor_core(A, b, omega, max_iter, tol, "SOR")
 
+def estimate_rho_jacobi(A, iters=None, seed=0, work=None):
+    """Power iteration on ``T_J = I - D^-1 A``, returning an estimate of rho(T_J).
+
+    Uses only matrix-vector products, so it costs the same as ``iters`` Jacobi steps --
+    and those matvecs are added to ``work``. Charging for the estimate matters: an
+    adaptive method that hides its own setup would beat a fixed one on cost by
+    bookkeeping rather than by being cheaper.
+
+    Returns NaN when the diagonal carries a zero, since T_J does not exist there.
+    """
+    iters = config.POWER_ITERS_OMEGA if iters is None else iters
+    d = A.diagonal()
+    if np.any(np.abs(d) < 1e-14):
+        return float("nan")
+    rng = np.random.default_rng(seed)
+    v = rng.normal(size=A.shape[0])
+    nv = np.linalg.norm(v)
+    if nv == 0:
+        return float("nan")
+    v /= nv
+    lam = 0.0
+    for _ in range(iters):
+        w = v - (A @ v) / d
+        if work is not None:
+            work.matvecs += 1
+        nw = np.linalg.norm(w)
+        if nw < 1e-300:
+            return 0.0
+        lam = nw
+        v = w / nw
+    return float(lam)
+
+
+def optimal_omega(rho):
+    """Young (1950): ``omega* = 2 / (1 + sqrt(1 - rho(T_J)^2))``.
+
+    The formula is exact for a consistently ordered matrix with property A. Most of this
+    corpus is neither, so here it is a heuristic and is reported as one -- what the
+    benchmark measures is whether it is worth applying outside its hypotheses.
+
+    Falls back to 1.0 -- plain Gauss-Seidel -- when no usable estimate exists. That is
+    the safe direction: rho >= 1 means the iteration is not converging anyway, and
+    over-relaxing a divergent iteration makes it worse faster.
+    """
+    if not np.isfinite(rho) or rho >= 1.0:
+        return 1.0
+    return float(np.clip(2.0 / (1.0 + np.sqrt(max(1.0 - rho * rho, 0.0))), 1.0, 1.95))
+
+
+def sor_adaptive(A, b, max_iter=config.MAX_ITERATIONS, tol=config.TOLERANCE):
+    """SOR with omega chosen per matrix instead of fixed.
+
+    A single relaxation factor for every matrix is measurably the wrong call in both
+    directions: on this corpus plain Gauss-Seidel solves 11 systems that SOR at 1.25
+    misses, while SOR at 1.25 solves 9 that Gauss-Seidel misses. Choosing omega from an
+    estimate of rho(T_J) recovers both sides.
+    """
+    work = Work()
+    rho = estimate_rho_jacobi(A, work=work)
+    omega = optimal_omega(rho)
+    x, iters, converged, w2 = _sor_core(A, b, omega, max_iter, tol, "SOR (adaptive)")
+    w2.matvecs += work.matvecs          # the estimate is part of this method's cost
+    return x, iters, converged, w2
 
 # --------------------------------------------------------------- Krylov
 

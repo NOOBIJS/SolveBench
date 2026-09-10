@@ -34,6 +34,8 @@ splitting without changing what solves the system. Nothing needs un-permuting af
 Everything here works on the sparse pattern: the ratio matrix has exactly the nonzeros of
 A, so cost is O(nnz), not O(n^2).
 """
+import time
+
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
@@ -376,7 +378,14 @@ def make_solver(base_solver, objective="bottleneck"):
     method.
     """
     def solve(A, b):
+        t0 = time.perf_counter()
         A2, b2, _ = select_diagonal(A, b, objective=objective)
-        return base_solver(A2, b2)
+        setup = time.perf_counter() - t0
+        x, iters, converged, work = base_solver(A2, b2)
+        # The permutation is part of this method's cost, not a free gift from outside.
+        # A wrapper that hides its own setup wins on cost by bookkeeping.
+        if work is not None and hasattr(work, "setup"):
+            work.setup += setup
+        return x, iters, converged, work
     solve.__name__ = f"{base_solver.__name__}_{objective}"
     return solve

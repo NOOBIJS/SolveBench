@@ -24,6 +24,7 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
 from . import config, direct_solvers as direct, iterative_solvers as it
+from . import reordering
 from . import metrics, reference_solvers as ref, spectral
 from .direct_solvers import SolverNotApplicable
 from .io_utils import (cancellation_ratio, discover_matrices, load_matrix,
@@ -80,6 +81,45 @@ METHODS = [
     Method("ILU-Krylov (dispatched)", ref.ilu_krylov_dispatched, "preconditioned"),
 ]
 
+#: The proposed pipeline, and the arms needed to attribute its effect.
+#:
+#: Two preprocessing steps sit in front of unmodified solvers:
+#:
+#:   1. choose the diagonal by assignment  -- makes D invertible, and makes an
+#:      incomplete factorization constructible, on matrices where neither was true
+#:   2. choose omega from an estimate of rho(T_J) -- replaces the fixed 1.25
+#:
+#: Both are measured separately as well as together, because "the pipeline helps" is
+#: not a result: which step helps, and by how much, is. Baselines for every row here
+#: already exist in the main sweep, so this list is run on its own rather than by
+#: repeating all sixteen methods.
+#:
+#: Step 1 is not offered to the direct or unpreconditioned-Krylov families: they never
+#: divide by a diagonal entry, so a row permutation changes their arithmetic without
+#: addressing anything they were failing on.
+PIPELINE_METHODS = [
+    # step 2 alone -- isolates the relaxation factor from the reordering
+    Method("SOR (adaptive w)", it.sor_adaptive, "pipeline"),
+
+    # step 1 alone, on the methods that need a usable diagonal to exist at all
+    Method("Jacobi + reordered", reordering.make_solver(it.jacobi, "best"), "pipeline"),
+    Method("Gauss-Seidel + reordered",
+           reordering.make_solver(it.gauss_seidel, "best"), "pipeline"),
+    Method("SOR + reordered", reordering.make_solver(it.sor, "best"), "pipeline"),
+
+    # both steps
+    Method("SOR + pipeline", reordering.make_solver(it.sor_adaptive, "best"), "pipeline"),
+
+    # step 1 in front of the preconditioned family: ILU fails to build on 166 matrices
+    # and a zero on the diagonal is what closes its last fallback
+    Method("ILU-BiCGSTAB + reordered",
+           reordering.make_solver(ref.ilu_bicgstab, "best"), "pipeline"),
+    Method("ILU-Krylov + reordered",
+           reordering.make_solver(ref.ilu_krylov_dispatched, "best"), "pipeline"),
+]
+
+PIPELINE_NAMES = [m.name for m in PIPELINE_METHODS]
+
 METHOD_NAMES = [m.name for m in METHODS]
 
 
@@ -111,14 +151,21 @@ def _row(base, method, passes, **extra):
 
 
 def run_one_matrix(domain, name, mtx_path, refinement_passes=(0, 1),
-                   with_spectral=True, seed=None, verbose=True):
-    """Benchmark every method on one matrix. Returns (result_rows, spectral_row)."""
+                   with_spectral=True, seed=None, verbose=True, methods=None):
+    """Benchmark a set of methods on one matrix. Returns (result_rows, spectral_row).
+
+    ``methods`` defaults to the sixteen baseline methods. Passing ``PIPELINE_METHODS``
+    runs the proposed pipeline instead, on the same corpus and through the same scoring,
+    so the two are directly comparable without repeating the baselines that are already
+    measured.
+    """
+    methods = METHODS if methods is None else methods
     try:
         A = load_matrix(mtx_path)
     except Exception as e:
         base = {"domain": domain, "matrix": name, "n": np.nan, "nnz": np.nan}
         rows = [_row(base, m, p, **metrics.blank("load_failed", f"{type(e).__name__}: {e}"))
-                for m in METHODS for p in refinement_passes]
+                for m in methods for p in refinement_passes]
         return rows, {"domain": domain, "matrix": name, "status": "load_failed"}
 
     n = A.shape[0]
@@ -132,7 +179,7 @@ def run_one_matrix(domain, name, mtx_path, refinement_passes=(0, 1),
                   " -- no unique solution, all methods skipped")
         note = f"{zero_rows} zero rows, {zero_cols} zero cols"
         rows = [_row(base, m, p, **metrics.blank(metrics.STATUS_SINGULAR, note))
-                for m in METHODS for p in refinement_passes]
+                for m in methods for p in refinement_passes]
         return rows, {**base, "status": metrics.STATUS_SINGULAR}
 
     x_true, b = make_ground_truth(A, seed=seed)
@@ -150,7 +197,7 @@ def run_one_matrix(domain, name, mtx_path, refinement_passes=(0, 1),
         print(f"    n={n:,} nnz={A.nnz:,} cond={cond:.2e} ({cond_how})")
 
     rows = []
-    for m in METHODS:
+    for m in methods:
         operand = A_dense if m.dense else A
         for passes in refinement_passes:
             if m.capped and n > config.DIRECT_SIZE_CAP:

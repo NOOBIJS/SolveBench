@@ -583,7 +583,91 @@ REORDERING_PROBE = (REORDERING.replace("__PROBE_N__", "200")
                               .replace("__WITH_SPECTRA__", "False"))
 
 
+PIPELINE = '''T0 = time.perf_counter()
+import pandas as pd
+
+# Only the pipeline arm runs here. Every baseline it is compared against was measured
+# in the main sweep, on this same corpus and through this same scoring, so repeating
+# the sixteen would cost hours and add nothing.
+rows = []
+results_csv = OUT_DIR / "tables" / "pipeline_results.csv"
+order = sorted(MATRICES, key=lambda e: e["path"].stat().st_size)
+TIME_BUDGET_H = 11.0
+
+print("=" * 78)
+print("PIPELINE ARM -- convergence-oriented preprocessing")
+print("=" * 78)
+print(f"  matrices        : {len(order)}")
+print(f"  methods         : {len(benchmark.PIPELINE_METHODS)}")
+for _m in benchmark.PIPELINE_METHODS:
+    print(f"      {_m.name}")
+print(f"  iteration cap   : {config.MAX_ITERATIONS:,}   tolerance {config.TOLERANCE:g}")
+print(f"  refinement      : off, as in the main sweep")
+print(f"  budget          : {TIME_BUDGET_H} h  (Kaggle cancels at 12 h)")
+print(f"  checkpoint      : {results_csv.name} after every matrix")
+print("=" * 78, flush=True)
+
+for i, entry in enumerate(order, 1):
+    elapsed = (time.perf_counter() - T0) / 60
+    eta = (len(order) - i) / max(i / max(elapsed, 1e-9), 1e-9)
+    print(f"[{i:>4}/{len(order)}] {100.0 * i / len(order):5.1f}%  {entry['name']:<24}"
+          f" | {elapsed / 60:5.2f}h elapsed | ETA {eta / 60:5.2f}h", flush=True)
+    r, _ = benchmark.run_one_matrix(entry["domain"], entry["name"], entry["path"],
+                                    refinement_passes=(0,), with_spectral=False,
+                                    verbose=True,
+                                    methods=benchmark.PIPELINE_METHODS)
+    rows.extend(r)
+    pd.DataFrame(rows).to_csv(results_csv, index=False)
+
+    if i % 25 == 0 or i == len(order):
+        d = pd.DataFrame(rows)
+        got = int((d.status == metrics.STATUS_SOLVED).sum())
+        spent = (time.perf_counter() - T0) / 3600
+        print(f"    ---- after {i}/{len(order)}: {got:,} solved rows"
+              f" | {spent:.2f}h spent, {spent / max(i, 1) * len(order):.2f}h projected",
+              flush=True)
+
+    if (time.perf_counter() - T0) / 3600 > TIME_BUDGET_H:
+        print(f"\\n*** BUDGET {TIME_BUDGET_H} h REACHED at matrix {i}"
+              f"/{len(order)} ({entry['name']}). Stopping cleanly; {len(rows):,} rows "
+              f"written. ***", flush=True)
+        break
+
+results = pd.DataFrame(rows)
+print(f"\\nrows {len(results):,}  matrices {results['matrix'].nunique()}")'''
+
+PIPELINE_SUMMARY = '''APP = metrics.APPLICABLE_STATUSES
+summary = (results.groupby("method")
+           .agg(corpus=("status", "size"),
+                applicable=("status", lambda s: s.isin(APP).sum()),
+                solved=("status", lambda s: (s == metrics.STATUS_SOLVED).sum()))
+           .reset_index())
+summary["applicability"] = 100 * summary.applicable / summary.corpus
+summary["conditional_success"] = 100 * summary.solved / summary.applicable.clip(lower=1)
+summary.to_csv(OUT_DIR / "tables" / "pipeline_summary.csv", index=False)
+
+print("Applicability and conditional success stay separate columns here for the same")
+print("reason as everywhere else: multiplying them is what reported CG at 10.4%.")
+print(summary.to_string(index=False))
+
+print("\\nThe comparison against the sixteen baselines is made locally, against the")
+print("main sweep's own results -- both arms ran the same corpus through the same")
+print("scoring, so the rows line up on (matrix, status) without any adjustment.")'''
+
+
 NOTEBOOKS = {
+    "solvebench-pipeline": {
+        "title": "SolveBench Pipeline",
+        "intro": ("# SolveBench -- Pipeline Arm" + chr(92) + "n" + chr(92) + "n"
+                  "Two preprocessing steps in front of unmodified solvers: choose the "
+                  "diagonal by assignment, then choose omega from an estimate of "
+                  "rho(T_J)." + chr(92) + "n" + chr(92) + "n"
+                  "Each step is also run alone, because *which* step helps is the "
+                  "result -- 'the pipeline helps' is not. Baselines come from the main "
+                  "sweep and are not repeated here."),
+        "body": [PIPELINE, PIPELINE_SUMMARY],
+        "tables": ["pipeline_results.csv", "pipeline_summary.csv"],
+    },
     "solvebench-main-sweep": {
         "title": "SolveBench Main Sweep",
         "intro": ("# SolveBench -- Main Sweep\\n\\n"

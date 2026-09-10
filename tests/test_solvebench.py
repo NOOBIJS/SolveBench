@@ -15,7 +15,7 @@ import pytest
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
-from solvebench import benchmark, direct_solvers as direct, io_utils
+from solvebench import benchmark, config, direct_solvers as direct, io_utils
 from solvebench import iterative_solvers as it, metrics, reference_solvers as ref, spectral
 from solvebench.direct_solvers import SolverNotApplicable
 from solvebench.refinement import refine
@@ -453,3 +453,72 @@ def test_minsum_is_mc64_under_another_name():
         assert np.isclose(np.log(d1).sum(), np.log(d2).sum(), rtol=1e-9), \
             "min-sum reached a different MC64 objective value"
     assert compared > 20, "test lost its coverage"
+
+
+def test_optimal_omega_is_young_formula_and_degrades_safely():
+    """Young (1950): omega* = 2/(1+sqrt(1-rho^2)), and 1.0 whenever that is unusable.
+
+    The fallback direction matters. rho >= 1 means the iteration is not converging, and
+    over-relaxing a divergent iteration diverges it faster -- so the safe default is
+    plain Gauss-Seidel, never a larger omega.
+    """
+    assert it.optimal_omega(0.0) == pytest.approx(1.0)
+    assert it.optimal_omega(0.5) == pytest.approx(2 / (1 + np.sqrt(0.75)))
+    assert it.optimal_omega(0.99) > 1.7
+    for bad in (1.0, 1.5, np.nan, np.inf):
+        assert it.optimal_omega(bad) == 1.0, f"omega must fall back to 1 for rho={bad}"
+    assert 1.0 <= it.optimal_omega(0.999999) <= 1.95
+
+
+def test_adaptive_sor_charges_for_its_own_estimate():
+    """The power iteration that picks omega is part of the method's cost.
+
+    An adaptive method that does not count its setup beats a fixed one on the cost
+    metric by bookkeeping rather than by being cheaper, which is exactly the kind of
+    unfair comparison this harness exists to prevent.
+    """
+    n = 60
+    A = sp.diags([np.full(n, 4.0), np.full(n - 1, -1.0), np.full(n - 1, -1.0)],
+                 [0, 1, -1], format="csr")
+    b = A @ np.ones(n)
+    x, iters, converged, work = it.sor_adaptive(A, b)
+    assert converged
+    assert np.linalg.norm(A @ x - b) / np.linalg.norm(b) <= 1e-8
+    assert work.matvecs >= config.POWER_ITERS_OMEGA + iters, \
+        "the omega estimate's matvecs are missing from the tally"
+
+
+def test_estimate_rho_jacobi_is_nan_without_a_diagonal():
+    A = sp.csr_matrix(np.array([[0.0, 2.0], [1.0, 4.0]]))
+    assert np.isnan(it.estimate_rho_jacobi(A))
+
+
+def test_pipeline_methods_keep_the_solver_contract():
+    """Every pipeline entry returns the same 4-tuple, solves the ORIGINAL system, and
+    charges for its own preprocessing.
+
+    Two matrices are needed. Only the entries carrying step 1 can be asked to cope with
+    a scrambled diagonal -- "SOR (adaptive w)" is the ablation arm with no reordering,
+    so on a deliberately scrambled diagonal it is *supposed* to fail, and requiring
+    otherwise would be testing the wrong thing.
+    """
+    from solvebench import benchmark
+
+    rng = np.random.default_rng(11)
+    n = 30
+    base = rng.normal(size=(n, n)) * 0.08
+    base[np.arange(n), np.arange(n)] = 3.0 + rng.random(n)
+    good = sp.csr_matrix(base)                       # dominant, rows in order
+    scrambled = sp.csr_matrix(base[rng.permutation(n), :])   # same entries, wrong order
+
+    assert benchmark.PIPELINE_METHODS, "no pipeline methods registered"
+    for m in benchmark.PIPELINE_METHODS:
+        reorders = "reordered" in m.name or "pipeline" in m.name
+        A = scrambled if reorders else good
+        b = A @ np.ones(n)
+        x, iters, converged, work = m.fn(A, b)
+        assert x.shape == (n,), f"{m.name} returned the wrong shape"
+        # x must solve the system as handed in, not the permuted one the method built
+        assert np.linalg.norm(A @ x - b) / np.linalg.norm(b) < 1e-6,             f"{m.name} did not solve the original system"
+        if reorders:
+            assert work.setup > 0, f"{m.name} did not charge for its permutation"

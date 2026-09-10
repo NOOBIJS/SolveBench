@@ -11,6 +11,11 @@ MAX_ITERATIONS = 10_000     # cap before a stationary/Krylov method is called no
 TOLERANCE = 1e-8            # relative residual an iterative method is asked to reach
 SOR_OMEGA = 1.25            # fixed relaxation factor (1.0 would reduce SOR to Gauss-Seidel)
 
+# Power iterations spent estimating rho(T_J) before choosing omega adaptively.
+# 60 is enough for the two-digit accuracy the omega formula needs, and it is
+# charged to the method as 60 matvecs -- about 0.6% of the iteration cap.
+POWER_ITERS_OMEGA = 60
+
 # A run whose residual climbs past this multiple of its own best is abandoned early:
 # it is diverging, and letting it burn the full iteration cap teaches us nothing.
 # 2,022,191 of the iterations in the first sweep were spent this way.
