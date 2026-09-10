@@ -464,23 +464,49 @@ def fig_refinement(study):
     ok = study[study.status == "solved"]
     if ok.empty:
         return
-    piv = ok.pivot_table(index="method", columns="refinement_passes",
+    err = ok.pivot_table(index="method", columns="refinement_passes",
                          values="error_rel", aggfunc="median").dropna(how="all")
-    if piv.empty:
+    cost = ok.pivot_table(index="method", columns="refinement_passes",
+                          values="matvecs", aggfunc="median").reindex(err.index)
+    if err.empty:
         return
-    cols = sorted(piv.columns)
-    fig, ax = plt.subplots(figsize=(9, 0.44 * len(piv) + 2.0))
-    y = np.arange(len(piv))
-    w = 0.26
-    for i, (c, colour) in enumerate(zip(cols, [C1, C2, C3])):
-        ax.barh(y + (i - (len(cols) - 1) / 2) * w, piv[c].values, height=w * 0.92,
-                color=colour, label=f"{c} refinement pass{'es' if c != 1 else ''}")
-    ax.set_xscale("log")
-    ax.set_yticks(y, piv.index, fontsize=8.5)
-    ax.set_xlabel("median relative forward error")
-    ax.set_title("Refinement applied to every method, on equal terms", loc="left", pad=12)
-    ax.legend(loc="lower right")
-    _hide_grid_x(ax)
+
+    # Dots, not bars. A bar encodes its value by length measured from zero, and a log
+    # axis has no zero -- so the bars' lengths were set by wherever the axis happened to
+    # be cut, not by the numbers. Position reads correctly on a log scale; length does
+    # not. The two panels put the trade-off side by side: refinement buys accuracy and
+    # is paid for in work.
+    cols = sorted(err.columns)
+    order = err[cols[1]].sort_values(ascending=False).index if len(cols) > 1 else err.index
+    err, cost = err.reindex(order), cost.reindex(order)
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 0.40 * len(err) + 2.2), sharey=True)
+    y = np.arange(len(err))
+    for ax, table, xlabel in ((axes[0], err, "median relative forward error"),
+                              (axes[1], cost, "median matrix-vector products")):
+        for yi, row in zip(y, table.itertuples(index=False)):
+            vals = [v for v in row if np.isfinite(v) and v > 0]
+            if len(vals) > 1:
+                ax.plot([min(vals), max(vals)], [yi, yi], color=GRID, lw=1.4, zorder=1,
+                        solid_capstyle="round")
+        for c, colour in zip(cols, [C1, C2, C3]):
+            v = table[c] if c in table else None
+            if v is None:
+                continue
+            m = np.isfinite(v) & (v > 0)
+            ax.scatter(v[m], y[m.values], s=44, color=colour, zorder=3,
+                       edgecolors=SURFACE, linewidths=1.4,
+                       label=f"{c} pass{'es' if c != 1 else ''}")
+        ax.set_xscale("log")
+        ax.set_xlabel(xlabel)
+        ax.grid(axis="y", visible=False)
+    axes[0].set_yticks(y, err.index, fontsize=8.5)
+    axes[0].invert_xaxis()          # better to the right in both panels
+    axes[0].set_title("accuracy  (further right is better)", fontsize=9, color=INK2, loc="left")
+    axes[1].set_title("cost  (further left is better)", fontsize=9, color=INK2, loc="left")
+    fig.suptitle("Refinement applied to every method, on equal terms",
+                 x=0.02, ha="left", fontsize=11, color=INK)
+    axes[1].legend(loc="upper center", bbox_to_anchor=(-0.05, -0.09), ncols=3)
     save(fig, "10_refinement_effect",
          "In the first sweep only one method received refinement, and that is "
          "where its accuracy advantage came from.")
