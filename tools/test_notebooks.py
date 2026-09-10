@@ -10,6 +10,7 @@ fails to parse or references a name that no longer exists fails the test.
 
     python tools/test_notebooks.py [n_matrices]
 """
+import ast
 import json
 import sys
 import traceback
@@ -17,6 +18,31 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 NB_DIR = ROOT / "kaggle_upload"
+
+
+def check_grammar(path, version=(3, 12)):
+    """Parse every cell against an older Python grammar before running it.
+
+    The local interpreter may be newer than Kaggle's, so syntax that only exists here
+    executes fine locally and is a SyntaxError there. Running the cells cannot catch
+    that; only parsing against the target version can.
+
+    Kaggle reported python 3.12.13 in results_v2/.../run_metadata.json -- that measured
+    value is the version pinned here, not a guess. Re-check it after any image update.
+    """
+    nb = json.loads(path.read_text(encoding="utf-8"))
+    for i, cell in enumerate(nb["cells"]):
+        if cell["cell_type"] != "code":
+            continue
+        src = "".join(cell["source"])
+        try:
+            ast.parse(src, feature_version=version)
+        except SyntaxError as e:
+            print(f"\n  {path.name} cell {i}: needs a newer Python than "
+                  f"{version[0]}.{version[1]}")
+            print(f"    line {e.lineno}: {e.msg}")
+            return False
+    return True
 
 
 def run_notebook(path, n_matrices):
@@ -51,7 +77,7 @@ def main():
     results = {}
     for path in notebooks:
         print(f"\n{'=' * 70}\n{path.name}\n{'=' * 70}")
-        results[path.name] = run_notebook(path, n)
+        results[path.name] = check_grammar(path) and run_notebook(path, n)
 
     print(f"\n{'=' * 70}")
     for name, ok in results.items():

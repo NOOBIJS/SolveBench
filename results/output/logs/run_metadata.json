@@ -1,5 +1,5 @@
 {
-  "started": "2026-09-10T13:18:27.714015",
+  "started": "2026-09-10T13:54:13.784274",
   "on_kaggle": false,
   "python": "3.12.5",
   "numpy": "2.4.6",
@@ -7,8 +7,8 @@
   "pandas": "2.2.3",
   "cpu_count": 12,
   "platform": "Windows-11-10.0.26200-SP0",
-  "finished": "2026-09-10T13:18:31.826570",
-  "runtime_minutes": 0.06835740500000612,
+  "finished": "2026-09-10T13:54:16.686456",
+  "runtime_minutes": 0.04787768833333151,
   "notebook": "solvebench-spectral",
   "config": {
     "COND_EXACT_CAP": 2000,

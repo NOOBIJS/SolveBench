@@ -324,6 +324,28 @@ STATIONARY = {"Jacobi": solvebench.iterative_solvers.jacobi,
 PROBE_N = __PROBE_N__
 WITH_EXACT_SPECTRA = __WITH_SPECTRA__
 
+_SHORT = {"solved": "ok", "not_applicable": "n/a", "diverged": "div",
+          "inaccurate": "bad", "error": "err"}
+
+
+def _outcome(r):
+    """One compact token per method, e.g. ``Jac:ok(37)`` or ``SOR:cap(10000)``.
+
+    ``cap`` and ``stop`` are both did_not_converge but mean opposite things: cap ran the
+    full iteration budget and was still going, stop was abandoned early by the
+    divergence guard. Collapsing them hides which one happened.
+    """
+    name = str(r.get("method", "?"))[:3]
+    it = r.get("iterations")
+    shown = int(it) if isinstance(it, (int, float)) and it == it else "-"
+    status = str(r.get("status"))
+    if status == "did_not_converge":
+        tag = "cap" if shown != "-" and shown >= config.MAX_ITERATIONS else "stop"
+    else:
+        tag = _SHORT.get(status, status[:3])
+    return "{}:{}({})".format(name, tag, shown)
+
+
 rows = []
 csv = OUT_DIR / "tables" / "reordering_study.csv"
 order = sorted(MATRICES, key=lambda e: e["path"].stat().st_size)
@@ -340,6 +362,26 @@ if PROBE_N and PROBE_N < len(order):
         picked += [bucket[j] for j in rng.choice(len(bucket), size=take, replace=False)]
     order = sorted(picked, key=lambda e: e["path"].stat().st_size)
     print(f"probe: {len(order)} matrices sampled across 10 size deciles (seed 20260910)")
+
+# Kaggle kills a session at 12 hours without warning. Stop cleanly before that, write
+# the results, and say so -- a run that reports "budget reached at matrix 812" is worth
+# far more than one that simply vanishes. The previous attempt was cancelled at the
+# limit and only survived because Kaggle happened to publish the checkpoint.
+TIME_BUDGET_H = 11.0
+_total_nnz = sum(e["path"].stat().st_size for e in order)
+
+print("=" * 78)
+print("REORDERING STUDY -- convergence-oriented diagonal selection")
+print("=" * 78)
+print(f"  matrices          : {len(order)}")
+print(f"  conditions        : {', '.join(CONDITIONS)}")
+print(f"  methods           : {', '.join(STATIONARY)}")
+print(f"  iteration cap     : {config.MAX_ITERATIONS:,}   tolerance {config.TOLERANCE:g}")
+print(f"  exact spectra     : {'yes, n <= %d' % config.SPECTRAL_EXACT_CAP if WITH_EXACT_SPECTRA else 'no'}")
+print(f"  wall-clock budget : {TIME_BUDGET_H} h  (Kaggle cancels at 12 h)")
+print(f"  expected runtime  : 3.5-4.5 h typical, 9 h worst case")
+print(f"  checkpoint        : {csv.name} rewritten after every matrix")
+print("=" * 78, flush=True)
 
 for i, entry in enumerate(order, 1):
     base = {"domain": entry["domain"], "matrix": entry["name"]}
@@ -368,8 +410,10 @@ for i, entry in enumerate(order, 1):
     elapsed = (time.perf_counter() - T0) / 60
     rate = i / max(elapsed, 1e-9)
     eta = (len(order) - i) / rate if rate > 0 else float("nan")
-    print(f"[{i}/{len(order)}] {entry['name']:<22} n={n:<6} nnz={A.nnz:<9} "
-          f"| {elapsed:6.1f} min elapsed, ETA {eta:6.1f} min", flush=True)
+    print(f"[{i:>4}/{len(order)}] {100.0 * i / len(order):5.1f}%  {entry['name']:<24} "
+          f"n={n:<6} nnz={A.nnz:<9} | {elapsed / 60:5.2f}h elapsed"
+          f" | ETA {eta / 60:5.2f}h | projected total {(elapsed + eta) / 60:5.2f}h",
+          flush=True)
 
     for cond in CONDITIONS:
         print(f"    {cond:<6} ...", flush=True, end="")
@@ -425,14 +469,36 @@ for i, entry in enumerate(order, 1):
                 row.update(metrics.blank(metrics.STATUS_ERROR, f"{type(e).__name__}: {e}"))
             rows.append(row)
 
-        solved = sum(1 for r in rows[-len(STATIONARY):]
-                     if r.get("status") == metrics.STATUS_SOLVED)
-        chosen = info.get("chosen", cond)
-        print(f" {solved}/3 solved, setup {setup:5.2f}s, "
-              f"{time.perf_counter() - t0:6.2f}s total"
-              + (f", chose {chosen}" if cond == "best" else ""), flush=True)
+        made = rows[-len(STATIONARY):]
+        solved = sum(1 for r in made if r.get("status") == metrics.STATUS_SOLVED)
+        detail = " ".join(_outcome(r) for r in made)
+        wr = info.get("worst_ratio_after", info.get("worst_ratio_before", float("nan")))
+        print(f" {solved}/{len(STATIONARY)} solved | {detail} | perm {setup:6.2f}s"
+              f" | total {time.perf_counter() - t0:7.2f}s"
+              f" | ratio {wr:.3g}" + (f" | chose {info.get('chosen', cond)}"
+                                      if cond == "best" else ""), flush=True)
 
     pd.DataFrame(rows).to_csv(csv, index=False)
+
+    # A standing scoreboard every 25 matrices: the log should answer "is it working?"
+    # without waiting for the end, and "will it finish?" without doing arithmetic.
+    if i % 25 == 0 or i == len(order):
+        d = pd.DataFrame(rows)
+        if "condition" in d and "status" in d:
+            tally = {c: int((d[(d.condition == c)].status == metrics.STATUS_SOLVED).sum())
+                     for c in CONDITIONS if (d.condition == c).any()}
+            spent = (time.perf_counter() - T0) / 3600
+            print(f"    ---- after {i}/{len(order)}: solved "
+                  + ", ".join(f"{c}={v}" for c, v in tally.items())
+                  + f" | {spent:.2f}h spent, {spent / max(i, 1) * len(order):.2f}h projected"
+                  + f" | {len(d):,} rows", flush=True)
+
+    # Kaggle cancels at 12 h with no warning. Stop first, and say where we stopped.
+    if (time.perf_counter() - T0) / 3600 > TIME_BUDGET_H:
+        print(f"\\n*** WALL-CLOCK BUDGET {TIME_BUDGET_H} h REACHED at matrix {i}"
+              f"/{len(order)} ({entry['name']}). Stopping cleanly; "
+              f"{len(rows):,} rows written to {csv.name}. ***", flush=True)
+        break
 
 study = pd.DataFrame(rows)
 print(f"\\nrows {len(study):,}")'''
