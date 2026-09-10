@@ -1,7 +1,7 @@
 # SolveBench — Results
 
 **Living document.** Every number here was measured, not estimated, and each is traceable
-to a table under `results_v2/tables/`. Updated as work progresses.
+to a table under `results/tables/`. Updated as work progresses.
 
 Last updated: **2026-09-10** · corpus **927 unique matrices, 26 domains**, n = 5 … 10,000
 (930 files downloaded; see §0.1 for the three duplicates and the split domain)
@@ -278,7 +278,7 @@ recovered, none lost.** Everything below is the evidence for that, and the limit
 
 
 Run completed 2026-09-10 on Kaggle: **927 matrices, 3 conditions, 3 methods, 114.7
-minutes**. `results_v2/tables/reordering_study.csv`.
+minutes**. `results/tables/reordering_study.csv`.
 
 ### What cannot work (proved, then confirmed)
 
