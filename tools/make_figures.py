@@ -311,24 +311,53 @@ def fig_dispatch_ablation(res):
 def fig_spectral(spec):
     """Where the spectral radii actually fall, against the rho = 1 threshold."""
     ok = spec[spec.get("status") == "analysed"] if "status" in spec else spec
-    fig, axes = plt.subplots(1, 2, figsize=(9.4, 3.6), sharey=True)
-    for ax, col, name, colour in ((axes[0], "rho_jacobi", "Jacobi", C1),
-                                  (axes[1], "rho_gauss_seidel", "Gauss-Seidel", C2)):
-        v = pd.to_numeric(ok.get(col), errors="coerce").dropna()
-        v = v[np.isfinite(v) & (v > 0)]
-        if v.empty:
+
+    # A cumulative distribution rather than a histogram. rho(T_GS) reaches 1e77 on the
+    # worst systems, and binning across eighty decades collapses everything into a
+    # single spike. An ECDF lets the extreme tail simply flatten out, and the height
+    # where each curve crosses rho = 1 reads directly as the fraction that converges.
+    fig, ax = plt.subplots(figsize=(7.6, 4.2))
+    notes = []
+    for col, name, colour in (("rho_jacobi", "Jacobi", C1),
+                              ("rho_gauss_seidel", "Gauss-Seidel", C2)):
+        raw = pd.to_numeric(ok.get(col), errors="coerce")
+        undefined = int(raw.isna().sum())        # zero diagonal: T does not exist
+        finite = raw[np.isfinite(raw)].sort_values()
+        if finite.empty:
             continue
-        ax.hist(v, bins=np.logspace(np.log10(max(v.min(), 1e-6)),
-                                    np.log10(max(v.max(), 1.1)), 45),
-                color=colour, edgecolor=SURFACE, linewidth=0.5)
-        ax.axvline(1.0, color="#d03b3b", linewidth=1.4)
-        ax.set_xscale("log")
-        ax.set_title(f"{name}:  {(v < 1).sum()} of {len(v)} below 1", fontsize=9.5,
-                     color=INK2, loc="left")
-        ax.set_xlabel(r"spectral radius $\rho(T)$")
-    axes[0].set_ylabel("matrices")
-    axes[0].text(1.05, axes[0].get_ylim()[1] * 0.95, r" $\rho=1$", fontsize=8,
-                 color="#d03b3b", va="top")
+        below = int((finite < 1).sum())
+        # rho == 0 means a nilpotent iteration matrix: the exact answer in one step.
+        # Those cannot sit on a log axis, so the curve starts at their share.
+        exact = int((finite == 0).sum())
+        v = finite[finite > 0]
+        y = (np.arange(len(v)) + 1 + exact) / len(finite)
+        ax.step(v, y, where="post", color=colour, lw=2,
+                label=f"{name}   {below} of {len(finite)} below 1  ({below/len(finite):.0%})")
+        ax.plot([v.iloc[0]], [(exact + 1) / len(finite)], "o", color=colour, ms=5,
+                markeredgecolor=SURFACE, markeredgewidth=1.2)
+        notes.append(f"{name}: {undefined} undefined (zero diagonal)"
+                     + (f", {exact} with $\\rho=0$" if exact else ""))
+
+    ax.axvline(1.0, color="#d03b3b", lw=1.4)
+    ax.text(1.15, 0.03, r"$\rho=1$", color="#d03b3b", fontsize=8.5)
+    ax.set_xscale("log")
+    ax.set_xlim(1e-4, 1e4)
+    ax.set_ylim(0, 1.02)
+    ax.yaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
+    # Say what the clipped window hides rather than letting the curve run off.
+    for col, name, colour, dy in (("rho_jacobi", "Jacobi", C1, 0.0),
+                                  ("rho_gauss_seidel", "Gauss-Seidel", C2, 0.06)):
+        raw = pd.to_numeric(ok.get(col), errors="coerce")
+        f = raw[np.isfinite(raw)]
+        beyond = int((f > 1e4).sum())
+        if beyond:
+            ax.text(0.985, 0.30 - dy, f"{beyond} {name} systems beyond $10^4$",
+                    transform=ax.transAxes, ha="right", fontsize=7.5, color=colour)
+    ax.set_xlabel(r"spectral radius $\rho(T)$")
+    ax.set_ylabel("share of systems with $\\rho$ at or below x")
+    ax.legend(loc="upper left")
+    ax.text(0.02, -0.20, "   ·   ".join(notes), transform=ax.transAxes,
+            fontsize=7.5, color=MUTED, va="top")
     fig.suptitle("Convergence is decided by whether rho falls left of 1",
                  x=0.02, ha="left", fontsize=11, color=INK)
     save(fig, "07_spectral_radius",
