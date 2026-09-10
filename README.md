@@ -33,6 +33,9 @@ numbers found defects serious enough to invalidate several headline results:
 - no sparse direct solver (`spsolve`/SuperLU) or GMRES was ever run as a
   baseline.
 
+Where things stand, what was decided and what is still open:
+[`PROJECT_STATE.md`](PROJECT_STATE.md).
+Every measured number, with its denominator: [`RESULTS.md`](RESULTS.md).
 Findings and the fix plan: [`Publication_Analysis_Bangla.md`](Publication_Analysis_Bangla.md)
 (Bangla, English technical terms).
 
