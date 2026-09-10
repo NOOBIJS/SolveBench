@@ -64,6 +64,11 @@ plt.rcParams.update({
     "font.size": 9, "axes.titlesize": 11, "legend.fontsize": 8,
 })
 
+#: Statuses meaning "the method was defined here and we let it try". Every rate in
+#: every figure divides by this, never by the corpus -- dividing by the corpus is the
+#: error that reported Conjugate Gradient at 10.4% when it solves 84% of what it can.
+APPLICABLE = ["solved", "inaccurate", "did_not_converge", "diverged"]
+
 FIGURES = []
 
 
@@ -92,8 +97,7 @@ def fig_scoreboard(res):
     rows = []
     for m in order:
         sub = res[res.method == m]
-        applicable = sub.status.isin(["solved", "inaccurate", "did_not_converge",
-                                      "diverged"]).sum()
+        applicable = sub.status.isin(APPLICABLE).sum()
         solved = (sub.status == "solved").sum()
         rows.append((m, applicable / len(sub) if len(sub) else np.nan,
                      solved / applicable if applicable else np.nan, applicable, solved))
@@ -165,7 +169,7 @@ def fig_outcomes(res):
 
 def fig_domain_heatmap(res):
     """Conditional success per domain and method. One hue, light to dark."""
-    app = res.status.isin(["solved", "inaccurate", "did_not_converge", "diverged"])
+    app = res.status.isin(APPLICABLE)
     g = (res.assign(_app=app, _ok=res.status == "solved")
            .groupby(["domain", "method"])[["_app", "_ok"]].sum())
     rate = (g["_ok"] / g["_app"].replace(0, np.nan)).unstack()
@@ -328,25 +332,40 @@ def fig_prediction(res, spec):
         return
     rows = []
     for meth, col in (("Jacobi", "jacobi_verdict"), ("Gauss-Seidel", "gs_verdict")):
-        obs = (res[(res.method == meth)].set_index("matrix").status == "solved")
+        sub = res[res.method == meth].set_index("matrix")
+        # Same restriction as the base-paper figure: a method that was never defined
+        # on a matrix has no observation there, and counting it as "did not solve"
+        # would blame the solver for a system it was never given.
+        sub = sub[sub.status.isin(APPLICABLE)]
+        obs = sub.status == "solved"
         pred = spec.set_index("matrix")[col]
         joined = pd.concat([pred.rename("pred"), obs.rename("obs")], axis=1).dropna()
         for verdict in ("converges", "too_slow", "diverges"):
             s = joined[joined.pred == verdict]
             if len(s):
-                rows.append((meth, verdict, s.obs.sum(), (~s.obs).sum()))
+                # astype(bool) matters. pd.concat widens a boolean column to int, and
+                # "~" is then bitwise negation rather than logical: ~1 == -2. Without
+                # this the "not solved" bars were negative, reaching -300.
+                solved = int(s.obs.astype(bool).sum())
+                rows.append((meth, verdict, solved, len(s) - solved))
     if not rows:
         return
     d = pd.DataFrame(rows, columns=["method", "verdict", "solved", "not_solved"])
 
-    fig, ax = plt.subplots(figsize=(7.6, 3.4))
+    fig, ax = plt.subplots(figsize=(8.2, 3.9))
     x = np.arange(len(d))
-    ax.bar(x - 0.19, d.solved, width=0.36, color=C1, label="observed: solved")
-    ax.bar(x + 0.19, d.not_solved, width=0.36, color=C2, label="observed: not solved")
+    groups = [ax.bar(x - 0.19, d.solved, width=0.36, color=C1, label="observed: solved"),
+              ax.bar(x + 0.19, d.not_solved, width=0.36, color=C2, label="observed: not solved")]
+    ax.set_ylim(0, max(d.solved.max(), d.not_solved.max()) * 1.22)
+    for bars in groups:
+        for bar in bars:
+            h = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width() / 2, h, f"{int(h)}",
+                    ha="center", va="bottom", fontsize=7.5, color=INK2)
     ax.set_xticks(x, [f"{m}\n{v}" for m, v in zip(d.method, d.verdict)], fontsize=8)
-    ax.set_ylabel("matrices")
+    ax.set_ylabel("matrices  (where the method is defined)")
     ax.set_title("Predicted verdict against observed outcome", loc="left", pad=12)
-    ax.legend(loc="upper right")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncols=2)
     ax.grid(axis="x", visible=False)
     save(fig, "09_prediction_vs_observation",
          "'too_slow' is the case the textbook criterion cannot express: rho < 1, so "
@@ -382,9 +401,14 @@ def fig_refinement(study):
 
 def fig_base_paper_test(res, spec):
     """The base paper's own question, asked of real matrices."""
-    j = res[res.method == "Jacobi"].set_index("matrix").status == "solved"
-    g = res[res.method == "Gauss-Seidel"].set_index("matrix").status == "solved"
-    d = pd.concat([j.rename("J"), g.rename("G")], axis=1).dropna()
+    jac = res[res.method == "Jacobi"].set_index("matrix")
+    gs = res[res.method == "Gauss-Seidel"].set_index("matrix")
+    # Restrict to systems where BOTH methods are actually defined. Comparing on the
+    # whole corpus instead puts the 491 systems with a zero diagonal into "neither
+    # converges", which is the very denominator error this project is about.
+    applicable = jac.status.isin(APPLICABLE) & gs.status.isin(APPLICABLE)
+    d = pd.concat([(jac.status == "solved").rename("J"),
+                   (gs.status == "solved").rename("G")], axis=1)[applicable].dropna()
     if d.empty:
         return
     counts = [int((d.J & d.G).sum()), int((~d.J & d.G).sum()),
@@ -392,16 +416,22 @@ def fig_base_paper_test(res, spec):
     labels = ["both\nconverge", "only\nGauss-Seidel", "only\nJacobi", "neither"]
     colours = [C1, C1, C2, C1]
 
-    fig, ax = plt.subplots(figsize=(6.4, 3.4))
+    fig, ax = plt.subplots(figsize=(6.6, 3.8))
     bars = ax.bar(range(4), counts, width=0.6, color=colours)
+    ax.set_ylim(0, max(counts) * 1.22)          # headroom so labels clear the top
     for b, c in zip(bars, counts):
         ax.text(b.get_x() + b.get_width() / 2, c, f"{c}", ha="center", va="bottom",
                 fontsize=9.5, color=INK2)
+    # The "only Jacobi" bar is zero, so a legend swatch for it would explain a colour
+    # nothing on the chart shows -- and it collided with the tallest bar's value.
+    # Annotate the empty column directly instead.
+    ax.annotate("Stein-Rosenberg (1948)\nforbids this for M-matrices",
+                xy=(2, 0), xytext=(2, max(counts) * 0.42), ha="center", fontsize=7.5,
+                color=C2, arrowprops=dict(arrowstyle="-", color=C2, lw=1.0,
+                                          shrinkA=2, shrinkB=16))
     ax.set_xticks(range(4), labels, fontsize=8.5)
-    ax.set_ylabel(f"matrices  (n={len(d)} where both are applicable)")
+    ax.set_ylabel(f"matrices  (n={len(d)} where both are defined)")
     ax.set_title("The base paper's comparison, re-run on real matrices", loc="left", pad=12)
-    ax.legend(handles=[Patch(color=C2, label="the case Stein-Rosenberg forbids for M-matrices")],
-              loc="upper right")
     ax.grid(axis="x", visible=False)
     save(fig, "11_jacobi_vs_gauss_seidel",
          "The denominator is matrices where both methods are defined, not the "
