@@ -176,20 +176,27 @@ Row permutation is the only lever available, and that is proved rather than assu
 scaling leaves `T_J` algebraically identical, column scaling is a similarity transform,
 and symmetric permutation moves `rho(T_GS)` only in the fifth decimal on real matrices.
 
-### What is ours, precisely
+### What is ours
 
-* **The pipeline itself** — the two preprocessing steps, the portfolio, the selector, and
-  the evaluation of all of it on a full corpus. MC64 is a component it uses, the way any
-  numerical code uses BLAS; the pipeline is not a reimplementation of MC64.
-* **The bottleneck objective** — minimising the worst row ratio rather than maximising
-  the product of the diagonal. It beats MC64 on the quantity it targets **367-0** with
-  506 ties, and it is solved exactly: verified against brute force on every permutation
-  of matrices small enough to enumerate, 400/400.
-* **The diagnosis of the ILU hole** — 166 matrices on which no incomplete factorization
-  can be built, which takes the entire preconditioned family down at once. Step 1 makes
-  150 of them constructible.
-* **min-sum is MC64** — `sum log(1 + ratio) = sum log(rowsum) - sum log|a_ii|`, and the
-  first term does not depend on the permutation. Verified 193/193.
+**1. The pipeline** — the two preprocessing steps, the portfolio of competing objectives,
+the selector, and the evaluation of all of it on a full corpus. MC64 is a component it
+uses, the way any numerical code uses BLAS.
+
+**2. The diagnosis of the ILU hole** — 166 matrices on which no incomplete factorization
+can be built, which takes the entire preconditioned family down at once: BiCGSTAB solves
+12 of them, GMRES 11, Gauss-Seidel 0, against sparse direct's 148. The cause is that
+`build_ilu` falls back to diagonal scaling, which a zero on the diagonal closes off.
+Step 1 makes **150 of the 166 constructible** and 17 solve outright.
+
+**3. The bottleneck objective** — minimising the worst row ratio rather than maximising
+the product of the diagonal. It beats MC64 on the quantity it targets **367-0** with 506
+ties, and it is solved exactly, verified against brute force over every permutation of
+matrices small enough to enumerate, 400/400.
+
+Row permutation is the only lever available, and that is proved rather than assumed: row
+scaling leaves `T_J` algebraically identical, column scaling is a similarity transform,
+and symmetric permutation moves `rho(T_GS)` only in the fifth decimal on real matrices.
+That is what keeps the method principled rather than an arbitrary heuristic.
 
 ### Where the detail lives
 
