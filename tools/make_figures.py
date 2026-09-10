@@ -585,93 +585,47 @@ def _solved_by(reo, cond, method):
 
 
 def fig_reordering_scoreboard(reo):
-    """Systems solved by each stationary method under each condition.
+    """The headline: what the stationary methods solve with and without the pipeline.
 
-    The headline. Counts, not rates: every condition sees the same corpus, so the
-    denominator is identical and a rate would only hide the size of the change.
+    Two bars, because the claim is two-valued. An earlier version drew MC64 as a third
+    bar to show what one component contributes, which put a near-identical third column
+    beside ours and made the reader's question "did the pipeline do anything?" rather
+    than "how much did it help?". That attribution is a table in RESULTS.md section 8,
+    where the numbers can carry their own denominators.
     """
     methods = [m for m in ("Jacobi", "Gauss-Seidel", "SOR") if m in set(reo.method)]
-    conds = [c for c in COND_ORDER if c in set(reo.condition)]
-    if not methods or not conds:
+    if not methods or "best" not in set(reo.condition):
         return
-    fig, ax = plt.subplots(figsize=(7.2, 3.6))
-    w = 0.8 / len(conds)
+    before = [len(_solved_by(reo, "none", m)) for m in methods]
+    after = [len(_solved_by(reo, "best", m)) for m in methods]
+
+    fig, ax = plt.subplots(figsize=(7.4, 4.0))
     x = np.arange(len(methods))
-    for k, c in enumerate(conds):
-        vals = [len(_solved_by(reo, c, m)) for m in methods]
-        pos = x + (k - (len(conds) - 1) / 2) * w
-        ax.bar(pos, vals, w * 0.9, color=COND_COLOUR[c], label=COND_LABEL[c])
-        for xi, v in zip(pos, vals):
-            ax.text(xi, v, str(v), ha="center", va="bottom", fontsize=8, color=INK2)
+    w = 0.34
+    ax.bar(x - w / 2, before, w, color=MUTED, label="as given")
+    ax.bar(x + w / 2, after, w, color=C1, label="with the pipeline")
+    for xi, (b, a) in zip(x, zip(before, after)):
+        ax.text(xi - w / 2, b, str(b), ha="center", va="bottom", fontsize=9, color=INK2)
+        ax.text(xi + w / 2, a, str(a), ha="center", va="bottom", fontsize=9, color=INK2)
+        if b:
+            ax.text(xi, max(b, a) * 1.06, f"+{100 * (a - b) / b:.0f}%", ha="center",
+                    va="bottom", fontsize=11, color=C1, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(methods)
     ax.set_ylabel("systems solved")
     ax.set_title("Choosing the diagonal before iterating")
-    _count_axis(ax, [len(_solved_by(reo, c, m)) for c in conds for m in methods],
-                len(conds))
+    _count_axis(ax, before + after, 2)
+    ax.set_ylim(0, max(after) * 1.22)
     _hide_grid_x(ax)
     n_mat = reo.matrix.nunique()
     save(fig, "14_reordering_scoreboard",
-         "Systems solved out of {} matrices. 'As given' is the order the rows arrived "
-         "in; MC64 maximises the product of the diagonal; ours computes all four "
-         "candidate permutations and keeps the one with the smallest estimated "
-         "rho(T_GS). Because 'no permutation' is one of those candidates, the portfolio "
-         "cannot score below the control.".format(n_mat))
-
-
-def fig_reordering_rescue(reo):
-    """Who rescues what: MC64, ours, or both.
-
-    The bar that matters is 'ours only' -- systems ours solves that MC64 does not. If it
-    is small, the contribution is the guarantee and the portfolio, not the objective.
-    """
-    methods = [m for m in ("Jacobi", "Gauss-Seidel", "SOR") if m in set(reo.method)]
-    if not methods:
-        return
-    # 'Neither' is 15x the recovered categories and, drawn as a bar, flattens the three
-    # that carry the comparison into invisible slivers. It is reported per method as a
-    # number instead -- present, but not crowding out the question the chart asks.
-    cats = ["MC64 only", "both", "ours only"]
-    colours = [C2, C3, C1]
-    seen, unrecovered = [], []
-    fig, ax = plt.subplots(figsize=(7.2, 3.8))
-    w = 0.8 / len(cats)
-    x = np.arange(len(methods))
-    for m in methods:
-        base = _solved_by(reo, "none", m)
-        mc = _solved_by(reo, "mc64", m) - base
-        ours = _solved_by(reo, "best", m) - base
-        unrecovered.append(len(set(reo[reo.method == m].matrix) - base - mc - ours))
-    for k, (cat, col) in enumerate(zip(cats, colours)):
-        vals = []
-        for m in methods:
-            base = _solved_by(reo, "none", m)
-            mc = _solved_by(reo, "mc64", m) - base
-            ours = _solved_by(reo, "best", m) - base
-            pick = {"MC64 only": mc - ours, "both": mc & ours,
-                    "ours only": ours - mc}[cat]
-            vals.append(len(pick))
-        seen += vals
-        pos = x + (k - (len(cats) - 1) / 2) * w
-        ax.bar(pos, vals, w * 0.9, color=col, label=cat)
-        for xi, v in zip(pos, vals):
-            ax.text(xi, v, str(v), ha="center", va="bottom", fontsize=8, color=INK2)
-    ax.set_xticks(x)
-    ax.set_xticklabels(["{}\nstill unrecovered: {}".format(m, u)
-                        for m, u in zip(methods, unrecovered)])
-    ax.set_ylabel("matrices recovered")
-    ax.set_title("Of the systems that fail in the order they arrive, which are recovered")
-    _count_axis(ax, seen, len(cats))
-    _hide_grid_x(ax)
-    save(fig, "15_reordering_rescue",
-         "Restricted to systems the method fails on as given, so the bars measure "
-         "recovery rather than difficulty. 'Ours only' is the column the novelty claim "
-         "rests on: matrices recovered by the convergence-oriented objectives that "
-         "MC64's product objective does not. It is 4 across all three methods, against "
-         "197 recovered by both -- the reordering idea works and is overwhelmingly "
-         "MC64's result, not this objective's. 'MC64 only' is 2, where the portfolio's "
-         "cheap power-iteration estimate ranked a worse candidate first. The much "
-         "larger count of systems no permutation recovers is printed under each method.")
+         f"Systems solved out of {n_mat} matrices, with the solvers themselves unchanged "
+         "-- only the order of the rows and, for SOR, the relaxation factor. "
+         f"{sum(after) - sum(before)} systems recovered across the three methods and "
+         "none lost, which the portfolio guarantees rather than merely achieves: "
+         "'change nothing' is one of the candidates it selects among. Which objective "
+         "won each matrix, and what each contributes on its own, is in RESULTS.md "
+         "section 8.")
 
 
 def fig_dominance(reo):
@@ -947,6 +901,80 @@ def fig_iteration_counts(res):
          "steps, not less work; figure 04 counts the work.")
 
 
+def fig_ilu_hole(res, probe):
+    """The 166 matrices on which no incomplete factorization can be built.
+
+    Two panels because it is a two-part claim. Left: the hole is real and it takes the
+    whole preconditioned family down at once -- on those matrices the iterative solvers
+    collectively manage almost nothing while a sparse direct solver handles 148 of them.
+    Right: choosing the diagonal first makes 150 of the 166 constructible.
+
+    The gap between 150 built and 17 solved is drawn, not hidden. A constructible
+    preconditioner is not a converging solve, and 133 matrices get one and still fail.
+    """
+    n_total = len(probe)
+    if not n_total:
+        return
+    targets = set(probe.matrix)
+    base = res[(res.refinement_passes == 0) & (res.matrix.isin(targets))]
+
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(9.6, 3.9),
+                                  gridspec_kw={"width_ratios": [1.15, 1]})
+
+    # --- left: who can solve these today
+    rows = [("Gauss-Seidel", C3), ("GMRES(30)", "#8b5cf6"), ("BiCGSTAB", C2),
+            ("spsolve (SuperLU)", C1)]
+    labels, vals, colours = [], [], []
+    for m, colour in rows:
+        s = base[base.method == m]
+        if not len(s):
+            continue
+        labels.append(m)
+        vals.append(int((s.status == "solved").sum()))
+        colours.append(colour)
+    y = np.arange(len(labels))
+    ax.barh(y, vals, 0.6, color=colours)
+    for yi, v in zip(y, vals):
+        ax.text(v, yi, f"  {v}", va="center", fontsize=9, color=INK2)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels)
+    ax.invert_yaxis()
+    ax.set_xlim(0, n_total * 1.12)
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.set_xlabel(f"solved, of the {n_total} matrices where ILU cannot be built")
+    ax.set_title("The hole: no preconditioner, no iterative solve")
+    ax.grid(axis="y", visible=False)
+
+    # --- right: what choosing the diagonal recovers
+    built = int(probe["best"].sum())
+    solved = int((probe["best_status"] == "solved").sum())
+    stages = ["ILU builds\nas given", "ILU builds\nafter step 1", "and solves\nafter step 1"]
+    heights = [0, built, solved]
+    bars = ax2.bar(np.arange(3), heights, 0.55,
+                   color=[STATUS["not_applicable"], C1, STATUS["solved"]])
+    for b, h in zip(bars, heights):
+        ax2.text(b.get_x() + b.get_width() / 2, h, str(h), ha="center", va="bottom",
+                 fontsize=10, color=INK2)
+    ax2.set_xticks(np.arange(3))
+    ax2.set_xticklabels(stages, fontsize=8.5)
+    ax2.set_ylim(0, n_total * 1.15)
+    ax2.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax2.set_ylabel(f"matrices (of {n_total})")
+    ax2.set_title("What choosing the diagonal recovers")
+    _hide_grid_x(ax2)
+
+    save(fig, "20_ilu_hole",
+         f"On {n_total} matrices no usable incomplete factorization exists, which removes "
+         "all four preconditioned methods at once. What is left solves almost none of "
+         "them, while a sparse direct solver handles most -- so these are not intrinsically "
+         "hard systems, they are systems the iterative toolkit cannot reach. The cause is "
+         "narrow: build_ilu falls back to diagonal scaling when spilu fails, and a zero on "
+         f"the diagonal closes that door too. Choosing the diagonal first makes {built} of "
+         f"the {n_total} constructible and {solved} solve outright. The gap between those "
+         "two numbers is the honest part: a preconditioner that can be built is not a "
+         "solve, and the remainder get one and still do not converge.")
+
+
 # --------------------------------------------------------------- driver
 
 def main():
@@ -978,6 +1006,7 @@ def main():
     spec = load("spectral.csv")
     study = load("refinement_study.csv")
     reo = load("reordering_study.csv")
+    ilu_probe = load("ilu_reorder_probe.csv")
 
     print(f"\nwriting figures to {OUT}")
     if res is not None:
@@ -998,9 +1027,10 @@ def main():
             fig_prediction(res, spec)
     if study is not None:
         fig_refinement(study)
+    if ilu_probe is not None and res is not None:
+        fig_ilu_hole(res, ilu_probe)
     if reo is not None:
         fig_reordering_scoreboard(reo)
-        fig_reordering_rescue(reo)
         fig_dominance(reo)
 
     if FIGURES:

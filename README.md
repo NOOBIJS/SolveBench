@@ -22,8 +22,8 @@ diagonal before the solver runs:
 
 | method | as given | with the pipeline | |
 |---|---|---|---|
-| Jacobi | 75 | **124** | +65% |
-| Gauss-Seidel | 121 | **208** | +72% |
+| Jacobi | 76 | **124** | +63% |
+| Gauss-Seidel | 122 | **208** | +70% |
 | SOR | 119 | **184** | +55% |
 
 199 systems recovered, none lost. The solvers themselves are unmodified: the pipeline

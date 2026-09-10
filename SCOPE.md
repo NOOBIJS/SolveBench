@@ -142,9 +142,14 @@ solvers by 55-72%, measured across 927 real sparse matrices.**
 
 | method | as given | with the pipeline | |
 |---|---|---|---|
-| Jacobi | 75 | **124** | **+65%** |
-| Gauss-Seidel | 121 | **208** | **+72%** |
+| Jacobi | 76 | **124** | **+63%** |
+| Gauss-Seidel | 122 | **208** | **+70%** |
 | SOR | 119 | **184** | **+55%** |
+
+Both columns come from the *same* run. The main sweep's baseline for these methods is
+one or two systems lower, because the divergence guard was raised from 1e4 to 1e12
+between the two, and pairing a stricter "before" with a looser "after" would inflate the
+gain for free.
 
 199 systems recovered. **None lost** — the pipeline cannot score below the control,
 because "change nothing" is one of the candidates it chooses among.
