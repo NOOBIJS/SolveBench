@@ -33,7 +33,12 @@ MODULES = ["config", "metrics", "direct_solvers", "iterative_solvers",
            "reference_solvers", "refinement", "io_utils", "spectral",
            "reordering", "benchmark", "__init__"]
 
+#: The corpus. Owned by the account that first uploaded it and now public, so kernels
+#: under either account can attach it without a second 985 MB copy.
 DATASET = "mdmarufhasanrubab/solvebench-matrices-large"
+
+#: Account the generated kernels belong to.
+KAGGLE_USER = "ijsasif"
 
 
 # --------------------------------------------------------------------- cells
@@ -354,9 +359,20 @@ for i, entry in enumerate(order, 1):
     x_true, b = io_utils.make_ground_truth(A)
     bn = np.linalg.norm(b) or 1.0
     xn = np.linalg.norm(x_true) or 1.0
-    line = f"[{i}/{len(order)}] {entry['name']:<22} n={n:<6}"
+
+    # Progress is printed BEFORE the work, and again after each condition. The previous
+    # run printed one line per matrix only once all three conditions were done, so when
+    # it stalled inside a permutation the log simply stopped -- twelve hours of silence
+    # and no way to tell which matrix or which step was responsible. Announcing the
+    # matrix first means the last line in the log always names whatever is stuck.
+    elapsed = (time.perf_counter() - T0) / 60
+    rate = i / max(elapsed, 1e-9)
+    eta = (len(order) - i) / rate if rate > 0 else float("nan")
+    print(f"[{i}/{len(order)}] {entry['name']:<22} n={n:<6} nnz={A.nnz:<9} "
+          f"| {elapsed:6.1f} min elapsed, ETA {eta:6.1f} min", flush=True)
 
     for cond in CONDITIONS:
+        print(f"    {cond:<6} ...", flush=True, end="")
         t0 = time.perf_counter()
         try:
             A2, b2, info = reordering.select_diagonal(A, b, objective=cond)
@@ -400,9 +416,11 @@ for i, entry in enumerate(order, 1):
 
         solved = sum(1 for r in rows[-len(STATIONARY):]
                      if r.get("status") == metrics.STATUS_SOLVED)
-        line += f"  {cond}:{solved}/3"
+        chosen = info.get("chosen", cond)
+        print(f" {solved}/3 solved, setup {setup:5.2f}s, "
+              f"{time.perf_counter() - t0:6.2f}s total"
+              + (f", chose {chosen}" if cond == "best" else ""), flush=True)
 
-    print(line + f"   ({(time.perf_counter() - T0) / 60:.1f} min)", flush=True)
     pd.DataFrame(rows).to_csv(csv, index=False)
 
 study = pd.DataFrame(rows)
@@ -553,7 +571,7 @@ def build(name, spec):
     nb_path.write_text(json.dumps(nb, indent=1), encoding="utf-8")
 
     meta = {
-        "id": f"mdmarufhasanrubab/{name}",
+        "id": f"{KAGGLE_USER}/{name}",
         "title": spec["title"],
         "code_file": f"{name}.ipynb",
         "language": "python",

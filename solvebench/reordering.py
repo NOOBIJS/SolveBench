@@ -36,6 +36,7 @@ A, so cost is O(nnz), not O(n^2).
 """
 import numpy as np
 import scipy.sparse as sp
+from scipy.optimize import linear_sum_assignment
 from scipy.sparse.csgraph import maximum_bipartite_matching, min_weight_full_bipartite_matching
 
 OBJECTIVES = ("bottleneck", "minsum", "mc64", "best", "none")
@@ -46,6 +47,12 @@ OBJECTIVES = ("bottleneck", "minsum", "mc64", "best", "none")
 #: MC64's 1.83. Since each permutation costs milliseconds, the honest method computes
 #: all of them and picks by direct spectral estimate.
 PORTFOLIO = ("none", "mc64", "minsum", "bottleneck")
+
+#: Both assignment objectives are solved densely up to this size, which needs an n x n
+#: array: 200 MB and about two seconds here, against 800 MB at n = 10,000. Above it,
+#: MC64 falls back to the sparse routine and min-sum is not offered at all, so the
+#: portfolio simply chooses among fewer candidates. 130 of 927 matrices are affected.
+DENSE_ASSIGNMENT_CAP = 5000
 
 
 def row_ratios(A):
@@ -140,24 +147,48 @@ def minsum_permutation(A):
     whereas min-sum trades the worst row away to improve the average. Which is better is
     an open question this benchmark is meant to answer.
     """
-    R = row_ratios(A).tocsr()
+    n = A.shape[0]
+    if n > DENSE_ASSIGNMENT_CAP:
+        return None, np.inf          # see DENSE_ASSIGNMENT_CAP; the portfolio copes
+
+    R = row_ratios(A)
     if R.nnz == 0:
         return None, np.inf
 
-    # Minimise sum(log(1 + ratio)), i.e. the PRODUCT of (1 + ratio), not the raw sum.
-    # Two reasons, and both matter. Statistically, a raw sum is dominated by whichever
-    # single row has the largest ratio -- on nnc261 the ratios span 0 to 3.8e10 -- so
-    # "min-sum" would barely differ from the bottleneck objective it is supposed to
-    # contrast with. Numerically, min_weight_full_bipartite_matching runs a shortest-path
-    # augmentation that degrades badly over that dynamic range: on nnc261 it had not
-    # returned after 240 seconds with raw ratios, and finishes immediately under log.
-    R.data = np.log1p(R.data) + 1e-300
-    try:
-        rows, cols = min_weight_full_bipartite_matching(R)
-    except ValueError:
-        return None, np.inf          # no perfect matching exists
-    order = np.argsort(rows)
-    return _perm_from_matching(cols[order], A.shape[0]), float(R[rows, cols].sum())
+    # Minimise sum(log(1 + ratio)), i.e. the PRODUCT of (1 + ratio) rather than the raw
+    # sum. A raw sum is dominated by whichever single row has the largest ratio -- on
+    # nnc261 those span 0 to 3.8e10 -- which would make "min-sum" nearly the bottleneck
+    # objective it exists to contrast with.
+    mask = abs(A).toarray() > 0
+    return _dense_assignment(np.log1p(R.toarray()), mask, n)
+
+
+def _dense_assignment(weights, mask, n):
+    """Solve a minimum-cost perfect assignment densely.
+
+    ``weights`` holds the cost of every real edge and ``mask`` says which entries are
+    real. Absent edges get a penalty larger than any complete assignment of real ones, so
+    a chosen penalty edge means no perfect matching exists over the real entries.
+
+    Dense rather than ``min_weight_full_bipartite_matching`` because that routine is not
+    dependable here. It hung outright on nnc261 under raw ratios and on west0067 -- 67x67,
+    294 nonzeros -- under a log transform, and merely crawled elsewhere: 9.7 seconds on
+    oscil_dcop_23 at n = 430, which the dense solver finishes in 6 milliseconds, a factor
+    of 1,600. One of those hangs cost a twelve-hour Kaggle session that completed 30
+    matrices of 930. A hang cannot be interrupted from Python, so the fix has to be
+    avoiding the routine rather than detecting the hang.
+    """
+    W = np.full((n, n), np.inf)
+    W[mask] = weights[mask]
+    finite = W[np.isfinite(W)]
+    if finite.size == 0:
+        return None, np.inf
+    penalty = (finite.max() + 1.0) * n + 1.0
+    W[~np.isfinite(W)] = penalty
+    rows, cols = linear_sum_assignment(W)
+    if np.any(W[rows, cols] >= penalty):
+        return None, np.inf          # no perfect matching over the real entries
+    return _perm_from_matching(cols[np.argsort(rows)], n), float(W[rows, cols].sum())
 
 
 def mc64_permutation(A):
@@ -167,19 +198,29 @@ def mc64_permutation(A):
     pivot stability rather than for convergence, and it is the comparison the method has
     to beat.
     """
+    n = A.shape[0]
     M = abs(A).tocsr().astype(np.float64)
     if M.nnz == 0:
         return None, np.inf
-    C = M.copy()
+
+    if n <= DENSE_ASSIGNMENT_CAP:
+        d = M.toarray()
+        mask = d > 0
+        with np.errstate(divide="ignore"):
+            C = -np.log(d, out=np.full_like(d, -np.inf), where=mask)
+        C[mask] -= C[mask].min() - 1.0          # strictly positive weights
+        return _dense_assignment(C, mask, n)
+
+    C = M.copy()                                # past the cap the dense array is too big
     with np.errstate(divide="ignore"):
         C.data = -np.log(M.data)
-    C.data = C.data - C.data.min() + 1e-300     # keep weights positive and finite
+    C.data = C.data - C.data.min() + 1.0
     try:
         rows, cols = min_weight_full_bipartite_matching(C)
     except ValueError:
         return None, np.inf
     order = np.argsort(rows)
-    return _perm_from_matching(cols[order], A.shape[0]), float(C[rows, cols].sum())
+    return _perm_from_matching(cols[order], n), float(C[rows, cols].sum())
 
 
 def apply_permutation(A, b, p):

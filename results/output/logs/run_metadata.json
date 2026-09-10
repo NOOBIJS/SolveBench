@@ -1,5 +1,5 @@
 {
-  "started": "2026-09-10T05:44:07.204544",
+  "started": "2026-09-10T11:44:55.358136",
   "on_kaggle": false,
   "python": "3.12.5",
   "numpy": "2.4.6",
@@ -7,13 +7,13 @@
   "pandas": "2.2.3",
   "cpu_count": 12,
   "platform": "Windows-11-10.0.26200-SP0",
-  "finished": "2026-09-10T05:44:07.960992",
-  "runtime_minutes": 0.012466228333333143,
+  "finished": "2026-09-10T11:44:56.644445",
+  "runtime_minutes": 0.021229996666666768,
   "notebook": "solvebench-spectral",
   "config": {
     "COND_EXACT_CAP": 2000,
     "DIRECT_SIZE_CAP": 2000,
-    "DIVERGENCE_GROWTH": 10000.0,
+    "DIVERGENCE_GROWTH": 1000000000000.0,
     "ILL_CONDITIONED": 1000000000000000.0,
     "ILU_DROP_TOL": 0.001,
     "ILU_FILL_FACTOR": 5,

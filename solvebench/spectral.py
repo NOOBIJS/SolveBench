@@ -167,10 +167,17 @@ def convergence_verdict(rho, tol=None, budget=None):
     10,000. Reporting that as a prediction failure would be wrong, and reporting
     it as "converges" would be misleading. It is a third case.
 
-    Returns "diverges", "too_slow", or "converges".
+    A fourth case has to be kept apart from these three. When the diagonal carries a
+    zero the iteration matrix does not exist, so rho is NaN -- and "the method is
+    undefined here" is not the same statement as "it would diverge". Conflating them put
+    491 systems into the diverging column for Jacobi, which is most of that column.
+
+    Returns "not_applicable", "diverges", "too_slow", or "converges".
     """
     budget = config.MAX_ITERATIONS if budget is None else budget
-    if not np.isfinite(rho) or rho >= 1.0:
+    if rho is None or (isinstance(rho, float) and np.isnan(rho)):
+        return "not_applicable"
+    if not np.isfinite(rho) or rho >= 1.0:      # +inf is genuine divergence
         return "diverges"
     return "converges" if iterations_to_tolerance(rho, tol) <= budget else "too_slow"
 
