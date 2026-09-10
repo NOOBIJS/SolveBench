@@ -50,6 +50,9 @@ numbers found defects serious enough to invalidate several headline results:
 - no sparse direct solver (`spsolve`/SuperLU) or GMRES was ever run as a
   baseline.
 
+New to the project? Start with [`docs/GUIDE.md`](docs/GUIDE.md) — it explains the
+solver families, what every file and figure means, and how to read the results.
+
 What the project covers and what it deliberately does not:
 [`SCOPE.md`](SCOPE.md).
 Every measured number, with its denominator: [`RESULTS.md`](RESULTS.md).

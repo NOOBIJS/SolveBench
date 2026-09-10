@@ -799,7 +799,7 @@ def fig_runtime_scaling(res):
     Survivorship, drawn as a trend, and pointing the wrong way.
 
     A shared denominator removes it: only matrices all four families solve. Dense LU is
-    dropped rather than included, as in figure 12 -- it is capped at n = 2,000 by
+    dropped rather than included, as in figure 08 -- it is capped at n = 2,000 by
     construction, so including it would cut the size range to a third and reintroduce
     the same bias in another form.
     """
@@ -898,7 +898,7 @@ def fig_iteration_counts(res):
          "axis is not comparable across methods as a success rate -- n is printed in "
          "the legend for that reason. One preconditioned ILU-BiCGSTAB step does far "
          "more arithmetic than one Jacobi step, so a lower curve here means fewer "
-         "steps, not less work; figure 12 counts the work.")
+         "steps, not less work; figure 08 counts the work.")
 
 
 def fig_ilu_hole(res, probe):
