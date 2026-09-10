@@ -352,21 +352,47 @@ def fig_prediction(res, spec):
         return
     d = pd.DataFrame(rows, columns=["method", "verdict", "solved", "not_solved"])
 
-    fig, ax = plt.subplots(figsize=(8.2, 3.9))
-    x = np.arange(len(d))
-    groups = [ax.bar(x - 0.19, d.solved, width=0.36, color=C1, label="observed: solved"),
-              ax.bar(x + 0.19, d.not_solved, width=0.36, color=C2, label="observed: not solved")]
-    ax.set_ylim(0, max(d.solved.max(), d.not_solved.max()) * 1.22)
-    for bars in groups:
-        for bar in bars:
-            h = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width() / 2, h, f"{int(h)}",
-                    ha="center", va="bottom", fontsize=7.5, color=INK2)
-    ax.set_xticks(x, [f"{m}\n{v}" for m, v in zip(d.method, d.verdict)], fontsize=8)
-    ax.set_ylabel("matrices  (where the method is defined)")
-    ax.set_title("Predicted verdict against observed outcome", loc="left", pad=12)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncols=2)
-    ax.grid(axis="x", visible=False)
+    # One panel per method and a stacked bar per verdict. Side-by-side pairs were
+    # ambiguous: where one bar is near zero the pair visually breaks apart and the
+    # label stops obviously belonging to either. Stacking makes the bar height the
+    # number of matrices predicted that way, and the split inside it the outcome.
+    methods = list(dict.fromkeys(d.method))
+    fig, axes = plt.subplots(1, len(methods), figsize=(4.4 * len(methods), 4.0),
+                             sharey=True)
+    axes = np.atleast_1d(axes)
+    order = ["converges", "too_slow", "diverges"]
+    for ax, meth in zip(axes, methods):
+        sub = d[d.method == meth].set_index("verdict").reindex(order).fillna(0)
+        x = np.arange(len(order))
+        ax.bar(x, sub.solved, width=0.55, color=C1, label="observed: solved")
+        ax.bar(x, sub.not_solved, width=0.55, bottom=sub.solved, color=C2,
+               edgecolor=SURFACE, linewidth=1.2, label="observed: not solved")
+        span = d.groupby("method")[["solved", "not_solved"]].sum().sum(axis=1).max()
+        for xi, r in zip(x, sub.itertuples()):
+            total = r.solved + r.not_solved
+            for value, base, colour in ((r.solved, 0, C1),
+                                        (r.not_solved, r.solved, C2)):
+                if not value:
+                    continue
+                # A sliver cannot hold a label. Below a few percent of the axis the
+                # number goes beside the bar in the segment's own colour instead of
+                # inside it in white, where it was invisible.
+                if value < 0.045 * span:
+                    ax.text(xi + 0.31, base + value / 2, f"{int(value)}", ha="left",
+                            va="center", fontsize=7.5, color=colour)
+                else:
+                    ax.text(xi, base + value / 2, f"{int(value)}", ha="center",
+                            va="center", fontsize=8, color=SURFACE)
+            ax.text(xi, total, f"n={int(total)}", ha="center", va="bottom",
+                    fontsize=7.5, color=MUTED)
+        ax.set_xticks(x, order, fontsize=9)
+        ax.set_title(meth, fontsize=10, color=INK2, loc="left")
+        ax.grid(axis="x", visible=False)
+    axes[0].set_ylabel("matrices  (where the method is defined)")
+    axes[0].set_ylim(0, d.groupby("method")[["solved", "not_solved"]].sum().sum(axis=1).max() * 0.85)
+    fig.suptitle("Predicted verdict against observed outcome", x=0.02, ha="left",
+                 fontsize=11, color=INK)
+    axes[-1].legend(loc="upper right", fontsize=8)
     save(fig, "09_prediction_vs_observation",
          "'too_slow' is the case the textbook criterion cannot express: rho < 1, so "
          "convergence is guaranteed, but not within any usable iteration budget.")
