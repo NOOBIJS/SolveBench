@@ -628,31 +628,38 @@ def fig_reordering_rescue(reo):
     methods = [m for m in ("Jacobi", "Gauss-Seidel", "SOR") if m in set(reo.method)]
     if not methods:
         return
-    cats = ["MC64 only", "both", "ours only", "neither"]
-    colours = [C2, C3, C1, STATUS["not_applicable"]]
-    seen = []
-    fig, ax = plt.subplots(figsize=(7.2, 3.6))
+    # 'Neither' is 15x the recovered categories and, drawn as a bar, flattens the three
+    # that carry the comparison into invisible slivers. It is reported per method as a
+    # number instead -- present, but not crowding out the question the chart asks.
+    cats = ["MC64 only", "both", "ours only"]
+    colours = [C2, C3, C1]
+    seen, unrecovered = [], []
+    fig, ax = plt.subplots(figsize=(7.2, 3.8))
     w = 0.8 / len(cats)
     x = np.arange(len(methods))
+    for m in methods:
+        base = _solved_by(reo, "none", m)
+        mc = _solved_by(reo, "mc64", m) - base
+        ours = _solved_by(reo, "best", m) - base
+        unrecovered.append(len(set(reo[reo.method == m].matrix) - base - mc - ours))
     for k, (cat, col) in enumerate(zip(cats, colours)):
         vals = []
         for m in methods:
             base = _solved_by(reo, "none", m)
             mc = _solved_by(reo, "mc64", m) - base
             ours = _solved_by(reo, "best", m) - base
-            failed = set(reo[reo.method == m].matrix) - base - mc - ours
             pick = {"MC64 only": mc - ours, "both": mc & ours,
-                    "ours only": ours - mc, "neither": failed}[cat]
+                    "ours only": ours - mc}[cat]
             vals.append(len(pick))
         seen += vals
         pos = x + (k - (len(cats) - 1) / 2) * w
         ax.bar(pos, vals, w * 0.9, color=col, label=cat)
         for xi, v in zip(pos, vals):
-            if v:
-                ax.text(xi, v, str(v), ha="center", va="bottom", fontsize=8, color=INK2)
+            ax.text(xi, v, str(v), ha="center", va="bottom", fontsize=8, color=INK2)
     ax.set_xticks(x)
-    ax.set_xticklabels(methods)
-    ax.set_ylabel("matrices that fail as given")
+    ax.set_xticklabels(["{}\nstill unrecovered: {}".format(m, u)
+                        for m, u in zip(methods, unrecovered)])
+    ax.set_ylabel("matrices recovered")
     ax.set_title("Of the systems that fail in the order they arrive, which are recovered")
     _count_axis(ax, seen, len(cats))
     _hide_grid_x(ax)
@@ -660,7 +667,11 @@ def fig_reordering_rescue(reo):
          "Restricted to systems the method fails on as given, so the bars measure "
          "recovery rather than difficulty. 'Ours only' is the column the novelty claim "
          "rests on: matrices recovered by the convergence-oriented objectives that "
-         "MC64's product objective does not recover.")
+         "MC64's product objective does not. It is 4 across all three methods, against "
+         "197 recovered by both -- the reordering idea works and is overwhelmingly "
+         "MC64's result, not this objective's. 'MC64 only' is 2, where the portfolio's "
+         "cheap power-iteration estimate ranked a worse candidate first. The much "
+         "larger count of systems no permutation recovers is printed under each method.")
 
 
 def fig_dominance(reo):
@@ -687,20 +698,35 @@ def fig_dominance(reo):
         dom.append(int((v < 1).sum()))
         undef.append(int(np.isinf(v).sum()))
         tot.append(int(v.notna().sum()))
-    y = np.arange(len(labels))
-    ax.barh(y, dom, 0.62, color=[c[2] for c in cols])
-    for yi, d, t in zip(y, dom, tot):
-        ax.text(d, yi, "  {} of {}".format(d, t), va="center", fontsize=8, color=INK2)
-    ax.set_yticks(y)
-    ax.set_yticklabels(labels)
-    ax.invert_yaxis()
-    # A count axis starts at zero. Without this an all-zero column makes matplotlib
-    # centre the range on 0 and draw negative counts, which cannot exist.
-    ax.set_xlim(0, max(max(dom), 1) * 1.25)
-    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
-    ax.set_xlabel("matrices with worst row ratio < 1  (convergence guaranteed)")
-    ax.set_title("Reaching strict diagonal dominance")
-    ax.grid(axis="y", visible=False)
+
+    # Head to head on the quantity the method exists to minimise. Four bars of "43" said
+    # nothing: no matrix in the corpus can be made diagonally dominant by permutation if
+    # it is not already, so every objective ties at the threshold. The comparison that
+    # does separate them is the ratio itself, matrix by matrix.
+    a = pd.to_numeric(one.get("ratio_mc64"), errors="coerce")
+    c = pd.to_numeric(one.get("ratio_bottleneck"), errors="coerce")
+    both = np.isfinite(a) & np.isfinite(c) & (a > 0) & (c > 0)
+    a, c = a[both], c[both]
+    better, worse = int((c < a).sum()), int((c > a).sum())
+    tie = int((c == a).sum())
+    ax.scatter(a[c == a], c[c == a], s=9, color=MUTED, alpha=0.45,
+               label="identical ({})".format(tie), zorder=2)
+    ax.scatter(a[c < a], c[c < a], s=13, color=C1,
+               label="bottleneck better ({})".format(better), zorder=3)
+    if worse:
+        ax.scatter(a[c > a], c[c > a], s=13, color=STATUS["inaccurate"],
+                   label="MC64 better ({})".format(worse), zorder=4)
+    lo = float(min(a.min(), c.min())) * 0.6
+    hi = float(max(a.max(), c.max())) * 1.6
+    ax.plot([lo, hi], [lo, hi], color=AXIS, lw=1.0, zorder=1)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    ax.set_xlabel("worst row ratio under MC64")
+    ax.set_ylabel("under bottleneck (ours)")
+    ax.set_title("The quantity the method minimises")
+    ax.legend(loc="upper left", fontsize=8)
 
     # Distinct dash patterns as well as colour: where two objectives agree on every
     # matrix the curves coincide exactly, and with one style the upper one simply
@@ -732,14 +758,17 @@ def fig_dominance(reo):
 
     n_inf = max(undef) if undef else 0
     save(fig, "16_dominance",
-         "A worst row ratio below 1 IS strict diagonal dominance, so it guarantees both "
-         "Jacobi and Gauss-Seidel converge -- the one threshold in this project backed "
-         "by a theorem rather than a measurement. Bottleneck assignment minimises this "
-         "ratio exactly (verified against brute force), so it crosses the threshold "
-         "whenever any row permutation can. MC64 maximises the product of the diagonal "
-         "and carries no such statement. The right panel is drawn on finite positive "
-         "ratios only; up to {} matrices have an infinite ratio (a zero diagonal) under "
-         "some objective and appear only in the left panel's denominator.".format(n_inf))
+         "Left: the worst row ratio each objective achieves, matrix by matrix. Points "
+         "below the line are matrices where the convergence-oriented objective beats "
+         "MC64 on the quantity that governs convergence; there are none above it. This "
+         "is the method doing exactly what it is designed to do. Right: the same "
+         "quantity as a distribution. What the improvement does NOT buy is the "
+         "guarantee -- a ratio below 1 is strict diagonal dominance and forces both "
+         "Jacobi and Gauss-Seidel to converge, and 43 matrices already satisfy it while "
+         "no permutation brings a single further matrix under the threshold. The gain "
+         "is real and it lands in a regime where it does not decide convergence. "
+         "Finite positive ratios only; up to {} matrices have an infinite ratio (a zero "
+         "diagonal) under some objective.".format(n_inf))
 
 
 # --------------------------------------------------------------- driver

@@ -272,6 +272,9 @@ Other corrections:
 
 ## 8. The novel method — convergence-oriented diagonal selection
 
+Run completed 2026-09-10 on Kaggle: **927 matrices, 3 conditions, 3 methods, 114.7
+minutes**. `results_v2/tables/reordering_study.csv`.
+
 ### What cannot work (proved, then confirmed)
 
 * Row scaling: `T_J' = I − (RD)⁻¹RA = T_J`. Spectrum unchanged, **exactly**.
@@ -285,62 +288,113 @@ Other corrections:
 
 MC64 maximises the product of |diagonal| entries — built for pivot stability in *direct*
 solvers. Stationary convergence instead needs a small row ratio `Σ_{j≠i}|a_ij| / |a_ii|`.
-Choosing the permutation that minimises the **worst** such ratio is a bottleneck
-assignment: binary search on a threshold plus a bipartite matching feasibility test.
+Minimising the **worst** such ratio is a bottleneck assignment: binary search on a
+threshold plus a matching feasibility test, solved exactly.
 
-### No single objective wins — so the method chooses
+### Result 1 — choosing the diagonal works, and works large
 
-Implemented in `src/solvebench/reordering.py`, all on the sparse pattern (O(nnz), not
-O(n²)). Each permutation costs about 0.01 s even at n = 5,108.
+| condition | systems solved |
+|---|---|
+| as given | 317 |
+| MC64 | 514 |
+| ours (portfolio) | **516** |
 
-| matrix | none | mc64 | minsum | bottleneck | chosen |
-|---|---|---|---|---|---|
-| mcca | 383.3328 | 1.2013 | 1.2013 | **0.8848** | bottleneck |
-| odepa400 | 1.0001 | 1.0001 | 1.0001 | **0.4950** | bottleneck |
-| d_ss | undefined | **1.8256** | 1.8843 | 29.6052 | mc64 |
-| nnc261 | undefined | **9.4644** | 11.9567 | 9.4300 | mc64 |
-| plskz362 | undefined | 6.3305 | 6.2653 | **6.2037** | bottleneck |
-| d_dyn | undefined | **1.0036** | 1.0036 | 1.4144 | mc64 |
-| fs_541_2 | 0.9851 | 0.9851 | 0.9851 | 0.9851 | none |
+**199 systems rescued, 0 lost.** Per method: Jacobi 76 → 124, Gauss-Seidel 122 → 208,
+SOR 119 → 184. A 63% increase in what the stationary methods can solve, from reordering
+alone. The portfolio never scored below the control on any of 2,781 (matrix, method)
+pairs, as its construction requires.
 
-Bottleneck wins on `odepa400` and `plskz362`; MC64 wins on `d_ss`, `nnc261` and `d_dyn`;
-on `fs_541_2` nothing helps and the selector correctly leaves the matrix alone.
+### Result 2 — but that is MC64's win, not this objective's
 
-**So the method computes all candidates and picks by a cheap power-iteration estimate of
-ρ(T_GS).** Because "no permutation" is itself a candidate, the portfolio can never be
-worse than doing nothing, and it is at least as good as any fixed objective. Total cost:
-0.01 s.
+| | (matrix, method) pairs |
+|---|---|
+| rescued by both | 195 |
+| **rescued by ours only** | **4** |
+| rescued by MC64 only | 2 |
+| net gain over MC64 | **+2** |
 
-### A bug this found before it reached Kaggle
+The four are `iprob` (Gauss-Seidel, SOR), `mcca` (Gauss-Seidel), `odepa400`
+(Gauss-Seidel) — all chosen by bottleneck. The two losses are the portfolio's cheap
+power-iteration estimate ranking a worse candidate first.
 
-`minsum` originally minimised the raw sum of ratios. On `nnc261` those span 0 to 3.8e10,
-and `min_weight_full_bipartite_matching` had not returned after **240 seconds**.
-Minimising `Σ log(1 + ratio)` — the *product* of (1 + ratio) — fixes both problems at
-once: it is well-conditioned, and a raw sum was dominated by its single worst row, which
-made "min-sum" nearly indistinguishable from the bottleneck objective it exists to
-contrast with. Now returns in 0.01 s.
+**This is the APK situation again.** That dispatch rule was worth one matrix in 736; this
+objective is worth two pairs in 197. Reordering is the real effect; the *choice of
+objective* barely moves it.
 
-Worked 3×3: rows of a diagonally dominant matrix arriving in the wrong order give
-ρ(T_GS) = 99.19 and divergence; the permutation restores ρ(T_GS) = 0.0316 and Gauss-Seidel
-solves in 7 iterations. Row permutation does not change the solution — `A'x = PAx = Pb = b'` —
-so nothing has to be un-permuted.
+### Result 3 — on its own objective the method wins outright
 
-### Known negatives — to be reported, not hidden
+Head to head against MC64 on the worst row ratio, 873 matrices where both are finite:
+
+```
+bottleneck strictly better   367
+MC64 strictly better           0        <- never
+identical                    506
+```
+
+Median improvement where it wins: **1.55x**. Geometric mean ratio 535 → 379. The method
+does exactly what it is designed to do, and does it one-sidedly. Figure `16_dominance`.
+
+### Result 4 — the guarantee is out of reach on real matrices
+
+A worst row ratio below 1 is strict diagonal dominance and forces both Jacobi and
+Gauss-Seidel to converge. Bottleneck minimises that ratio exactly, so it reaches the
+threshold whenever any row permutation can (verified against brute force, 400/400).
+
+```
+already dominant as given                     43
+made dominant by permutation                   0
+dominance lost by permutation                  0
+```
+
+**Zero.** Not one matrix in 927 that is not already diagonally dominant can be made so by
+permuting its rows. The theorem is true and, on this corpus, empty. The gain in Result 3
+is real but lands entirely in a regime — ratios of 90 against 97 — where it does not
+decide convergence.
+
+### Result 5 — min-sum is MC64, algebraically
+
+`1 + R[i,j] = rowsum_i / |a_ij|`, so
+
+```
+Σ_i log(1 + R[i,p(i)])  =  Σ_i log(rowsum_i)  −  Σ_i log|a_{i,p(i)}|
+                           └── independent of p ──┘
+```
+
+Minimising the left side is exactly maximising `Σ log|a_ii|`, which is MC64's objective.
+The two are the same optimisation. Verified: 193 of 193 random matrices reach an
+identical MC64 objective value, none differ.
+
+Earlier drafts of this file described min-sum as "the natural alternative to contrast
+with bottleneck". That was wrong — it was never a contrast, and the portfolio had two
+distinct objectives rather than three. The selector picking `minsum` 64 times and `mc64`
+489 times is one objective winning 553 times under two names.
+
+### What the selector chose
+
+```
+mc64        489        none        250
+bottleneck   99        minsum       64
+```
+
+### Honest summary
+
+The contribution is a new *objective* for row permutation with an exact algorithm and a
+theorem, measured against the established tool on a full corpus. It beats MC64 on the
+quantity it targets, 367–0. It does not beat MC64 on systems solved, and the threshold
+where its guarantee would bite is unreachable on real matrices.
+
+The publishable finding is therefore a negative one, and a clean one: **minimising the
+row ratio is provably achievable and does not translate into convergence on real sparse
+matrices.** The measurement that reordering itself rescues 63% more stationary solves
+across 927 matrices stands on its own and, as far as we know, has not been reported at
+this scale.
+
+### Known negatives — reported, not hidden
 
 * `d_ss`: bottleneck made it **worse**, ρ(T_GS) 1.884 → 29.605. A min-max objective
   protects the worst row and can sacrifice the rest.
-* `nnc261`, `plskz362`, `d_dyn`, `d_dyn1`: neither MC64 nor bottleneck helps.
-
-Open design question, and this is the research: bottleneck (min-max) vs min-sum vs
-lexicographic objective.
-
-### Why the opportunity is large
-
-491 of 930 matrices have a zero diagonal, so stationary methods are undefined on 53% of
-the corpus before anything runs. And 192 applicable matrices fall in no theorem class,
-where Jacobi currently succeeds 1.6% of the time.
-
----
+* The portfolio's power-iteration estimate misranks near-ties and cost 2 rescues.
+* Six corpus files are truncated downloads and never loaded (§9).
 
 ## 9. Claims that must not be made
 

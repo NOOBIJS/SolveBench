@@ -422,3 +422,34 @@ def test_bottleneck_attains_the_minimum_worst_ratio():
             assert got < 1, "a dominant permutation exists but was not found"
 
     assert dominant_cases > 20, "test lost its coverage of the dominant case"
+
+
+def test_minsum_is_mc64_under_another_name():
+    """min-sum and MC64 optimise the same thing.
+
+    ``1 + R[i,j] = rowsum_i / |a_ij|``, so ``sum log(1 + R)`` is ``sum log(rowsum_i)``
+    minus ``sum log|a_ii|``; the first term is permutation-independent, leaving MC64's
+    objective exactly. The two were presented as contrasting objectives for most of this
+    project. They are not, and the portfolio has two distinct candidates rather than
+    three -- a claim worth a test so it cannot quietly revert.
+    """
+    from solvebench import reordering as ro
+
+    rng = np.random.default_rng(3)
+    compared = 0
+    for _ in range(60):
+        n = int(rng.integers(4, 10))
+        A = sp.csr_matrix(rng.normal(size=(n, n)) * (rng.random((n, n)) < 0.6))
+        if A.nnz == 0:
+            continue
+        p1, _ = ro.mc64_permutation(A)
+        p2, _ = ro.minsum_permutation(A)
+        if p1 is None or p2 is None:
+            continue
+        d1, d2 = np.abs(A[p1, :].diagonal()), np.abs(A[p2, :].diagonal())
+        if d1.min() <= 0 or d2.min() <= 0:
+            continue
+        compared += 1
+        assert np.isclose(np.log(d1).sum(), np.log(d2).sum(), rtol=1e-9), \
+            "min-sum reached a different MC64 objective value"
+    assert compared > 20, "test lost its coverage"

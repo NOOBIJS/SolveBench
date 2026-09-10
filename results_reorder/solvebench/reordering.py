@@ -184,17 +184,10 @@ def bottleneck_permutation(A):
 def minsum_permutation(A):
     """Minimise the TOTAL of the chosen row ratios: ``min_pi sum_i R[i, pi(i)]``.
 
-    **This is MC64 under another name.** Since ``1 + R[i,j] = rowsum_i / |a_ij|``,
-
-        sum_i log(1 + R[i,p(i)])  =  sum_i log(rowsum_i)  -  sum_i log|a_{i,p(i)}|
-
-    and the first term does not depend on the permutation, so minimising the left side is
-    exactly maximising ``sum log|a_ii|`` -- MC64's objective. Verified on 193 of 193
-    random matrices, both reaching an identical objective value.
-
-    It is kept because the full run reports it separately, and because the equivalence is
-    worth stating: it was introduced as "the natural contrast to bottleneck" and is not a
-    contrast at all. The portfolio has two distinct objectives, not three.
+    The natural alternative to the bottleneck objective. Bottleneck protects the worst
+    row and can wreck the rest -- on ``d_ss`` it drove rho(T_GS) from 1.884 to 29.605 --
+    whereas min-sum trades the worst row away to improve the average. Which is better is
+    an open question this benchmark is meant to answer.
     """
     n = A.shape[0]
     if n > DENSE_ASSIGNMENT_CAP:

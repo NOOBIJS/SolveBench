@@ -4,7 +4,7 @@
 the work stands, what was decided and why, and what is still open — the things a fresh
 reader (or a fresh session) would otherwise have to rediscover.
 
-Last updated: **2026-09-10**
+Last updated: **2026-09-10** (reordering run complete)
 
 ---
 
@@ -19,7 +19,7 @@ Publication is a later, separate goal and is **not** driving decisions right now
 | Main sweep, 927 × 16 | done, 5.19 h |
 | Spectral analysis | done, 0.95 h |
 | Refinement study | done, 3.30 h |
-| **Reordering study (the novel method)** | **not done** — see §4 |
+| **Reordering study (the novel method)** | **done**, 114.7 min, 927 matrices — see §9 |
 | Figures (13) | done, audited, 8 real bugs found and fixed |
 | `linear.tex` | 4 "Update" slides appended, proposal slides untouched |
 | Report | not started |
@@ -243,3 +243,27 @@ nonzeros than the file contains:
 The source data is fine; the downloads are incomplete. Re-fetch these six along with the
 99 missing matrices in §6.3. Until then the usable corpus is **924 files**, not 930 — which
 matches the count the first completed sweep reported.
+
+---
+
+## 9. The reordering study, completed
+
+Ran on `ijsasif` in **114.7 minutes** — well inside the 12-hour limit and well under the
+3.5-4.5 h estimate. No hang. Full numbers in `RESULTS.md` §8; the short version:
+
+* **Reordering works: 317 → 516 systems solved, 199 rescued, 0 lost.**
+* **The novel objective is worth +2 net pairs over MC64** (4 gained, 2 lost). MC64 does
+  195 of the 199 rescues. This is the APK situation repeating.
+* **On the ratio it targets, bottleneck beats MC64 367-0-506.** One-sided, never worse.
+* **The convergence guarantee is unreachable**: 43 matrices are already diagonally
+  dominant, and permutation brings exactly 0 more under the threshold.
+* **min-sum is MC64 algebraically** — `Σ log(1+ratio) = const − Σ log|a_ii|`. Verified
+  193/193. The portfolio had two objectives, not three; `RESULTS.md` said otherwise and
+  is corrected.
+
+**What to claim for the course project.** A new objective for row permutation, with an
+exact algorithm, a theorem, and an honest full-corpus evaluation against the established
+tool. It wins on what it optimises and does not win on systems solved — that is a
+result, not a failure, and it is the group's own work end to end.
+
+**What not to claim.** That it beats MC64. It does not, on the measure that matters.
