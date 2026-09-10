@@ -20,6 +20,7 @@ kaggle.json
 # ============================================================================
 dataset/
 dataset_large/
+dataset_full/
 matrices/
 small_matrices/
 kaggle_dataset_large/

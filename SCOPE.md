@@ -47,8 +47,11 @@ SuiteSparse Matrix Collection
 
 **Selection rule:** every square real matrix in the collection with n ≤ 10,000. The cap
 is the memory limit for the dense spectral analysis, not a judgement about difficulty.
-The corpus is a sample of that population, not yet a complete census — 99 qualifying
-matrices remain undownloaded.
+The corpus is a sample of that population, not a complete census: SuiteSparse holds
+1,184 such matrices and this corpus has 830 of them, plus 100 self-generated random
+ones. The remaining 353 have been downloaded into `dataset_full/` but are deliberately
+**not** used here — every number in this project was measured on the 927-matrix corpus,
+and enlarging it would invalidate all of them at once.
 
 ---
 
@@ -243,6 +246,7 @@ project claims; that one states what was measured.
 * That the convergence-oriented objective beats MC64 on systems solved. It does not.
 * That any iterative method beats a sparse direct solver here. `spsolve` solves 874 of
   927; the best iterative configuration solves 617.
-* That the corpus is a complete census of SuiteSparse at n ≤ 10,000. 99 qualifying
-  matrices are still undownloaded.
+* That the corpus is a complete census of SuiteSparse at n ≤ 10,000. It covers 830 of
+  the 1,184 qualifying matrices; the other 353, mostly graph kinds, are downloaded but
+  not measured.
 * That domain-level rankings are reliable where n is small.

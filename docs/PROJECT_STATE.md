@@ -158,10 +158,19 @@ systems into Jacobi's "diverges" column.
 2. **Re-run the reordering study** on `ijsasif`. Needs the user's confirmation before
    pushing, as always. **Budget is the open question** — see §8; the probe should go
    first.
-3. **99 missing matrices.** SuiteSparse has 930 usable matrices at n ≤ 10,000; the corpus
-   has 831. Downloading the rest (73 MB, 2.9 M nnz) would make it a *complete census* rather
-   than a sample — a much stronger claim — and adds 6 domains that were never downloaded at
-   all. The user asked to do this **after** the reordering run finishes.
+3. ~~**99 missing matrices.**~~ **That number was wrong — it is 353.** SuiteSparse holds
+   **1,184** square real matrices at n ≤ 10,000. The corpus has 830 of them (plus 100
+   self-generated random ones, which is where the earlier count went astray by treating
+   those as SuiteSparse entries). Downloading the remaining 353 costs about 355 MB and
+   adds **19 new domains**, most of them graph kinds — undirected and directed graphs,
+   combinatorial problems — whose matrices are largely binary adjacency patterns with
+   zero diagonals. Restricted to the domains the corpus already covers the gap is 151.
+
+   Downloaded 2026-09-10 into `dataset_full/`, deliberately kept **separate** from
+   `dataset_large/`: every result in this repository was measured on the 927-matrix
+   corpus, and mixing the two would silently invalidate them. Re-running everything on
+   the larger corpus is about 18 h of Kaggle time and is a future decision, not a
+   pending task.
 4. **Small domains.** Eight have fewer than 5 matrices. Verified against `ssstats.csv` that
    this is SuiteSparse's own scarcity, not under-sampling: only 3 more exist across all of
    them. `linear_programming` has 342 matrices but exactly **one** square — LP constraint
@@ -243,7 +252,7 @@ nonzeros than the file contains:
 | `nemeth23` | 758,158 | 615,965 |
 
 The source data is fine; the downloads are incomplete. Re-fetch these six along with the
-99 missing matrices in §6.3. Until then the usable corpus is **924 files**, not 930 — which
+353 missing matrices in §6.3. Until then the usable corpus is **924 files**, not 930 — which
 matches the count the first completed sweep reported.
 
 ---

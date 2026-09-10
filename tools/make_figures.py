@@ -143,7 +143,7 @@ def fig_scoreboard(res):
     # placed inside would sit on top of the data.
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.04), ncols=2)
     _hide_grid_x(ax)
-    save(fig, "01_method_scoreboard",
+    save(fig, "04_method_scoreboard",
          "Applicability (how much of the corpus a method is defined on) against "
          "conditional success (how much of that it solves). Multiplying the two "
          "into one rate is what understated several baselines.")
@@ -181,7 +181,7 @@ def fig_outcomes(res):
     ax.set_title("Outcome of every (matrix, method) attempt", loc="left", pad=12)
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.06), ncols=4)
     _hide_grid_x(ax)
-    save(fig, "02_outcomes",
+    save(fig, "06_outcomes",
          "'inaccurate' is the category that did not exist before: the solver "
          "returned without complaint and the residual says the answer is wrong.")
 
@@ -209,7 +209,7 @@ def fig_domain_heatmap(res):
     cb.set_label("solved / applicable", color=INK2, fontsize=8)
     cb.outline.set_visible(False)
     cb.ax.tick_params(color=MUTED, labelcolor=MUTED, labelsize=7.5)
-    save(fig, "03_domain_heatmap",
+    save(fig, "07_domain_heatmap",
          "Grey cells are domains where a method is defined on nothing. Rates are "
          "conditional; per-domain denominators are in per_domain.csv.")
 
@@ -249,7 +249,7 @@ def fig_cost_profile(res):
     axes[0].set_ylabel("matrix-vector products")
     fig.suptitle("Cost of a successful solve, iterative families only",
                  x=0.02, ha="left", fontsize=11, color=INK)
-    save(fig, "04_cost_profile",
+    save(fig, "08_cost_profile",
          "Counted work rather than wall-clock time, which is not reproducible on shared "
          "hardware. Direct methods are absent by construction: they perform no "
          "matrix-vector products at all, so their cost is the factorisation instead.")
@@ -275,7 +275,7 @@ def fig_conditioning(res):
     ax.set_xlabel("condition number"); ax.set_ylabel("relative forward error")
     ax.set_title("Forward error against conditioning", loc="left", pad=12)
     ax.legend(loc="lower right")
-    save(fig, "05_conditioning",
+    save(fig, "16_conditioning",
          "Pooling the two strata is what let dataset ill-conditioning masquerade "
          "as solver inaccuracy in the earlier error medians.")
 
@@ -304,7 +304,7 @@ def fig_dispatch_ablation(res):
                        Patch(color=C1, label="fixed choice, no dispatch")],
               loc="upper center", bbox_to_anchor=(0.5, -0.18), ncols=2)
     _hide_grid_x(ax); ax.grid(axis="x", visible=False); ax.grid(axis="y", visible=True)
-    save(fig, "06_dispatch_ablation",
+    save(fig, "17_dispatch_ablation",
          "If the dispatched bar matches always-BiCGSTAB, the dispatch rule adds "
          "nothing. Earlier probes put both at 51/70.")
 
@@ -361,7 +361,7 @@ def fig_spectral(spec):
             fontsize=7.5, color=MUTED, va="top")
     fig.suptitle("Convergence is decided by whether rho falls left of 1",
                  x=0.02, ha="left", fontsize=11, color=INK)
-    save(fig, "07_spectral_radius",
+    save(fig, "11_spectral_radius",
          "The quantity the base paper exists to characterise, computed here for "
          "every matrix in the corpus.")
 
@@ -382,7 +382,7 @@ def fig_hypothesis_coverage(spec):
     ax.set_xlabel("matrices")
     ax.set_title("Hypothesis-class coverage across the corpus", loc="left", pad=12)
     _hide_grid_x(ax)
-    save(fig, "08_hypothesis_coverage",
+    save(fig, "12_hypothesis_coverage",
          "Stein-Rosenberg (1948) forbids Jacobi-converges-while-Gauss-Seidel-does-not "
          "for M-matrices; Householder-John (1958) guarantees Gauss-Seidel for SPD. "
          "Coverage of these classes is what explains the benchmark's own headline.")
@@ -455,7 +455,7 @@ def fig_prediction(res, spec):
     fig.suptitle("Predicted verdict against observed outcome", x=0.02, ha="left",
                  fontsize=11, color=INK)
     axes[-1].legend(loc="upper right", fontsize=8)
-    save(fig, "09_prediction_vs_observation",
+    save(fig, "13_prediction_vs_observation",
          "'too_slow' is the case the textbook criterion cannot express: rho < 1, so "
          "convergence is guaranteed, but not within any usable iteration budget.")
 
@@ -508,7 +508,7 @@ def fig_refinement(study):
     fig.suptitle("Refinement applied to every method, on equal terms",
                  x=0.02, ha="left", fontsize=11, color=INK)
     axes[1].legend(loc="upper center", bbox_to_anchor=(-0.05, -0.09), ncols=3)
-    save(fig, "10_refinement_effect",
+    save(fig, "15_refinement_effect",
          "Refinement applied to every method, not to one. Given the same wrapper, Jacobi "
          "becomes the most accurate method in the benchmark and the dispatched ILU-Krylov "
          "does not -- but Jacobi pays roughly twenty times the work for it, which is why "
@@ -551,7 +551,7 @@ def fig_base_paper_test(res, spec):
     ax.set_ylabel(f"matrices  (n={len(d)} where both are defined)")
     ax.set_title("The base paper's comparison, re-run on real matrices", loc="left", pad=12)
     ax.grid(axis="x", visible=False)
-    save(fig, "11_jacobi_vs_gauss_seidel",
+    save(fig, "14_jacobi_vs_gauss_seidel",
          "The denominator is matrices where both methods are defined, not the "
          "whole corpus -- Jacobi and Gauss-Seidel are undefined wherever the "
          "diagonal carries a zero.")
@@ -618,7 +618,7 @@ def fig_reordering_scoreboard(reo):
     ax.set_ylim(0, max(after) * 1.22)
     _hide_grid_x(ax)
     n_mat = reo.matrix.nunique()
-    save(fig, "14_reordering_scoreboard",
+    save(fig, "01_pipeline_scoreboard",
          f"Systems solved out of {n_mat} matrices, with the solvers themselves unchanged "
          "-- only the order of the rows and, for SOR, the relaxation factor. "
          f"{sum(after) - sum(before)} systems recovered across the three methods and "
@@ -711,7 +711,7 @@ def fig_dominance(reo):
     ax2.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0))
 
     n_inf = max(undef) if undef else 0
-    save(fig, "16_dominance",
+    save(fig, "03_dominance",
          "Left: the worst row ratio each objective achieves, matrix by matrix. Points "
          "below the line are matrices where the convergence-oriented objective beats "
          "MC64 on the quantity that governs convergence; there are none above it. This "
@@ -778,7 +778,7 @@ def fig_performance_profile(res):
     ax.set_ylabel("fraction of the corpus")
     ax.set_title("Performance profile: speed and robustness in one picture")
     ax.legend(loc="lower right")
-    save(fig, "17_performance_profile",
+    save(fig, "05_performance_profile",
          f"Dolan-More profile over the {len(universe)} matrices at least one method "
          "solved, one representative per family. Height at tau = 1 is how often that "
          "method is the outright fastest; the right-hand plateau is how much of the "
@@ -799,7 +799,7 @@ def fig_runtime_scaling(res):
     Survivorship, drawn as a trend, and pointing the wrong way.
 
     A shared denominator removes it: only matrices all four families solve. Dense LU is
-    dropped rather than included, as in figure 04 -- it is capped at n = 2,000 by
+    dropped rather than included, as in figure 12 -- it is capped at n = 2,000 by
     construction, so including it would cut the size range to a third and reintroduce
     the same bias in another form.
     """
@@ -852,7 +852,7 @@ def fig_runtime_scaling(res):
     ax.set_ylabel("runtime, seconds (median per size bin)")
     ax.set_title("How each family scales, on a common set of problems")
     ax.legend(loc="upper left")
-    save(fig, "18_runtime_scaling",
+    save(fig, "09_runtime_scaling",
          f"Median runtime within each nonzero bin, restricted to the {len(common)} "
          "matrices every family shown here solves, so the curves describe the same "
          "problems at every size. Without that restriction the Krylov and stationary "
@@ -893,12 +893,12 @@ def fig_iteration_counts(res):
     ax.set_ylabel("fraction of that method's successes")
     ax.set_title("Iterations needed, where the method succeeds at all")
     ax.legend(loc="lower right", fontsize=8)
-    save(fig, "19_iteration_counts",
+    save(fig, "10_iteration_counts",
          "Each curve is conditioned on that method's own successes, so the vertical "
          "axis is not comparable across methods as a success rate -- n is printed in "
          "the legend for that reason. One preconditioned ILU-BiCGSTAB step does far "
          "more arithmetic than one Jacobi step, so a lower curve here means fewer "
-         "steps, not less work; figure 04 counts the work.")
+         "steps, not less work; figure 12 counts the work.")
 
 
 def fig_ilu_hole(res, probe):
@@ -963,7 +963,7 @@ def fig_ilu_hole(res, probe):
     ax2.set_title("What choosing the diagonal recovers")
     _hide_grid_x(ax2)
 
-    save(fig, "20_ilu_hole",
+    save(fig, "02_ilu_hole",
          f"On {n_total} matrices no usable incomplete factorization exists, which removes "
          "all four preconditioned methods at once. What is left solves almost none of "
          "them, while a sparse direct solver handles most -- so these are not intrinsically "
