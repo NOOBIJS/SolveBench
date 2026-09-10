@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LIB = ROOT / "src" / "solvebench"
-OUT = ROOT / "kaggle_upload"
+OUT = ROOT / "notebooks"
 
 MODULES = ["config", "metrics", "direct_solvers", "iterative_solvers",
            "reference_solvers", "refinement", "io_utils", "spectral",
@@ -127,7 +127,11 @@ print(f"corpus root : {DATA_ROOT}")
 print(f"matrices    : {len(MATRICES)}")
 print(f"domains     : {len({m['domain'] for m in MATRICES})}")
 
-OUT_DIR = pathlib.Path("/kaggle/working/output" if ON_KAGGLE else "results/output")
+# Off Kaggle the notebooks are only ever executed by tools/test_notebooks.py, so
+# their output is scratch and must not land beside the real results. It used to write
+# into a directory that was also make_figures' default input, which meant running the
+# safety check silently overwrote the tables the figures were built from.
+OUT_DIR = pathlib.Path("/kaggle/working/output" if ON_KAGGLE else ".nbscratch/output")
 (OUT_DIR / "tables").mkdir(parents=True, exist_ok=True)
 (OUT_DIR / "logs").mkdir(parents=True, exist_ok=True)
 print(f"output      : {OUT_DIR}")'''

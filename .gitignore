@@ -74,8 +74,8 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
-results/output/
-results/figures/
+# Scratch output from tools/test_notebooks.py executing the notebooks locally.
+.nbscratch/
 
 # Written by the notebooks themselves: each unpacks its embedded copy of the library
 # into a solvebench/ directory when executed off Kaggle, so tools/test_notebooks.py
@@ -94,3 +94,9 @@ results_v2/*/*.log
 
 # Unrelated skill scaffold, not part of this project
 advanced-memory-mcp-numerical-methods-expert/
+
+# ============================================================================
+#  Working notes and course handouts -- kept locally, not part of the project
+# ============================================================================
+prpmpt.txt
+Spec.txt

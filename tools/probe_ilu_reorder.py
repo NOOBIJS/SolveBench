@@ -30,7 +30,7 @@ from solvebench import (corpus, io_utils, iterative_solvers as it, metrics,  # n
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(ROOT / "dataset_large"))
-    ap.add_argument("--results", default=str(ROOT / "results_v2" / "tables"))
+    ap.add_argument("--results", default=str(ROOT / "results" / "tables"))
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
 
@@ -106,7 +106,7 @@ def main():
                   + " | ".join(parts), flush=True)
 
     d = pd.DataFrame(rows)
-    out = ROOT / "results_v2" / "tables" / "ilu_reorder_probe.csv"
+    out = ROOT / "results" / "tables" / "ilu_reorder_probe.csv"
     d.to_csv(out, index=False)
     print(f"\n{'=' * 70}")
     print(f"ILU builds after choosing the diagonal, on {len(d)} matrices where it did not")

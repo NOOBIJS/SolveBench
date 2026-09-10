@@ -187,10 +187,12 @@ systems into Jacobi's "diverges" column.
   while, which is the drift trap in a second form. It is now ignored. `pytest` is safe
   (`pytest.ini` sets `pythonpath = src`); scripts must insert `src` themselves, as
   `tools/*.py` do.
-* **Never point `tools/make_figures.py` at `results/output/`.** The real, corrected results
-  are `results_v2/tables/` (14,882 benchmark rows). `results/output/` holds 48 rows — the
-  leftovers of a `tools/test_notebooks.py` run, which overwrites it every time. It is the
-  script's default argument, which makes it a genuine trap.
+* ~~Never point `tools/make_figures.py` at `results/output/`.~~ **Fixed by construction.**
+  The notebooks used to write their local scratch into `results/output/`, which was also
+  the figure script's default input, so running the safety check silently overwrote the
+  tables the figures were built from. Notebook scratch now goes to `.nbscratch/`
+  (git-ignored) and the real tables live in `results/tables/`. The two can no longer
+  collide.
 * `tools/test_notebooks.py` executes every generated cell locally. Nothing goes to Kaggle
   without it passing; it has caught a missing import and two hangs.
 * `kaggle.json` is git-ignored and must stay that way.

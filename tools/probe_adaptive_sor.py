@@ -89,7 +89,7 @@ def main():
 
     import pandas as pd
     d = pd.DataFrame(recs)
-    d.to_csv("results_v2/tables/adaptive_sor_probe.csv", index=False)
+    d.to_csv("results/tables/adaptive_sor_probe.csv", index=False)
     both = d[(d.fixed_status == "solved") & (d.adaptive_status == "solved")]
     if len(both):
         r = both.fixed_iters / both.adaptive_iters.replace(0, np.nan)

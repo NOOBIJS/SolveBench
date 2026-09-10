@@ -17,7 +17,7 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-NB_DIR = ROOT / "kaggle_upload"
+NB_DIR = ROOT / "notebooks"
 
 
 def check_grammar(path, version=(3, 12)):
@@ -27,7 +27,7 @@ def check_grammar(path, version=(3, 12)):
     executes fine locally and is a SyntaxError there. Running the cells cannot catch
     that; only parsing against the target version can.
 
-    Kaggle reported python 3.12.13 in results_v2/.../run_metadata.json -- that measured
+    Kaggle reported python 3.12.13 in results/logs/run_metadata.json -- that measured
     value is the version pinned here, not a guess. Re-check it after any image update.
     """
     nb = json.loads(path.read_text(encoding="utf-8"))

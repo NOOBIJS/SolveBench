@@ -952,7 +952,7 @@ def fig_iteration_counts(res):
 def main():
     global OUT
     ap = argparse.ArgumentParser()
-    ap.add_argument("--results", default=str(ROOT / "results" / "output" / "tables"))
+    ap.add_argument("--results", default=str(ROOT / "results" / "tables"))
     ap.add_argument("--out", default=str(ROOT / "results" / "figures"))
     args = ap.parse_args()
 
