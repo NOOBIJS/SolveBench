@@ -394,6 +394,31 @@ matrices.** The measurement that reordering itself rescues 63% more stationary s
 across 927 matrices stands on its own and, as far as we know, has not been reported at
 this scale.
 
+### Step 2 measured on its own: the relaxation factor
+
+`SOR` runs at a fixed `omega = 1.25` for every matrix in the main sweep, and that is the
+wrong call in both directions at once: plain Gauss-Seidel solves 11 systems SOR(1.25)
+misses, and SOR(1.25) solves 9 that Gauss-Seidel misses. **So 20 systems are decided by
+the relaxation factor alone** — that is the whole headroom available to any adaptive rule.
+
+Choosing `omega` per matrix from a power-iteration estimate of rho(T_J), by Young's
+formula, over 400 matrices with a usable diagonal:
+
+| | solved |
+|---|---|
+| Gauss-Seidel (omega = 1) | 122 |
+| SOR, fixed 1.25 | 119 |
+| **SOR, omega from rho(T_J)** | **127** |
+
+It rescues 16 and loses 8: **+8 net, 40% of the 20-system ceiling.** Total iterations
+across the cases all three solve fall from 121,886 to 112,630, a median speedup of 1.21x
+with individual cases far larger — `sherman1` goes from 8,730 iterations to 1,658.
+
+Young's formula is exact for a consistently ordered matrix with property A, and most of
+this corpus is neither. What is measured here is not the formula but whether it is worth
+applying outside its hypotheses. It is, modestly. Its 60 power iterations are charged to
+the method as matvecs.
+
 ### Known negatives — reported, not hidden
 
 * `d_ss`: bottleneck made it **worse**, ρ(T_GS) 1.884 → 29.605. A min-max objective

@@ -191,16 +191,12 @@ and symmetric permutation moves `rho(T_GS)` only in the fifth decimal on real ma
 * **min-sum is MC64** — `sum log(1 + ratio) = sum log(rowsum) - sum log|a_ii|`, and the
   first term does not depend on the permutation. Verified 193/193.
 
-### Honest limits, stated with the result
+### Where the detail lives
 
-* Against MC64 alone the portfolio is worth **+2** systems. The reordering *idea* carries
-  the 199; the new objective is a small part of it. What the bottleneck objective wins
-  outright is the ratio it optimises, not the count.
-* Choosing omega adaptively (step 2) recovers **8 of the ~20 systems** where the
-  relaxation factor decides the outcome at all. Young's formula assumes consistent
-  ordering, which most of this corpus does not have.
-* Reordering cannot manufacture diagonal dominance: 43 matrices already have it, and no
-  permutation brings a single further matrix under the threshold.
+Every number behind the claim above, with its denominator — the per-objective
+comparison, what each step contributes on its own, and the cases where the pipeline
+gains nothing — is in [`RESULTS.md`](RESULTS.md) section 8. This file states what the
+project claims; that one states what was measured.
 
 ## 8. Out of scope
 
