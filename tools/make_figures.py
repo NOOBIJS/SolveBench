@@ -28,6 +28,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Patch
@@ -556,6 +557,191 @@ def fig_base_paper_test(res, spec):
          "diagonal carries a zero.")
 
 
+# ------------------------------------------------- the novel method: reordering
+
+#: The three conditions, in the order the argument runs: control, established tool, ours.
+COND_ORDER = ["none", "mc64", "best"]
+COND_LABEL = {"none": "as given", "mc64": "MC64", "best": "ours (portfolio)"}
+COND_COLOUR = {"none": MUTED, "mc64": C2, "best": C1}
+
+
+def _count_axis(ax, vals, legend_cols):
+    """Integer ticks, headroom for the value labels, and the legend clear of the bars.
+
+    Counts of matrices are integers, so 0.5 on the axis is meaningless. And a legend
+    anchored inside the axes lands on top of the tallest bar's label as soon as the data
+    fills the panel -- putting it below the axis is the one placement that cannot
+    collide with the data whatever the values turn out to be.
+    """
+    top = max(vals) if vals else 1
+    ax.set_ylim(0, max(top, 1) * 1.12)
+    ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.legend(ncol=legend_cols, loc="upper center", bbox_to_anchor=(0.5, -0.13))
+
+
+def _solved_by(reo, cond, method):
+    sub = reo[(reo.condition == cond) & (reo.method == method)]
+    return set(sub[sub.status == "solved"].matrix)
+
+
+def fig_reordering_scoreboard(reo):
+    """Systems solved by each stationary method under each condition.
+
+    The headline. Counts, not rates: every condition sees the same corpus, so the
+    denominator is identical and a rate would only hide the size of the change.
+    """
+    methods = [m for m in ("Jacobi", "Gauss-Seidel", "SOR") if m in set(reo.method)]
+    conds = [c for c in COND_ORDER if c in set(reo.condition)]
+    if not methods or not conds:
+        return
+    fig, ax = plt.subplots(figsize=(7.2, 3.6))
+    w = 0.8 / len(conds)
+    x = np.arange(len(methods))
+    for k, c in enumerate(conds):
+        vals = [len(_solved_by(reo, c, m)) for m in methods]
+        pos = x + (k - (len(conds) - 1) / 2) * w
+        ax.bar(pos, vals, w * 0.9, color=COND_COLOUR[c], label=COND_LABEL[c])
+        for xi, v in zip(pos, vals):
+            ax.text(xi, v, str(v), ha="center", va="bottom", fontsize=8, color=INK2)
+    ax.set_xticks(x)
+    ax.set_xticklabels(methods)
+    ax.set_ylabel("systems solved")
+    ax.set_title("Choosing the diagonal before iterating")
+    _count_axis(ax, [len(_solved_by(reo, c, m)) for c in conds for m in methods],
+                len(conds))
+    _hide_grid_x(ax)
+    n_mat = reo.matrix.nunique()
+    save(fig, "14_reordering_scoreboard",
+         "Systems solved out of {} matrices. 'As given' is the order the rows arrived "
+         "in; MC64 maximises the product of the diagonal; ours computes all four "
+         "candidate permutations and keeps the one with the smallest estimated "
+         "rho(T_GS). Because 'no permutation' is one of those candidates, the portfolio "
+         "cannot score below the control.".format(n_mat))
+
+
+def fig_reordering_rescue(reo):
+    """Who rescues what: MC64, ours, or both.
+
+    The bar that matters is 'ours only' -- systems ours solves that MC64 does not. If it
+    is small, the contribution is the guarantee and the portfolio, not the objective.
+    """
+    methods = [m for m in ("Jacobi", "Gauss-Seidel", "SOR") if m in set(reo.method)]
+    if not methods:
+        return
+    cats = ["MC64 only", "both", "ours only", "neither"]
+    colours = [C2, C3, C1, STATUS["not_applicable"]]
+    seen = []
+    fig, ax = plt.subplots(figsize=(7.2, 3.6))
+    w = 0.8 / len(cats)
+    x = np.arange(len(methods))
+    for k, (cat, col) in enumerate(zip(cats, colours)):
+        vals = []
+        for m in methods:
+            base = _solved_by(reo, "none", m)
+            mc = _solved_by(reo, "mc64", m) - base
+            ours = _solved_by(reo, "best", m) - base
+            failed = set(reo[reo.method == m].matrix) - base - mc - ours
+            pick = {"MC64 only": mc - ours, "both": mc & ours,
+                    "ours only": ours - mc, "neither": failed}[cat]
+            vals.append(len(pick))
+        seen += vals
+        pos = x + (k - (len(cats) - 1) / 2) * w
+        ax.bar(pos, vals, w * 0.9, color=col, label=cat)
+        for xi, v in zip(pos, vals):
+            if v:
+                ax.text(xi, v, str(v), ha="center", va="bottom", fontsize=8, color=INK2)
+    ax.set_xticks(x)
+    ax.set_xticklabels(methods)
+    ax.set_ylabel("matrices that fail as given")
+    ax.set_title("Of the systems that fail in the order they arrive, which are recovered")
+    _count_axis(ax, seen, len(cats))
+    _hide_grid_x(ax)
+    save(fig, "15_reordering_rescue",
+         "Restricted to systems the method fails on as given, so the bars measure "
+         "recovery rather than difficulty. 'Ours only' is the column the novelty claim "
+         "rests on: matrices recovered by the convergence-oriented objectives that "
+         "MC64's product objective does not recover.")
+
+
+def fig_dominance(reo):
+    """The worst row ratio under each objective, against the threshold that matters.
+
+    Below 1 the permuted matrix is strictly diagonally dominant, which guarantees both
+    Jacobi and Gauss-Seidel converge. Bottleneck minimises this quantity exactly, so it
+    reaches the guarantee whenever any row permutation can.
+    """
+    cols = [("ratio_none", "as given", MUTED), ("ratio_mc64", "MC64", C2),
+            ("ratio_minsum", "min-sum", C3), ("ratio_bottleneck", "bottleneck", C1)]
+    cols = [c for c in cols if c[0] in reo.columns]
+    if not cols:
+        print("  (skipped 16_dominance: no ratio_* columns in this run)")
+        return
+    one = reo[reo.condition == "best"].drop_duplicates("matrix")
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(9.4, 3.8),
+                                  gridspec_kw={"width_ratios": [1.5, 1]})
+
+    labels, dom, undef, tot = [], [], [], []
+    for col, lab, _c in cols:
+        v = pd.to_numeric(one[col], errors="coerce")
+        labels.append(lab)
+        dom.append(int((v < 1).sum()))
+        undef.append(int(np.isinf(v).sum()))
+        tot.append(int(v.notna().sum()))
+    y = np.arange(len(labels))
+    ax.barh(y, dom, 0.62, color=[c[2] for c in cols])
+    for yi, d, t in zip(y, dom, tot):
+        ax.text(d, yi, "  {} of {}".format(d, t), va="center", fontsize=8, color=INK2)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels)
+    ax.invert_yaxis()
+    # A count axis starts at zero. Without this an all-zero column makes matplotlib
+    # centre the range on 0 and draw negative counts, which cannot exist.
+    ax.set_xlim(0, max(max(dom), 1) * 1.25)
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.set_xlabel("matrices with worst row ratio < 1  (convergence guaranteed)")
+    ax.set_title("Reaching strict diagonal dominance")
+    ax.grid(axis="y", visible=False)
+
+    # Distinct dash patterns as well as colour: where two objectives agree on every
+    # matrix the curves coincide exactly, and with one style the upper one simply
+    # erases the rest -- a reader would see one line and conclude the others are absent.
+    # The LAST curve drawn sits on top, so it must be the dashed one -- give the
+    # solid style to the first and the coincident curves underneath show through.
+    dashes = [(), (5, 2), (1, 1.8), (6, 2, 1, 2)]
+    for (col, lab, colour), dash in zip(cols, dashes):
+        v = pd.to_numeric(one[col], errors="coerce")
+        v = v[np.isfinite(v) & (v > 0)]
+        if not len(v):
+            continue
+        xs = np.sort(v)
+        ys = np.arange(1, len(xs) + 1) / len(xs)
+        line, = ax2.plot(xs, ys, color=colour, lw=1.7, label=lab, solid_capstyle="butt")
+        if dash:
+            line.set_dashes(list(dash))
+    ax2.axvline(1.0, color=STATUS["inaccurate"], lw=1.0, ls="--", zorder=0)
+    ax2.set_xscale("log")
+    # Log minor ticks label every 1.25, 1.5, 1.75 ... and collide when the data spans
+    # less than a decade. Majors only.
+    ax2.xaxis.set_minor_formatter(mticker.NullFormatter())
+    ax2.xaxis.set_major_formatter(mticker.LogFormatterMathtext())
+    ax2.set_xlabel("worst row ratio  (dashed red line: ratio = 1)")
+    ax2.set_ylabel("fraction at or below")
+    ax2.set_ylim(0, 1.02)
+    ax2.set_title("Full distribution")
+    ax2.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0))
+
+    n_inf = max(undef) if undef else 0
+    save(fig, "16_dominance",
+         "A worst row ratio below 1 IS strict diagonal dominance, so it guarantees both "
+         "Jacobi and Gauss-Seidel converge -- the one threshold in this project backed "
+         "by a theorem rather than a measurement. Bottleneck assignment minimises this "
+         "ratio exactly (verified against brute force), so it crosses the threshold "
+         "whenever any row permutation can. MC64 maximises the product of the diagonal "
+         "and carries no such statement. The right panel is drawn on finite positive "
+         "ratios only; up to {} matrices have an infinite ratio (a zero diagonal) under "
+         "some objective and appear only in the left panel's denominator.".format(n_inf))
+
+
 # --------------------------------------------------------------- driver
 
 def main():
@@ -586,6 +772,7 @@ def main():
     res = load("benchmark_results.csv")
     spec = load("spectral.csv")
     study = load("refinement_study.csv")
+    reo = load("reordering_study.csv")
 
     print(f"\nwriting figures to {OUT}")
     if res is not None:
@@ -603,6 +790,10 @@ def main():
             fig_prediction(res, spec)
     if study is not None:
         fig_refinement(study)
+    if reo is not None:
+        fig_reordering_scoreboard(reo)
+        fig_reordering_rescue(reo)
+        fig_dominance(reo)
 
     if FIGURES:
         index = "\n".join(f"- `{f['file']}` -- {f['caption']}" for f in FIGURES)
