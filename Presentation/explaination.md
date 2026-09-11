@@ -703,12 +703,28 @@ association. The mechanism for wiring an arbitrary solver into the pipeline is t
 `make_solver` function in `src/solvebench/reordering.py`, and the seven measured
 combinations ("arms") live in `PIPELINE_METHODS` inside `src/solvebench/benchmark.py`.
 
-At the time of writing, the full-corpus run measuring every pipeline arm together
-(including the two-step combination on SOR, and the reordering-before-ILU combination
-across the *entire* 927-matrix corpus rather than only the 166-matrix ILU hole) is
-**running on Kaggle**. The reordering-only result (Milestone 13) and the ILU-hole probe
-result (Milestone 14, measured on the 166 affected matrices) are both already final.
-Section 23 explains exactly what is settled and what is still in progress.
+The full-corpus run measuring every pipeline arm together has since finished: 927
+matrices, 7 arms, 413.6 minutes, no hang, no budget stop. It answers the two questions
+that were still open when this milestone was first written.
+
+**SOR through both steps.** Reordering alone (Milestone 13) already takes SOR from 119 to
+184. Adding adaptive omega on top takes it to **208** — a 75% increase over the as-given
+baseline, and stronger than reordering alone's 55%. Step 2 is not loss-free the way step 1
+is: relative to step 1 alone it gains 36 and loses 12, because there is no "leave omega
+alone" fallback the way "leave the diagonal alone" is always one of step 1's own
+candidates.
+
+**Reordering in front of ILU, whole corpus.** The 166-matrix probe (Milestone 14) could
+only show gains, because ILU could not be built on any of those matrices to begin with. Run
+across all 927, ILU-BiCGSTAB moves 616 to 634 and ILU-Krylov 617 to 635, both on identical
+gained-and-lost sets: **30 gained, 12 lost, net +18**. Twelve matrices where ILU already
+worked stop being solvable once the diagonal is reordered, because reordering changes what
+ILU is factoring against. That loss does not appear anywhere in the 166-matrix subset,
+because that subset's baseline was zero.
+
+Both results, with their honest costs, are in `RESULTS.md` section 8 ("Result 6" and
+"Result 7") and in figures `24_sor_full_pipeline.png` and `25_ilu_full_corpus.png`.
+Section 23 is now a record of a finished project rather than an open status report.
 
 ---
 ---
@@ -1278,6 +1294,8 @@ exists to do.
 
 ## 23. Where things stand right now
 
+**Every planned run is complete. Nothing in this project is still running.**
+
 **Fully measured and final:**
 * The 16-method main sweep, across all 927 matrices.
 * The spectral analysis (theory vs. reality).
@@ -1286,15 +1304,14 @@ exists to do.
   (Milestone 13).
 * The ILU-hole diagnosis, on the 166 matrices where it applies directly (Milestone 14).
 * The adaptive-omega probe, on a 400-matrix sample (Milestone 15).
-
-**Currently running:** the full pipeline sweep — all seven pipeline arms (Milestone 16),
-across the entire corpus, in one run. This will confirm the reordering numbers on a fresh
-run, and for the first time measure, across the *whole* corpus rather than only a
-sub-sample:
-* what the two-step pipeline (reordering **and** adaptive omega together) achieves on
-  SOR, which is currently unknown, and
-* what reordering-before-ILU achieves across the entire corpus, rather than only the 166
-  matrices where ILU was already known to be completely broken.
+* **The full pipeline sweep** — all seven pipeline arms, across the entire 927-matrix
+  corpus in one run: 413.6 minutes, no hang, no budget stop (Milestone 16). It confirmed
+  the reordering numbers on a fresh run and, for the first time, measured:
+  * what the two-step pipeline (reordering **and** adaptive omega together) achieves on
+    SOR: 119 to 184 to **208**, a result unknown until this run.
+  * what reordering-before-ILU achieves across the entire corpus rather than only the
+    166 matrices already known to be completely broken: **616 to 634** for
+    ILU-BiCGSTAB and **617 to 635** for ILU-Krylov, 30 gained and 12 lost either way.
 
 **Deliberately not done, and why:** downloading the rest of SuiteSparse (a further 353
 qualifying matrices) has been carried out into a *separate* folder that is intentionally
@@ -1303,5 +1320,6 @@ mixing them in would silently invalidate every number above at once. Whether to 
 everything on the larger, more complete corpus is a genuine future decision, not an
 oversight.
 
-**What is still needed:** the written report and the live presentation — this document,
-together with `README.md`, `SCOPE.md`, and `RESULTS.md`, is the raw material for both.
+**What is still needed:** the written report. The presentation itself is done
+(`Presentation/present.tex`, 42 slides) and this document, together with `README.md`,
+`SCOPE.md`, and `RESULTS.md`, is the raw material for the report.

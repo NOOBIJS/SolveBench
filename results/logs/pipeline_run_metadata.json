@@ -1,0 +1,37 @@
+{
+  "started": "2026-09-10T13:34:49.719717",
+  "on_kaggle": true,
+  "python": "3.12.13",
+  "numpy": "2.0.2",
+  "scipy": "1.16.3",
+  "pandas": "2.3.3",
+  "cpu_count": 4,
+  "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+  "finished": "2026-09-10T20:28:28.912920",
+  "runtime_minutes": 413.63518743713337,
+  "notebook": "solvebench-pipeline",
+  "config": {
+    "COND_EXACT_CAP": 2000,
+    "DIRECT_SIZE_CAP": 2000,
+    "DIVERGENCE_GROWTH": 1000000000000.0,
+    "ILL_CONDITIONED": 1000000000000000.0,
+    "ILU_DROP_TOL": 0.001,
+    "ILU_FILL_FACTOR": 5,
+    "MAX_ITERATIONS": 10000,
+    "POWER_ITERS_OMEGA": 60,
+    "POWER_ITER_MAX": 200,
+    "POWER_ITER_TOL": 1e-06,
+    "REFINEMENT_PASSES": [
+      0,
+      1
+    ],
+    "REFINEMENT_STUDY_PASSES": [
+      0,
+      1,
+      2
+    ],
+    "SOR_OMEGA": 1.25,
+    "SPECTRAL_EXACT_CAP": 2000,
+    "TOLERANCE": 1e-08
+  }
+}

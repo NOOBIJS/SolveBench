@@ -1,7 +1,8 @@
 # SolveBench — Project Scope
 
 CSE 402 (Numerical Analysis Lab), BUET, Section A2.
-Last updated: **2026-09-10**, after the reordering study completed.
+Last updated: **2026-09-11**, after the full pipeline run completed. All planned runs
+are now finished; nothing in this project is still running.
 
 Base paper: P. Khrapov and N. Volkov, *Comparative Analysis of Jacobi and Gauss-Seidel
 Iterative Methods*, International Journal of Open Information Technologies, vol. 12,
@@ -112,9 +113,10 @@ cost                 direct family        0 matvecs
 | Main sweep | 927 × 16 | 5.19 h | what each method can do |
 | Spectral analysis | ρ(T_J), ρ(T_GS), matrix classes | 0.95 h | does theory predict the outcome? |
 | Refinement study | 0 / 1 / 2 passes × every method | 3.30 h | who gains when all are given the same help? |
-| **Reordering study** | 927 × 3 conditions × 3 methods | 1.91 h | **the group's own method** |
+| Reordering study | 927 × 3 conditions × 3 methods | 1.91 h | reordering alone, on the stationary methods |
+| **Pipeline run** | 927 × 7 arms | 6.89 h | **both steps, together, on the whole corpus** |
 
-All four run on Kaggle from a notebook generated out of `src/solvebench/`, so the
+All five run on Kaggle from a notebook generated out of `src/solvebench/`, so the
 library and the run cannot drift apart.
 
 ---
@@ -201,10 +203,25 @@ the product of the diagonal. It beats MC64 on the quantity it targets **367-0** 
 ties, and it is solved exactly, verified against brute force over every permutation of
 matrices small enough to enumerate, 400/400.
 
-Row permutation is the only lever available, and that is proved rather than assumed: row
-scaling leaves `T_J` algebraically identical, column scaling is a similarity transform,
-and symmetric permutation moves `rho(T_GS)` only in the fifth decimal on real matrices.
 That is what keeps the method principled rather than an arbitrary heuristic.
+
+### The full pipeline, both steps, across the whole corpus
+
+The 927-matrix, 7-arm run completed 2026-09-11. Two results it settles that the
+reordering-alone numbers above could not:
+
+* **SOR through both steps**: 119 as given, 184 with reordering alone, **208 with the
+  relaxation factor chosen per matrix as well** — a 75% increase over the as-given
+  baseline. Step 2 is not loss-free the way step 1 is: it gains 36 and loses 12 relative
+  to step 1 alone, because choosing omega per matrix has no "do nothing" fallback.
+* **Reordering in front of ILU, whole corpus**: 616 to 634 for ILU-BiCGSTAB, 617 to 635
+  for ILU-Krylov (identical gained and lost sets for both). Net +18, but **30 gained and
+  12 lost** — the 166-matrix hole result only ever showed gains because its baseline was
+  zero everywhere; across matrices where ILU already worked, reordering can make the
+  factorization it now runs against worse.
+
+Both losses are stated here rather than in the headline for the same reason the +2
+against MC64 is not: a real, net-positive result stays honest by naming what it costs.
 
 ### Where the detail lives
 
@@ -231,12 +248,13 @@ project claims; that one states what was measured.
 
 | | State |
 |---|---|
-| Library, `src/solvebench/` | done — 43 tests |
-| Kaggle notebooks, generated from the library | done — 5 |
+| Library, `src/solvebench/` | done — 47 tests |
+| Kaggle notebooks, generated from the library | done — 6, all runs complete |
 | `RESULTS.md`, every number with its denominator | done |
-| Figures | done — 16 |
+| Figures | done — 25 |
 | Repository, <https://github.com/NOOBIJS/SolveBench> | public |
-| Slides, `linear.tex` | Update pages appended |
+| Slides, `docs/linear.tex` (proposal) and `Presentation/present.tex` (final) | done |
+| Full walkthrough, `Presentation/explaination.md` | done |
 | **Report** | **not started** — contents not yet specified by the course |
 
 ---

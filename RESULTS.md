@@ -3,8 +3,10 @@
 **Living document.** Every number here was measured, not estimated, and each is traceable
 to a table under `results/tables/`. Updated as work progresses.
 
-Last updated: **2026-09-10** · corpus **927 unique matrices, 26 domains**, n = 5 … 10,000
+Last updated: **2026-09-11** · corpus **927 unique matrices, 26 domains**, n = 5 … 10,000
 (930 files downloaded; see §0.1 for the three duplicates and the split domain)
+
+**All six planned runs are now complete.** Nothing in this project is still running.
 
 ---
 
@@ -15,6 +17,8 @@ Last updated: **2026-09-10** · corpus **927 unique matrices, 26 domains**, n = 
 | `solvebench-main-sweep` | 5.19 h | `benchmark_results.csv` | 14,880 = 930 × 16 ✓ |
 | `solvebench-refinement-study` | 3.30 h | `refinement_study.csv` | 9,600 = 200 × 16 × 3 ✓ |
 | `solvebench-spectral` | 0.95 h | `spectral.csv` | 930 ✓ |
+| `solvebench-reordering-study` | 1.91 h | `reordering_study.csv` | 8,170 |
+| `solvebench-pipeline` | 6.89 h | `pipeline_results.csv` | 6,510 = 930 × 7 ✓ |
 
 Kaggle, CPU only, 4 cores, scipy 1.16.3 / numpy 2.0.2, BLAS threads pinned to 1.
 Row counts are exact, so nothing was silently dropped.
@@ -419,11 +423,56 @@ this corpus is neither. What is measured here is not the formula but whether it 
 applying outside its hypotheses. It is, modestly. Its 60 power iterations are charged to
 the method as matvecs.
 
+### Result 6 — the full pipeline on SOR: both steps together
+
+Completed 2026-09-10 on Kaggle: **927 matrices, 7 pipeline arms, 413.6 minutes**.
+`results/tables/pipeline_results.csv`. This is the number Result "Step 2" above could not
+give on its own, because the 400-matrix probe never combined omega selection with
+diagonal selection, and never ran on the full corpus.
+
+| stage | SOR solved |
+|---|---|
+| as given | 119 |
+| + reordering (step 1 alone) | 184 |
+| **+ adaptive omega too (steps 1 and 2)** | **208** |
+
+Step 2 adds **24** on top of step 1 (**+65%** over the as-given baseline, up from the
++55% reordering alone gives). That +24 is not one-directional the way step 1 is: relative
+to step 1 alone it gains 36 and loses 12. Relative to the true "as given" baseline the
+full pipeline gains 97 and loses 8, net +89. Choosing omega per matrix has no
+"do nothing" fallback the way the diagonal selector does, so it can genuinely make a
+system that used to converge stop converging. Figure `24_sor_full_pipeline`.
+
+### Result 7 — reordering in front of ILU, across the whole corpus, not just the hole
+
+The 166-matrix probe (§ILU hole, below) could only show gains, because ILU could not be
+built at all on any of those matrices before reordering — the baseline was zero. Run
+across the full corpus, the picture is more honest:
+
+| | ILU-BiCGSTAB solved | ILU-Krylov (dispatched) solved |
+|---|---|---|
+| as given | 616 | 617 |
+| **+ reordering** | **634** | **635** |
+| gained | 30 | 30 |
+| lost | 12 | 12 |
+| **net** | **+18** | **+18** |
+
+The two ILU-preconditioned methods move on **identical** gained and lost sets — both use
+the same ILU factorization, only the Krylov solver on top differs. **Twelve matrices where
+ILU already worked stop being solvable once the diagonal is reordered.** Changing which
+entries sit on the diagonal changes what ILU factors against, and for those twelve the new
+factorization is worse. This is the honest counterpart to the 166-matrix result: reordering
+in front of ILU is a net win, but not a free one. Figure `25_ilu_full_corpus`.
+
 ### Known negatives — reported, not hidden
 
 * `d_ss`: bottleneck made it **worse**, ρ(T_GS) 1.884 → 29.605. A min-max objective
   protects the worst row and can sacrifice the rest.
 * The portfolio's power-iteration estimate misranks near-ties and cost 2 rescues.
+* Adaptive omega, on top of reordering, loses 12 systems relative to reordering alone
+  (Result 6). Reordering in front of ILU loses 12 systems relative to ILU alone across
+  the full corpus (Result 7). Neither loss shows up in a subset probe restricted to
+  matrices that could not be solved at all beforehand.
 * Six corpus files are truncated downloads and never loaded (§9).
 
 ## 9. Claims that must not be made

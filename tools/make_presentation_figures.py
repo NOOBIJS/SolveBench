@@ -339,10 +339,125 @@ def fig_random_matrices():
                 "made bigger than the paper itself tested.")
 
 
+# --------------------------------------------------------------- 24: SOR, both steps
+
+def fig_sor_full_pipeline():
+    """SOR taken through both pipeline steps: what step 2 buys on top of step 1.
+
+    The pipeline run finished after this figure set was first drawn, so this is the
+    one comparison that could not be measured until the full sweep completed. Same
+    staged-bridge style as figure 20, because the shape of the claim is the same:
+    where does each stage's gain actually land.
+    """
+    p = pd.read_csv(TABLES / "pipeline_results.csv")
+    b = corpus.apply(pd.read_csv(TABLES / "benchmark_results.csv"))
+    b = b[b.refinement_passes == 0]
+    p = corpus.apply(p)
+
+    given = int((b[b.method == "SOR"].status == "solved").sum())
+    step1 = int((p[p.method == "SOR + reordered"].status == "solved").sum())
+    step12 = int((p[p.method == "SOR + pipeline"].status == "solved").sum())
+
+    stages = [("as given", 0, given, MUTED),
+              ("+ reordering\n(step 1)", given, step1, C2),
+              ("+ adaptive omega\n(step 1 and 2)", step1, step12, C1)]
+    fig, ax = plt.subplots(figsize=(7.8, 4.6))
+    for i, (label, lo, hi, colour) in enumerate(stages):
+        ax.bar(i, hi - lo, bottom=lo, width=0.62, color=colour, zorder=3)
+        ax.text(i, hi + 6, f"{hi}", ha="center", fontsize=11, fontweight="bold",
+                color=INK, zorder=5)
+        if i > 0:
+            ax.plot([i - 1 + 0.31, i - 0.31], [lo, lo], color=AXIS, lw=1.1,
+                    linestyle=(0, (3, 2)), zorder=2)
+            ax.text(i, lo + (hi - lo) / 2, f"+{hi - lo}", ha="center", va="center",
+                    fontsize=9.5, color="white", fontweight="bold")
+    ax.set_xticks(range(len(stages)))
+    ax.set_xticklabels([s[0] for s in stages], fontsize=9.5)
+    ax.set_xlim(-0.6, 2.6)
+    ax.set_ylim(0, step12 * 1.28)
+    ax.set_ylabel("SOR, systems solved (927 matrices)")
+    ax.set_title("SOR through both pipeline steps", pad=10)
+    mf._hide_grid_x(ax)
+    return save(fig, "24_sor_full_pipeline",
+                f"{given} as given, {step1} after choosing the diagonal alone, "
+                f"{step12} with the relaxation factor chosen per matrix as well. Step 2 "
+                f"adds {step12 - step1} on top of step 1: it gains 36 and loses 12 "
+                "relative to step 1 alone, a net gain, but not a free one -- choosing "
+                "omega per matrix changes which systems converge in both directions.")
+
+
+# --------------------------------------------------------------- 25: ILU, full corpus
+
+def fig_ilu_full_corpus():
+    """Reordering in front of ILU, measured across the WHOLE corpus, not just the
+    166 matrices where ILU could not be built at all.
+
+    That subset probe (figure 2) could only show gains, because its baseline was
+    zero everywhere. Across the full corpus reordering can also disturb a matrix
+    where ILU already worked -- changing the diagonal changes the conditioning ILU
+    factors against -- and it does, on 12 matrices. This figure exists specifically
+    to show that loss rather than let the subset result stand in for the whole
+    corpus's answer.
+    """
+    b = corpus.apply(pd.read_csv(TABLES / "benchmark_results.csv"))
+    b = b[b.refinement_passes == 0]
+    p = corpus.apply(pd.read_csv(TABLES / "pipeline_results.csv"))
+
+    base = set(b[(b.method == "ILU-BiCGSTAB") & (b.status == "solved")].matrix)
+    new = set(p[(p.method == "ILU-BiCGSTAB + reordered") & (p.status == "solved")].matrix)
+    gained, lost = len(new - base), len(base - new)
+    kept = len(base & new)
+    before, after = len(base), len(new)
+
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(9.8, 4.0),
+                                  gridspec_kw={"width_ratios": [1.05, 1]})
+
+    ax.bar(0, before, width=0.55, color=MUTED, zorder=3)
+    ax.bar(1, after, width=0.55, color=C1, zorder=3)
+    ax.text(0, before + 8, str(before), ha="center", fontsize=11, fontweight="bold",
+            color=INK)
+    ax.text(1, after + 8, str(after), ha="center", fontsize=11, fontweight="bold",
+            color=INK)
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(["as given", "+ reordering"], fontsize=9.5)
+    ax.set_ylim(0, after * 1.22)
+    ax.set_ylabel("solved (ILU-BiCGSTAB, 927 matrices)")
+    ax.set_title("Net effect", fontsize=10.5)
+    mf._hide_grid_x(ax)
+
+    cats = ["gained", "lost"]
+    vals = [gained, lost]
+    cols = [STATUS["solved"], STATUS["inaccurate"]]
+    ax2.bar(cats, vals, color=cols, width=0.5, zorder=3)
+    for i, v in enumerate(vals):
+        ax2.text(i, v + 0.8, f"{v}", ha="center", fontsize=11, fontweight="bold",
+                 color=INK)
+    ax2.set_ylim(0, max(vals) * 1.3)
+    ax2.set_ylabel("matrices")
+    ax2.set_title(f"Net +{gained - lost}: not a one-directional win", fontsize=10.5)
+    mf._hide_grid_x(ax2)
+
+    fig.suptitle("Reordering in front of ILU, across the full corpus", fontsize=12.5,
+                 y=1.02)
+    fig.tight_layout()
+    return save(fig, "25_ilu_full_corpus",
+                f"{before} to {after} solved by ILU-BiCGSTAB across all 927 matrices "
+                f"({kept} unchanged, {gained} gained, {lost} lost). ILU-Krylov "
+                "(dispatched) moves identically: same 30 gained, same 12 lost. On "
+                "the 166-matrix subset where ILU could not be built at all (figure 2) "
+                "reordering only ever gains, because the baseline there is zero; on "
+                "the other 761, where ILU already worked, changing the diagonal "
+                "changes what ILU factors against, and that can go either way.")
+
+
 def main():
     print(f"writing new presentation figures to {OUT}\n")
     figs = [fig_matrix_gallery(), fig_hang_fixes(), fig_incremental_gains(),
             fig_adaptive_omega(), fig_domain_composition(), fig_random_matrices()]
+    if (TABLES / "pipeline_results.csv").exists():
+        figs += [fig_sor_full_pipeline(), fig_ilu_full_corpus()]
+    else:
+        print("  (skipped: pipeline_results.csv not present yet)")
     print(f"\n{len(figs)} figures written")
 
 

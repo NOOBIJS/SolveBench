@@ -753,10 +753,31 @@
       much, is.
     \item Steps 1 and 2 never touch the solver itself. $A'\vec{x}=\vec{b}'$ solves
       the original system directly: nothing needs to be undone.
-    \item \textbf{\color{LSteal}Status:} the full seven-arm sweep across all 927
-      matrices is running now. Reordering alone (Milestone 7) and the ILU-hole
-      result (Milestone 8) are already final.
+    \item \textbf{\color{LSteal}All seven arms have now run}, across all 927 matrices,
+      413.6 minutes, no hang. What that run found is on the next two slides.
   \end{itemize}
+\end{frame}
+
+\begin{frame}{Milestone 10 (continued): SOR Through Both Steps}
+  \begin{center}
+  \slidefig[0.6]{24_sor_full_pipeline.png}
+  \end{center}
+  \vspace{0.2em}
+  \footnotesize\color{LSgray}\centering
+  Step 2 adds 24 on top of step 1, a 75\% increase over the as-given baseline. Not
+  loss-free: relative to step 1 alone it gains 36 and loses 12, because choosing
+  $\omega$ per matrix has no ``do nothing'' fallback the way step 1 does.
+\end{frame}
+
+\begin{frame}{Milestone 10 (continued): Reordering in Front of ILU, Whole Corpus}
+  \begin{center}
+  \slidefig[0.86]{25_ilu_full_corpus.png}
+  \end{center}
+  \vspace{0.2em}
+  \footnotesize\color{LSgray}\centering
+  The 166-matrix hole (Milestone 8) could only show gains, since its baseline was zero.
+  Across all 927, ILU-BiCGSTAB and ILU-Krylov both move on identical sets: 30 gained,
+  12 lost, net +18. Changing the diagonal changes what ILU factors against.
 \end{frame}
 
 %=============================================================================
@@ -776,6 +797,9 @@
       permutation on this corpus.
     \item \textbf{We do not claim a new iterative method.} This is a preprocessing
       pipeline in front of solvers that are otherwise completely unmodified.
+    \item \textbf{We do not claim the full pipeline is loss-free.} Step 2 gains 36 and
+      loses 12 on top of step 1 for SOR; reordering in front of ILU gains 30 and loses
+      12 across the whole corpus. Only step 1 alone is guaranteed never to lose.
   \end{itemize}
   \vspace{0.5em}
   \colorbox{LSlightgold}{\parbox{0.95\linewidth}{\centering\footnotesize
@@ -784,12 +808,12 @@
 \end{frame}
 
 %=============================================================================
-\dividerframe{PART 7}{Where Things Stand}{What is finished, what is running, and what comes next}
+\dividerframe{PART 7}{Where Things Stand}{Everything planned has run. What comes next}
 %=============================================================================
 
 \begin{frame}{Status Right Now}
   \small
-  \renewcommand{\arraystretch}{1.12}
+  \renewcommand{\arraystretch}{1.02}
   \begin{center}
   \begin{tabular}{@{}p{6.7cm}p{4.0cm}@{}}
     \toprule
@@ -804,11 +828,14 @@
     ILU-hole diagnosis (166 matrices) & \gd{done}\\
     \rowcolor{LSlight}
     Adaptive-omega probe (400 matrices) & \gd{done}\\
-    \textbf{Full 7-arm pipeline, whole corpus} & \textbf{\color{LSgold}running now}\\
+    Full 7-arm pipeline, whole corpus & \gd{done}\\
     \bottomrule
   \end{tabular}
   \end{center}
-  \vspace{0.3em}
+  \vspace{0.1em}
+  \colorbox{LSlightgold}{\parbox{0.96\linewidth}{\centering\footnotesize
+  \textbf{Every planned run has finished. Nothing in this project is still running.}}}
+  \vspace{0.1em}
   \footnotesize\color{LSgray}
   353 further SuiteSparse matrices have been downloaded into a separate folder for
   a possible future, larger run. They are deliberately not mixed into the 927 this

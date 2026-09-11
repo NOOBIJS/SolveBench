@@ -392,7 +392,7 @@ that is exactly how the library and the notebook drifted apart once already.
 | `solvebench-spectral` | `ρ` and matrix classes, no solving | 0.95 h |
 | `solvebench-refinement-study` | 0/1/2 refinement passes for every method | 3.30 h |
 | `solvebench-reordering-study` | 3 conditions × 3 stationary methods | 1.91 h |
-| `solvebench-pipeline` | the 7 pipeline arms | ~2 h |
+| `solvebench-pipeline` | the 7 pipeline arms | 6.89 h |
 
 ### Documents
 
@@ -531,6 +531,16 @@ Pooling the two is what let *dataset* difficulty masquerade as *solver* inaccura
 dispatched bar matches always-BiCGSTAB, the dispatch rule adds nothing. It very nearly
 does.
 
+### Presentation figures (18–25)
+
+Eight further figures, built by `tools/make_presentation_figures.py` rather than
+`make_figures.py`, exist to make the talk itself: a gallery of real matrix sparsity
+patterns, the four scipy hangs drawn before-and-after, the reordering result as a staged
+bridge, the adaptive-omega ceiling, domain composition, the random-matrix collapse, and
+(once the pipeline run finished) SOR through both steps and reordering-in-front-of-ILU
+across the whole corpus. Each is captioned in full in `Presentation/present.tex` and
+walked through in `Presentation/explaination.md`.
+
 ---
 
 ## 10. The results
@@ -563,7 +573,7 @@ best stationary        121        (Gauss-Seidel)
 And `ρ(T_J)` grows roughly linearly with `n`: median 10 at n ≤ 10, 166 at n ≈ 300. The
 base paper's validation works at 2–5 unknowns and stops working almost immediately after.
 
-### Our pipeline
+### Our pipeline, step 1 alone (reordering)
 
 ```
 Jacobi         76 → 124   (+63%)
@@ -572,12 +582,30 @@ SOR           119 → 184   (+55%)
               199 recovered, 0 lost
 ```
 
+### The full pipeline, both steps, whole corpus (the final run)
+
+```
+SOR            119 → 184 (step 1) → 208 (steps 1+2)     (+75% over as-given)
+                 step 2 alone gains 36, loses 12, on top of step 1
+
+ILU-BiCGSTAB   616 → 634   (30 gained, 12 lost, net +18, whole corpus)
+ILU-Krylov     617 → 635   (identical gained/lost set to ILU-BiCGSTAB)
+```
+
+Unlike step 1, step 2 (and reordering-in-front-of-ILU across the *whole* corpus, as
+opposed to just the 166-matrix hole) is not loss-free. Both losses are real and are
+reported, not hidden — see `RESULTS.md` §8, Results 6 and 7.
+
 ### The ILU hole
 
 ```
-166 matrices where no ILU can be built
+166 matrices where no ILU can be built at all
   → step 1 makes 150 constructible, 17 solve
 ```
+
+That 17 is a subset of the full-corpus ILU result above: on the 166 matrices where ILU
+could not be built at all, reordering only ever helps, because the baseline is zero.
+Across the other 761, where ILU already worked, it can also hurt.
 
 ### Where our objective stands against MC64
 

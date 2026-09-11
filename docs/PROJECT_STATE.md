@@ -4,24 +4,29 @@
 the work stands, what was decided and why, and what is still open — the things a fresh
 reader (or a fresh session) would otherwise have to rediscover.
 
-Last updated: **2026-09-10** (reordering run complete)
+Last updated: **2026-09-11** (pipeline run complete — every planned run is now finished)
 
 ---
 
 ## 1. Where the project stands
 
-The course project is complete end to end except for the novel method's headline number.
-Publication is a later, separate goal and is **not** driving decisions right now.
+The course project is complete end to end. Every Kaggle run that was planned has run and
+finished with no hang and no budget stop. Publication is a later, separate goal and is
+**not** driving decisions right now. The report is the one piece of the deliverable that
+has not been started.
 
 | Piece | State |
 |---|---|
-| Library (`src/solvebench/`, 16 methods) | done, 40 tests pass |
+| Library (`src/solvebench/`, 16 baseline methods + 7 pipeline arms) | done, 47 tests pass |
 | Main sweep, 927 × 16 | done, 5.19 h |
 | Spectral analysis | done, 0.95 h |
 | Refinement study | done, 3.30 h |
-| **Reordering study (the novel method)** | **done**, 114.7 min, 927 matrices — see §9 |
-| Figures (13) | done, audited, 8 real bugs found and fixed |
-| `linear.tex` | 4 "Update" slides appended, proposal slides untouched |
+| Reordering study (diagonal selection alone) | done, 114.7 min — see §9 |
+| **Pipeline run (both steps, all 7 arms, whole corpus)** | **done**, 413.6 min — see §10 |
+| Figures (25) | done, audited, 8 real bugs found and fixed |
+| `docs/linear.tex` (proposal) | 4 "Update" slides appended, proposal slides untouched |
+| `Presentation/present.tex` (final deck) | done, 42 slides, compiled clean |
+| `Presentation/explaination.md` (full walkthrough) | done |
 | Report | not started |
 
 Repository: <https://github.com/NOOBIJS/SolveBench> — public, commits authored as
@@ -155,9 +160,9 @@ systems into Jacobi's "diverges" column.
 1. ~~**Preflight**~~ **PASSED.** All 930 matrices, 66.5 min, no hang, on the fourth
    attempt — each earlier one found a hang the previous fix had not covered
    (`west0067`, `bcsstk19`, `rw5151`). Results in §8.
-2. **Re-run the reordering study** on `ijsasif`. Needs the user's confirmation before
-   pushing, as always. **Budget is the open question** — see §8; the probe should go
-   first.
+2. ~~**Re-run the reordering study, then the full pipeline.**~~ **Both done.** The
+   reordering study (§9) and the 7-arm pipeline run (§10) both completed on `ijsasif`
+   with no hang and no budget stop. Nothing is running any more.
 3. ~~**99 missing matrices.**~~ **That number was wrong — it is 353.** SuiteSparse holds
    **1,184** square real matrices at n ≤ 10,000. The corpus has 830 of them (plus 100
    self-generated random ones, which is where the earlier count went astray by treating
@@ -276,5 +281,31 @@ Ran on `ijsasif` in **114.7 minutes** — well inside the 12-hour limit and well
 exact algorithm, a theorem, and an honest full-corpus evaluation against the established
 tool. It wins on what it optimises and does not win on systems solved — that is a
 result, not a failure, and it is the group's own work end to end.
+
+---
+
+## 10. The pipeline run, completed
+
+Ran on `ijsasif` in **413.6 minutes** (6.89 h) — well inside the 12-hour limit, no hang,
+no budget stop, all 930 files processed. `results/tables/pipeline_results.csv`,
+`results/tables/pipeline_summary.csv`. This was the one number Milestone 10 in
+`Presentation/explaination.md` had left open: what do both pipeline steps achieve
+*together*, on the *whole* corpus, rather than on a probe or a subset.
+
+* **SOR through both steps: 119 → 184 (reordering alone) → 208 (both steps).** Step 2
+  adds 24 on top of step 1 — a 75% increase over the as-given baseline, stronger than
+  reordering alone (+55%). It is not loss-free: relative to step 1 alone it gains 36 and
+  loses 12, because the omega selector has no "do nothing" fallback the way the diagonal
+  selector does.
+* **Reordering in front of ILU, whole corpus: 616 → 634 (ILU-BiCGSTAB), 617 → 635
+  (ILU-Krylov dispatched).** Net +18 for both, on **identical** gained and lost sets (both
+  use the same ILU factorization). The honest part: **30 gained, 12 lost** — the
+  166-matrix "ILU hole" probe only ever showed gains because its baseline there was zero;
+  across the matrices where ILU already worked, reordering can leave it factoring against
+  a worse-conditioned diagonal.
+* Figures `24_sor_full_pipeline.png` and `25_ilu_full_corpus.png` carry both results.
+  `RESULTS.md` §8 "Result 6" and "Result 7" carry the full numbers.
+
+**Nothing is running.** Every planned Kaggle run in this project has now completed.
 
 **What not to claim.** That it beats MC64. It does not, on the measure that matters.
