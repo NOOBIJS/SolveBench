@@ -306,6 +306,31 @@ no budget stop, all 930 files processed. `results/tables/pipeline_results.csv`,
 * Figures `24_sor_full_pipeline.png` and `25_ilu_full_corpus.png` carry both results.
   `RESULTS.md` §8 "Result 6" and "Result 7" carry the full numbers.
 
-**Nothing is running.** Every planned Kaggle run in this project has now completed.
+---
+
+## 11. Correction and re-run, 2026-09-16
+
+**Every ILU number above is understated.** `build_ilu` retried `spilu` at `(1e-3, 5)`,
+`(1e-2, 10)`, `(1e-2, 20)` — with *increasing* `drop_tol`. spilu fails on a zero pivot, and
+dropping more entries makes a zero pivot likelier rather than less, so the ladder retried
+in the direction that makes failure more probable.
+
+Audited against stock `spilu` with no permutation at all: `drop_tol = 0` factors **150 of
+the 166** matrices we reported as admitting no incomplete factorization — the same 150,
+to within one matrix each way — in 0.002 s median. At `drop_tol = 1e-6`, a genuinely
+incomplete factorization, 113 still factor. **The real hole is 16 matrices.**
+
+Fixed in `config.ILU_LADDER`, which now runs `(1e-3,5) → (1e-4,10) → (1e-6,20) → (0,50)`
+and probes every candidate on a random vector before accepting it — a factorization that
+succeeds and then maps to `inf` used to be returned silently and poison every downstream
+Krylov step. 47 tests pass. Evidence in [`AUDIT_2026-09-16.md`](AUDIT_2026-09-16.md).
+
+**Three runs are in flight** (pushed 2026-09-16), all on the 927-matrix corpus so the
+before/after stays comparable: `solvebench-main-sweep`, `solvebench-pipeline`,
+`solvebench-refinement-study`. The spectral and reordering studies are unaffected — the
+first does no solving and the second touches only the stationary methods.
+
+The research work has moved to a separate private repository,
+<https://github.com/NOOBIJS/solvebench-paper>. This repository remains the course project.
 
 **What not to claim.** That it beats MC64. It does not, on the measure that matters.

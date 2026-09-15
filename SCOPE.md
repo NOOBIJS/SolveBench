@@ -192,11 +192,14 @@ and symmetric permutation moves `rho(T_GS)` only in the fifth decimal on real ma
 the selector, and the evaluation of all of it on a full corpus. MC64 is a component it
 uses, the way any numerical code uses BLAS.
 
-**2. The diagnosis of the ILU hole** — 166 matrices on which no incomplete factorization
-can be built, which takes the entire preconditioned family down at once: BiCGSTAB solves
-12 of them, GMRES 11, Gauss-Seidel 0, against sparse direct's 148. The cause is that
-`build_ilu` falls back to diagonal scaling, which a zero on the diagonal closes off.
-Step 1 makes **150 of the 166 constructible** and 17 solve outright.
+**2. ~~The diagnosis of the ILU hole~~ — RETRACTED 2026-09-16.** We reported 166 matrices
+on which no incomplete factorization can be built, and that step 1 made 150 of them
+constructible. An audit against stock `spilu` factors **150 of the 166 with no permutation
+at all** — the same 150, to within one matrix each way — because the old retry ladder
+raised `drop_tol` on each attempt, which makes a zero pivot likelier rather than less.
+Restricted to a genuinely incomplete factorization (`drop_tol = 1e-6`), 113 of the 166
+still factor. The real hole is **16 matrices**. `build_ilu` is fixed and every ILU number
+in this project now needs re-measuring. See [`docs/AUDIT_2026-09-16.md`](docs/AUDIT_2026-09-16.md).
 
 **3. The bottleneck objective** — minimising the worst row ratio rather than maximising
 the product of the diagonal. It beats MC64 on the quantity it targets **367-0** with 506

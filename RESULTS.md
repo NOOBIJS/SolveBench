@@ -445,6 +445,13 @@ system that used to converge stop converging. Figure `24_sor_full_pipeline`.
 
 ### Result 7 — reordering in front of ILU, across the whole corpus, not just the hole
 
+> **Correction, 2026-09-16.** Every number in this section is measured against a broken
+> ILU retry ladder and is **understated**. `build_ilu` retried `spilu` with *increasing*
+> `drop_tol`, which makes a zero pivot likelier rather than less; stock `spilu` at
+> `drop_tol = 0` factors 150 of the 166 "impossible" matrices with no permutation at all.
+> The ladder is fixed in `config.ILU_LADDER` and a re-run is in progress. Do not cite this
+> table until it lands. See [`docs/AUDIT_2026-09-16.md`](docs/AUDIT_2026-09-16.md).
+
 The 166-matrix probe (§ILU hole, below) could only show gains, because ILU could not be
 built at all on any of those matrices before reordering — the baseline was zero. Run
 across the full corpus, the picture is more honest:

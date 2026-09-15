@@ -313,12 +313,18 @@ def build_ilu(A, work=None):
     """
     import time
     t0 = time.perf_counter()
-    for drop, fill in ((config.ILU_DROP_TOL, config.ILU_FILL_FACTOR),
-                       (config.ILU_DROP_TOL * 10, config.ILU_FILL_FACTOR * 2),
-                       (1e-2, 20)):
+    Acsc = A.tocsc()
+    probe = np.random.default_rng(0).standard_normal(A.shape[0])
+    for drop, fill in config.ILU_LADDER:
         try:
-            ilu = spla.spilu(A.tocsc(), drop_tol=drop, fill_factor=fill)
+            ilu = spla.spilu(Acsc, drop_tol=drop, fill_factor=fill)
         except (RuntimeError, ValueError, MemoryError):
+            continue
+        try:                                  # a factorization can succeed and still be
+            y = ilu.solve(probe)              # unusable: a tiny pivot sends the solve to
+        except Exception:                     # inf, and applying that silently poisons
+            continue                          # every Krylov step downstream
+        if not np.all(np.isfinite(y)):
             continue
         if work is not None:
             work.setup += time.perf_counter() - t0

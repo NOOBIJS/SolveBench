@@ -50,6 +50,17 @@ REFINEMENT_STUDY_PASSES = (0, 1, 2)
 ILU_DROP_TOL = 1e-3
 ILU_FILL_FACTOR = 5
 
+# The retry ladder, in order. It has to push *toward* robustness: spilu fails on a zero
+# pivot, and dropping more entries makes that likelier, not less. The first version of
+# this ladder went the other way (1e-3, 1e-2, 1e-2) and reported 166 matrices as having no
+# possible incomplete factorization. An audit against stock spilu factored 150 of those
+# with drop_tol=0 and no permutation at all, in 0.002 s median, so the hole was this
+# ladder rather than a property of ILU. See tools/audit_ilu_hole.py.
+ILU_LADDER = ((ILU_DROP_TOL, ILU_FILL_FACTOR),
+              (1e-4, 10),
+              (1e-6, 20),
+              (0.0, 50))
+
 # --- direct solvers ----------------------------------------------------------
 # The direct solvers are hand-written rather than LAPACK calls, so they cost
 # O(n^3) in Python: roughly 50-100x slower than numpy.linalg.solve, measured at

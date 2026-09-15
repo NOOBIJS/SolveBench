@@ -596,16 +596,28 @@ Unlike step 1, step 2 (and reordering-in-front-of-ILU across the *whole* corpus,
 opposed to just the 166-matrix hole) is not loss-free. Both losses are real and are
 reported, not hidden — see `RESULTS.md` §8, Results 6 and 7.
 
-### The ILU hole
+### ~~The ILU hole~~ — retracted 2026-09-16
+
+We reported this:
 
 ```
 166 matrices where no ILU can be built at all
   → step 1 makes 150 constructible, 17 solve
 ```
 
-That 17 is a subset of the full-corpus ILU result above: on the 166 matrices where ILU
-could not be built at all, reordering only ever helps, because the baseline is zero.
-Across the other 761, where ILU already worked, it can also hurt.
+It does not hold. `build_ilu` retried `spilu` at `(1e-3, 5)`, `(1e-2, 10)`, `(1e-2, 20)` —
+with *increasing* `drop_tol`. spilu fails on a zero pivot, and dropping more entries makes
+a zero pivot likelier, not less. The ladder was retrying in the direction that makes
+failure more probable.
+
+Re-run against stock `spilu` with **no permutation at all**, `drop_tol = 0` factors
+**150 of the 166** — the same 150, to within one matrix each way — in 0.002 s median. At
+`drop_tol = 1e-6`, a genuinely incomplete factorization, 113 still factor. The real hole
+is **16 matrices**.
+
+The ladder is fixed in `config.ILU_LADDER`, and every ILU number in this project is
+understated until the re-run lands. Full evidence in
+[`AUDIT_2026-09-16.md`](AUDIT_2026-09-16.md).
 
 ### Where our objective stands against MC64
 
