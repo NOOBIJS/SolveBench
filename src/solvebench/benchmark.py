@@ -28,7 +28,8 @@ from . import reordering
 from . import metrics, reference_solvers as ref, spectral
 from .direct_solvers import SolverNotApplicable
 from .io_utils import (cancellation_ratio, discover_matrices, load_matrix,
-                       make_ground_truth, structural_singularity)
+                       make_ground_truth, structural_singularity,
+                       structural_rank_deficit)
 from .refinement import refine
 
 
@@ -173,11 +174,14 @@ def run_one_matrix(domain, name, mtx_path, refinement_passes=(0, 1),
             "density": A.nnz / (n * n)}
 
     zero_rows, zero_cols = structural_singularity(A)
-    if zero_rows or zero_cols:
+    deficit = structural_rank_deficit(A)
+    if zero_rows or zero_cols or deficit:
         if verbose:
-            print(f"    structurally singular ({zero_rows} zero rows, {zero_cols} zero cols)"
-                  " -- no unique solution, all methods skipped")
-        note = f"{zero_rows} zero rows, {zero_cols} zero cols"
+            print(f"    structurally singular ({zero_rows} zero rows, {zero_cols} zero "
+                  f"cols, structural rank deficit {deficit}) -- no unique solution, "
+                  "all methods skipped")
+        note = (f"{zero_rows} zero rows, {zero_cols} zero cols, "
+                f"structural rank deficit {deficit}")
         rows = [_row(base, m, p, **metrics.blank(metrics.STATUS_SINGULAR, note))
                 for m in methods for p in refinement_passes]
         return rows, {**base, "status": metrics.STATUS_SINGULAR}

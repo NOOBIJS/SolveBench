@@ -67,6 +67,33 @@ def structural_singularity(A):
     return zero_rows, zero_cols
 
 
+def structural_rank_deficit(A):
+    """``n - structural_rank(A)``: how far the sparsity pattern is from a full matching.
+
+    A positive value means no permutation can put a nonzero on every diagonal entry, so
+    the determinant vanishes identically whatever the values are and the system has no
+    unique solution. Strictly stronger than ``structural_singularity``, which only sees
+    an entirely empty row or column: ``M10PI_n`` and ``S10PI_n`` have no empty row or
+    column at all and are still rank deficient by 3.
+
+    That gap is not academic. It is the same OS-kill the docstring above describes, one
+    screen further out. The relax-and-retry ILU ladder pushes SuperLU harder than the
+    original did, and under Kaggle's scipy the harder push exhausts memory on exactly
+    these matrices instead of raising -- the 2026-09-16 main sweep died at ``M10PI_n``,
+    matrix 113 of 930, having run cleanly past ``M10PI_n1`` only because that one happens
+    to have two empty rows and was caught by the weaker screen.
+
+    Dulmage-Mendelsohn, so it costs nothing worth measuring: 2 ms on TSC_OPF_1047 at
+    n = 8,140 with 2.0M nonzeros.
+    """
+    from scipy.sparse.csgraph import structural_rank
+    n = A.shape[0]
+    try:
+        return int(n - structural_rank(A.tocsr()))
+    except Exception:
+        return 0            # never let the screen itself be what fails the run
+
+
 def discover_matrices(dataset_root):
     """Find every .mtx under the corpus root, flat or nested, as one entry each."""
     root = Path(dataset_root)
