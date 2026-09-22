@@ -1,0 +1,25 @@
+in the flow you made the slide, please create make a latex report in @finalreport.tex
+
+please follow the tenplate and theme of "E:\L-4-T-1 Study Materials\Numerical Analysis Lab\Project\full_report.tex"
+
+
+unlik ethe slide, where you told everything concisely , where you will write everhting in details. The flow of story will be the same.
+like introm, motivation, datasets we used, examples of dataset marticaes, paper, ethods we have impletemed from paper, methdos we designe novel , (from the beinggign methods to what we strucgged on and ahow we impirved tnem)< results ,d airagsm and weveryhting else . Please inlcud eother things if i am missing some. each story inrcrememnatally from beginning to end.
+
+please create enough Sections and subextions to organize the contents
+
+
+re-use the tikz code of the rendered diagrsm and plot sof the slides.
+the result tht was not rendred yet in lside, please write tikz code for it and rednere it beautifully and cleanly . 
+
+
+another thing we missed in the sldie is "analysis  why a specific solver fails and why and how we suggested novel solutions for it " 
+even if it is told in previous sectiosn, keep another section ort . this failure enalaysis is wanted by our teacher specidifcacally so include the resoans of failure + improvement descsion for both the established paper methods + our designed methods.
+
+
+then write a nice conclusion
+
+accorss the report , please use humanly looking butt professional and scholarly lamguage .
+use /personal-humanizer and /humanizer skill . but still miantian a bit scholarly language and porfessaionalism in technical writing. should not sound like a naive student wither but should avoid cpmmon ai slops (like MEVER USE em shashes ) and try to avoid common ai generated phrases so that our report looks genuineinly human crafted
+
+do it it extreme effoert, care and importance. take as much time as you need, best of luck
