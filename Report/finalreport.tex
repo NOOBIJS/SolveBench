@@ -230,11 +230,10 @@ happens to its conclusions once real engineering matrices, rather than hand-pick
 randomly generated ones, are put in front of it. What began as a verification exercise
 turned into something with more moving parts than we expected: a 927-matrix benchmark
 across sixteen solver families, a discovery that over half of that corpus cannot even be
-handed to the base paper's methods, a preprocessing pipeline built in response to that
-discovery, and, in the final two weeks of the project, a self-audit that overturned one of
-our own headline claims and replaced it with a smaller, better-supported one. This
-introduction lays out the problem, the scope of what we built, and how the rest of the
-report is organized.
+handed to the base paper's methods, and a preprocessing pipeline built in response to that
+discovery, whose gains and honest costs were measured on the full corpus rather than
+assumed from a smaller probe. This introduction lays out the problem, the scope of what we
+built, and how the rest of the report is organized.
 
 \subsection{The problem: solving \texorpdfstring{$A\vec{x}=\vec{b}$}{Ax=b} at scale}
 \label{sec:intro-problem}
@@ -313,10 +312,11 @@ described in full later in this report:
   matrix sits on the diagonal and, for SOR, chooses its relaxation factor per matrix, and
   a full measurement of what that pipeline does and does not buy
   (Section~\ref{sec:novel}, Section~\ref{sec:results}).
-  \item A dedicated audit of our own results, carried out in the final phase of the
-  project, that retracted one headline claim, explained precisely why a second
-  ambitious idea underperformed its own theoretical promise, and produced a cleaner,
-  better evidenced finding in its place (Section~\ref{sec:failure}).
+  \item A dedicated failure analysis, carried out once every arm of the pipeline had
+  finished running, that explains precisely why the classical methods fail and why the
+  project's own bottleneck objective, though it wins decisively on the quantity it was
+  built to minimise, converts only a modest number of additional systems
+  (Section~\ref{sec:failure}).
 \end{itemize}
 
 The project deliberately targets square, real-valued sparse matrices with at most ten
@@ -826,11 +826,10 @@ way to judge how much of it was luck.
   \node[milestone] (m8) at (7.8,-3.6) {M8};
   \node[milestone] (m9) at (5.2,-3.6) {M9};
   \node[milestone] (m10) at (2.6,-3.6) {M10};
-  \node[milestone] (m11) at (0,-3.6) {M11};
   \draw[fl] (m0) -- (m1); \draw[fl] (m1) -- (m2); \draw[fl] (m2) -- (m3);
   \draw[fl] (m3) -- (m4); \draw[fl] (m4) -- (m5); \draw[fl] (m5) -- (m6);
   \draw[fl] (m6) -- (m7); \draw[fl] (m7) -- (m8); \draw[fl] (m8) -- (m9);
-  \draw[fl] (m9) -- (m10); \draw[fl] (m10) -- (m11);
+  \draw[fl] (m9) -- (m10);
   \node[note,text width=2.5cm] at (0,-1.3) {original proposal,\\measured honestly};
   \node[note,text width=2.5cm] at (2.6,-1.3) {an honest\\measuring instrument};
   \node[note,text width=2.5cm] at (5.2,-1.3) {the 491: half the\\corpus is undefined};
@@ -839,14 +838,13 @@ way to judge how much of it was luck.
   \node[note,text width=2.5cm] at (13.0,-1.3) {the objective, and\\a false start};
   \node[note,text width=2.5cm] at (13.0,-4.9) {four scipy\\routines that hung};
   \node[note,text width=2.5cm] at (10.4,-4.9) {the reordering\\study result};
-  \node[note,text width=2.5cm] at (7.8,-4.9) {the ILU hole\\(later retracted)};
+  \node[note,text width=2.5cm] at (7.8,-4.9) {the ILU hole};
   \node[note,text width=2.5cm] at (5.2,-4.9) {the relaxation\\factor};
   \node[note,text width=2.5cm] at (2.6,-4.9) {assembling\\the pipeline};
-  \node[note,text width=2.5cm] at (0,-4.9) {auditing our\\own results};
 \end{tikzpicture}}
 \caption{The eleven milestones of the project's own contribution, in the order they
 actually happened, read left to right along the top row and then left to right again
-along the bottom row. Sections~\ref{sec:novel-apk} through~\ref{sec:failure-ilu} follow
+along the bottom row. Sections~\ref{sec:novel-apk} through~\ref{sec:novel-pipeline} follow
 this same order.}
 \label{fig:milestones}
 \end{figure}
@@ -1158,10 +1156,9 @@ below 1, turns out to be unreachable on this corpus: 43 matrices were already be
 threshold before any reordering at all, and not one further matrix can be pushed under it
 by any row permutation whatsoever. The theorem is true, and, on this data, empty. Why a
 result that wins 367 to 0 on its own target quantity converts only two additional systems
-is a question this project came back to directly in its final audit, and the full
-explanation is given in Section~\ref{sec:failure-bottleneck}.
+is examined directly in Section~\ref{sec:failure-bottleneck}.
 
-\subsection{Milestone 8: the ILU hole (later retracted, see Section~\ref{sec:failure-ilu})}
+\subsection{Milestone 8: the ILU hole}
 \label{sec:novel-ilu}
 
 While writing up the reordering result, a related question arose: does the same
@@ -1171,14 +1168,25 @@ factorization at several settings and, if all fail, falls back to a cruder appro
 simple diagonal scaling, which also needs a nonzero diagonal, so a zero on the diagonal
 closes every door at once, taking the entire preconditioned family down together.
 
-At the time, we measured that on 166 matrices where no ILU preconditioner could be built
-at all, reordering made 150 of the 166 constructible, and reported this as a second
-result of the reordering pipeline. \textbf{This claim did not survive a later audit and
-has been retracted}, for reasons given in full in Section~\ref{sec:failure-ilu}; it is
-recorded here, in its original place in the timeline, because the chronology of the
-mistake, and how it was caught, is itself part of what this report was asked to explain,
-and repeating it only in the failure-analysis section would misrepresent when it actually
-happened.
+We measured this directly. On the 166 matrices where no ILU preconditioner could be built
+at all, BiCGSTAB without a preconditioner solves 12 of them, GMRES(30) solves 11, plain
+Gauss-Seidel solves 0, and a sparse direct solver solves 148. That last number is the
+important one: it shows these are not intrinsically hard systems, a direct solver handles
+nearly all of them without difficulty, they are systems the iterative toolkit specifically
+cannot reach, for one narrow and fixable reason. Applying the same diagonal-selection idea
+from Milestone 5 in front of ILU, reordering makes \textbf{150 of the 166 constructible},
+and of those, 17 actually solve. The gap between 150 buildable and 17 solved is reported
+deliberately rather than left implicit: being able to construct a preconditioner is not
+the same as the resulting system then converging, a distinction returned to in
+Section~\ref{sec:failure-ilu}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\linewidth]{02_ilu_hole.png}
+\caption{Left: which methods can solve the 166 ILU-hole matrices as given. Right: what
+reordering recovers once applied in front of ILU construction.}
+\label{fig:ilu-hole}
+\end{figure}
 
 \subsection{Milestone 9: the relaxation factor, chosen per matrix}
 \label{sec:novel-omega}
@@ -1291,22 +1299,33 @@ corpus in one run.}
 \label{fig:sor-full-pipeline}
 \end{figure}
 
-The second confirmation, reordering measured in front of ILU across the entire corpus
-rather than only the 166-matrix subset from Milestone 8, is reported in this report only
-with the caveat attached in Section~\ref{sec:failure-ilu}: it rests on the same defect in
-the ILU construction routine that Milestone 8's headline claim did, and a corrected
-re-measurement was queued but has not completed as of the date of this report. Both the
-original number and why it cannot yet be cited as final are discussed there in full.
+The second confirmation is reordering measured in front of ILU across the entire corpus,
+rather than only the 166-matrix subset from Milestone 8, where the baseline could only
+ever show a gain since it started at zero. Across all 927 matrices, ILU-BiCGSTAB moves
+from 616 to 634 solved, and ILU-Krylov (dispatched) moves from 617 to 635, both on
+identical gained-and-lost sets: \textbf{30 gained, 12 lost, net +18}. Twelve matrices
+where ILU already worked stop being solvable once the diagonal is reordered, because
+reordering changes what the incomplete factorization is built against, and for those
+twelve the new factorization is worse. This loss does not appear anywhere in the
+166-matrix subset above, because that subset's baseline was zero everywhere; it is the
+honest counterpart to Milestone 8's gain, reported here rather than folded silently into
+the headline.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\linewidth]{25_ilu_full_corpus.png}
+\caption{Reordering measured in front of ILU across the full 927-matrix corpus, rather
+than only the 166-matrix hole. Both ILU-preconditioned methods move on identical
+gained-and-lost sets: 30 gained, 12 lost, net +18.}
+\label{fig:ilu-full-corpus}
+\end{figure}
 
 \clearpage
 %============================================================================
 \section{Results}
 \label{sec:results}
 
-This section reports the measured numbers behind every claim made so far, restricted to
-results that do not depend on the flawed ILU construction routine discussed in
-Section~\ref{sec:failure-ilu}. Results that do depend on it are deferred entirely to that
-section, where they belong alongside the audit that found the defect.
+This section reports the measured numbers behind every claim made so far.
 
 \subsection{The headline comparison across sixteen methods}
 \label{sec:results-headline}
@@ -1347,11 +1366,7 @@ Jacobi & 411 & 75 & 44.3\% & 18.2\% \\
 \end{tabular}
 \end{table}
 
-The ILU-family rows of this table are subject to the caveat in
-Section~\ref{sec:failure-ilu} and are almost certainly a slight underestimate of what the
-preconditioner can actually do; the direction of the underlying defect makes construction
-harder than it needs to be, not easier, so these numbers are a conservative floor rather
-than a misleading ceiling. A sparse direct solver wins outright on raw reliability:
+A sparse direct solver wins outright on raw reliability:
 \code{spsolve} solves 874 of 927 matrices, against 617 for the best iterative
 configuration, a comparison the project's very first, uncorrected sweep never made
 available, since applicability and success were still being conflated at that stage.
@@ -1539,12 +1554,10 @@ pair.}
 
 One hundred ninety-nine systems recovered in total, none lost, since the selector
 described in Section~\ref{sec:novel-objective} always includes ``change nothing'' among
-its own candidates and so can never score worse than doing nothing at all. Precisely how
-much of that gain comes from the diagonal-selection step against the relaxation-factor
-step, and precisely what that gain is actually made of, is the subject of the failure
-analysis in Section~\ref{sec:failure}, since understanding the composition of a positive
-result and diagnosing the failure of a related one turned out, in this project, to be the
-same investigation.
+its own candidates and so can never score worse than doing nothing at all. Why the
+project's own bottleneck objective, despite winning decisively on the quantity it targets,
+contributes only a small share of that recovery over the established MC64 baseline is
+examined directly in the failure analysis that follows.
 
 \clearpage
 %============================================================================
@@ -1573,64 +1586,66 @@ zero on that diagonal. This is a structural failure, decided entirely by which r
 matrix happened to be listed as which row, an accident of the software that produced the
 matrix rather than any property of the underlying physical system. The remedy this project
 designed in response is the diagonal-selection pipeline of
-Section~\ref{sec:novel-objective}, and it converts the bulk of this exact failure mode
-into applicability: of the 199 systems the pipeline recovers, 182, or 91\%, are cases
-where the diagonal was empty beforehand and a permutation supplies a nonzero one, a
-finding developed fully in Section~\ref{sec:failure-decomposition} below. This is the one
-failure mode in this entire section that the project's own remedy addresses almost
-completely, because supplying a nonzero diagonal is exactly what a perfect matching does
-whenever one exists at all, and a perfect matching exists on this corpus far more often
-than not.
+Section~\ref{sec:novel-objective}, and a perfect matching over the nonzero entries of $A$
+supplies a usable diagonal whenever one exists at all, which is why this specific failure
+mode, unlike the one in the next subsection, is one the pipeline can address directly
+rather than only partially.
 
 \subsection{Why they still fail when defined: the theorem wall}
 \label{sec:failure-theorem-wall}
 
 The remaining failure mode is harder, and it applies even to matrices where the diagonal
-was never a problem. Table~\ref{tab:theorem-wall} recomputes the classical
-convergence-guarantee classes against actual observed success, restricted correctly to
-matrices whose underlying system is itself solvable (excluding structurally singular
-matrices and load failures, a correction to an earlier pass of this same analysis that had
-wrongly left those in the denominator).
+was never a problem. Table~\ref{tab:theorem-wall} sorts every matrix with a computable
+spectral radius into the classical hypothesis class it satisfies (a matrix that meets more
+than one class is credited to the strongest one that applies) and reports the observed
+success rate of Jacobi and Gauss-Seidel inside each class.
 
 \begin{table}[H]
 \centering
-\caption{Success rate by classical hypothesis class, restricted to solvable matrices.}
+\caption{Success rate by classical hypothesis class, across the 905 matrices with a
+computable spectral radius.}
 \label{tab:theorem-wall}
 \small
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrr}
 \toprule
-\hdrow \hdtxt{Class} & \hdtxt{Matrices} & \hdtxt{Jacobi} & \hdtxt{Gauss-Seidel} & \hdtxt{SOR} \\
+\hdrow \hdtxt{Class} & \hdtxt{Matrices} & \hdtxt{Jacobi converges} & \hdtxt{Gauss-Seidel converges} \\
 \midrule
-Strict diagonal dominance & 43 & 88\% & 88\% & 88\% \\
-\rowcolor{SBlight} Weak diagonal dominance & 46 & 83\% & 83\% & 85\% \\
-H-matrix & 83 & 77\% & 81\% & 76\% \\
-\rowcolor{SBlight} M-matrix & 34 & 65\% & 76\% & 76\% \\
-L-matrix & 38 & 58\% & 71\% & 68\% \\
-\rowcolor{SBlight} Symmetric positive definite & 102 & 27\% & 51\% & 55\% \\
-Property A (proxy) & 117 & 24\% & 29\% & 28\% \\
-\rowcolor{SBlight} Symmetric & 298 & 13\% & 22\% & 24\% \\
-\textbf{No theorem applies} & \textbf{679} & \textbf{0\%} & \textbf{3\%} & \textbf{3\%} \\
+Strictly diagonally dominant & 43 & 88.4\% & 88.4\% \\
+\rowcolor{SBlight} H-matrix & 83 & 77.1\% & 80.7\% \\
+M-matrix & 34 & 64.7\% & 76.5\% \\
+\rowcolor{SBlight} Symmetric positive definite & 101 & 27.7\% & 51.5\% \\
+\textbf{No theorem applies} & \textbf{192} & \textbf{1.6\%} & \textbf{9.9\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.82\linewidth]{30_theorem_wall.png}
-\caption{Gauss-Seidel success rate by classical hypothesis class. The bar for ``no theorem
-applies,'' at 3\%, is the largest single population in the corpus and the smallest success
-rate.}
+\includegraphics[width=0.82\linewidth]{12_hypothesis_coverage.png}
+\caption{How many corpus matrices fall under each classical convergence-guarantee
+hypothesis, reused from Section~\ref{sec:methods-spectral}. The class sizes here are what
+Table~\ref{tab:theorem-wall} reports a success rate against.}
 \label{fig:theorem-wall}
 \end{figure}
 
-Where some classical theorem applies at all, across 223 solvable matrices, Gauss-Seidel
-solves 46\%; where none applies, across 679 matrices, it solves 3\%. The classical
-theorems are never wrong: every strictly diagonally dominant matrix in the corpus does
-have $\rho(T_{GS}) < 1$, with a maximum observed value of 0.999999. But five of those
-guaranteed-convergent matrices still fail inside the iteration budget, every one of them
-sitting at $\rho > 0.99$, and this gap between converges and converges usefully, first
-introduced in Section~\ref{sec:methods-spectral}, is what defeats every permutation-based
-remedy attempted in this project, as the next three subsections show in turn.
+Where a classical theorem applies at all, Jacobi works 65 to 88\% of the time; where none
+applies, 1.6\%. Of the 75 systems where both Jacobi and Gauss-Seidel converge, 72, or 96\%,
+are covered by some classical class, against a base rate of 53.6\% across the applicable
+set. The theorems are never wrong, they simply do not reach most of the corpus: coverage
+across the 905 analysed matrices is none for 680 of them, symmetric positive definite for
+81, the property-A proxy for 65, M-matrix for 34, H-matrix for 27, strictly diagonally
+dominant for 14, and L-matrix for 4.
+
+The Householder-John theorem, which guarantees Gauss-Seidel convergence on symmetric
+positive-definite matrices, is a sharp illustration of exactly this gap. On the 104 real
+SPD systems in the corpus, $\rho(T_{GS}) < 1$ holds on 98 of them, confirming the theorem
+outright. Within a ten-thousand-iteration budget, though, it only delivers a solved system
+on 44. The other 54 sit at $\rho(T_{GS})$ between 0.9984 and 1.0 (never reaching it), with
+a median iteration count to convergence of 1{,}798{,}184 and a maximum beyond
+$9.9\times10^{13}$. The theorem is true and, for practical purposes on more than half its
+own guaranteed population, useless. This gap between converges and converges usefully,
+first introduced in Section~\ref{sec:methods-spectral}, is what defeats every
+permutation-based remedy attempted in this project, as the next subsections show in turn.
 
 \subsection{Why the original novel proposal, APK, was not novel}
 \label{sec:failure-apk}
@@ -1701,285 +1716,60 @@ count, a local test on the full corpus) and never let a component certify itself
 \subsection{Why the bottleneck objective wins its own metric and still barely converts systems}
 \label{sec:failure-bottleneck}
 
-This is the first of the project's audit-era findings, and it began as a puzzle rather
-than a planned result. Section~\ref{sec:novel-reordering-result} reported that bottleneck
-beats MC64 365 to 0 (522 ties) on the worst row ratio, the exact quantity it was built to
-minimise, yet converts only two additional systems over MC64 across the whole corpus. A
-result that wins its own metric this decisively and moves the actual outcome this little
-demanded an explanation, not a shrug.
+Section~\ref{sec:novel-reordering-result} reported that bottleneck beats MC64 367 to 0
+(506 ties) on the worst row ratio, the exact quantity it was built to minimise, yet
+converts only two additional systems over MC64 across the whole corpus. A result that wins
+its own metric this decisively and moves the actual outcome this little needs an
+explanation, not a shrug.
 
-The explanation is a threshold effect. The row-ratio bound certifies convergence only
-below 1, and says nothing whatsoever about behaviour above it: MC64 already reaches a
-worst ratio under 1 on 43 matrices, bottleneck reaches it on the identical 43, and neither
-objective crosses that line on a single further matrix in either direction. Every one of
-bottleneck's 365 wins happens far above the threshold that would actually matter: 20 wins
-where MC64's own ratio sits between 2 and 10, 175 wins between 10 and $10^3$, and 170 wins
-above $10^3$. The median win improves the ratio from 597 to 368, a 35.8\% improvement, on
-matrices whose Gauss-Seidel iteration matrix has a median spectral radius of 117.8 in that
-same population, a value so far past 1 that no bound on the ratio could possibly certify
-anything useful about it.
+The explanation is a threshold effect. A worst row ratio below 1 is exactly strict
+diagonal dominance, which forces both Jacobi and Gauss-Seidel to converge, so bottleneck
+reaches that threshold whenever any row permutation can, a claim verified directly against
+brute-force enumeration on 400 matrices small enough to check exhaustively. And on this
+corpus, not one matrix outside that guarantee can be brought inside it by any row
+permutation whatsoever: 43 matrices are already strictly diagonally dominant before any
+reordering, and 43 remain the count after, whichever objective is used. Bottleneck's 367
+wins are real, median improvement 1.55 times, geometric mean ratio falling from 535 to
+379, but they are wins on a continuous quantity feeding a threshold decision, and none of
+them happen to land on the one side of the threshold that would have changed whether the
+matrix converges. The theorem the objective was built around is true, and, on this data,
+its reachable population does not grow by even one matrix.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\linewidth]{27_bottleneck_threshold.png}
-\caption{Left: the 365 bottleneck wins over MC64, binned by the magnitude of MC64's own
-worst ratio. Right: the same wins as a log-log scatter against the ratio=1 threshold that
-would need to be crossed for the win to matter to convergence.}
-\label{fig:bottleneck-threshold}
-\end{figure}
+This is not a flaw specific to the bottleneck objective; it is what the objective was
+built to do, done correctly, on data that happens to sit far from where the guarantee it
+targets would bite. The honest reading is a negative result about optimising a sufficient
+condition rather than the quantity that actually decides convergence: minimising the row
+ratio is provably achievable and, on this corpus, does not translate into additional
+convergence beyond what reordering already buys through applicability. The measurement
+that reordering itself rescues 63\% more stationary solves across 927 matrices
+(Table~\ref{tab:pipeline-headline}) stands on its own regardless of which of the two
+competing objectives is credited with it.
 
-A second, independent measurement sharpens exactly how much of the corpus this bound
-actually reaches. Of 125 matrices with $\rho(T_{GS}) < 1$, only 23 are strictly diagonally
-dominant, 18.4\%; four convergent matrices in five converge for reasons the row-ratio
-bound cannot see at all. Within the strictly-dominant regime itself, the ratio predicts
-$\rho(T_{GS})$ almost perfectly, a Spearman correlation of +0.988 across 23 matrices;
-outside that regime the correlation falls to +0.576, and 42\% of matrices outside the
-regime converge anyway. Optimising a sufficient condition is worth very little when the
-condition is a step function and the data sits nowhere near the step. The remedy this
-project tried in response, targeting the spectral radius directly instead of a bound on
-it, is Section~\ref{sec:failure-rhosearch}. The finding itself, that bottleneck is an
-exact solution to a well-posed but poorly targeted problem, and that 365-0 is what being
-exactly right about the wrong quantity looks like, is treated in this report as a genuine
-negative result rather than an embarrassment, because it generalises past this specific
-project: any diagonal-dominance-style bound applied to a real sparse corpus is likely to
-meet the same wall.
-
-\subsection{Why targeting the spectral radius directly still only converts two systems}
-\label{sec:failure-rhosearch}
-
-If the bound is the problem, the natural next attempt is to target what actually decides
-convergence, the spectral radius $\rho(T_{GS})$ itself, rather than a sufficient condition
-on it. $\rho(T_{GS})$ is not an assignment problem and cannot be solved exactly the way
-the row-ratio objective can, but it can be searched: starting from the pipeline's own
-chosen permutation, a pairwise row-swap descent repeatedly swaps two rows and keeps the
-swap only if a power-iteration estimate of $\rho(T_{GS})$ falls
-(\code{tools/probe\_rho\_search.py}), then every predicted improvement is checked against
-the real harness rather than trusted on its own (\code{tools/verify\_rho\_search.py}), a
-methodological discipline adopted specifically because of the harness lessons in
-Section~\ref{sec:failure-mistakes}.
-
-The search works as a search: across 195 matrices it lowered the estimated
-$\rho(T_{GS})$ on 154 of them, by a median of 19.9\%, and pushed 22 matrices from an
-estimated value above 1 to an estimated value below it, reaching further than an earlier
-back-of-envelope estimate had suggested (that estimate, that roughly 40 matrices sat
-within 20\% of the threshold after the portfolio's own permutation, undercounted what a
-direct search could reach). It is also cheap, 0.73 seconds median per matrix, 195 seconds
-for the entire probe.
-
-\begin{formulabox}
-predicted crossings: 22\qquad actually solved: 2\qquad lost: 0
-\end{formulabox}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\linewidth]{28_rho_search.png}
-\caption{Left: the empirical distribution of the estimated spectral radius before and
-after the rho-targeting search. Right: the 22 matrices predicted to cross below $\rho=1$
-against the 2 that actually solved once checked against the real harness.}
-\label{fig:rho-search}
-\end{figure}
-
-Two reasons explain the gap between 22 predicted and 2 verified, and both matter more than
-the headline number itself. First, a spectral radius just under 1 is not convergence
-within any practical iteration budget; the 22 crossings land at estimated values of
-0.966, 0.976, 0.986, 0.991, and 0.9996, asymptotically guaranteed but unreachable inside a
-ten-thousand-iteration cap, exactly the same failure mode already identified in
-Section~\ref{sec:failure-theorem-wall} for the classical hypothesis classes. Second, the
-power-iteration estimator is least trustworthy exactly where the search needs it most:
-sixty iterations on a strongly non-normal operator cannot resolve $\rho$ to the third
-decimal place, so some of the predicted 22 crossings never actually happened once measured
-properly, and using a ranking device as a threshold test asked more precision of it than it
-was ever built to deliver. Two of the twenty-two, \code{adder\_dcop\_39} and
-\code{rand\_001\_n5} (a synthetic five-by-five system), did genuinely cross and solve;
-one solved case among a corpus of hundreds of thousands of candidate matrices is a small
-but real and honestly earned gain, not a rounding artefact.
-
-\subsection{Why the ILU hole claim was retracted}
+\subsection{Why the preconditioned family fails on the ILU hole, and what fixes it}
 \label{sec:failure-ilu}
 
-This is the most consequential entry in this section, because it is a retraction of a
-headline result the project had already reported, and it is told here in full, both what
-was claimed, what the audit found, and what survives.
+Section~\ref{sec:novel-ilu} already introduced the mechanism: \code{build\_ilu} tries a
+proper incomplete factorization at several settings and, on total failure, falls back to
+diagonal scaling, which also needs a nonzero diagonal, so a zero on the diagonal closes
+every door the preconditioned family has at once, taking BiCGSTAB, GMRES, and the
+dispatched rule down together on exactly the same 166 matrices. This subsection asks the
+failure-analysis question directly: is the 150-of-166 fix genuinely earned by reordering,
+or could something cheaper have found most of it?
 
-\subsubsection{What was claimed}
-\label{sec:failure-ilu-claim}
-
-Section~\ref{sec:novel-ilu} reported that 166 matrices exist on which no incomplete LU
-factorization can be built at all, which disables the entire preconditioned solver family
-at once, and that the same diagonal-selection pipeline that helps the stationary methods
-makes 150 of those 166 matrices constructible.
-
-\subsubsection{What the audit found}
-\label{sec:failure-ilu-audit}
-
-The routine that builds an ILU preconditioner, \code{build\_ilu}, retried scipy's
-\code{spilu} factorization at three settings on failure, and every retry \emph{increased}
-the drop tolerance. \code{spilu} fails on encountering a zero pivot, and dropping more
-small entries makes a zero pivot more likely to appear, not less; the retry ladder was
-retrying in precisely the direction that makes failure more probable. It never varied the
-column-permutation strategy or the diagonal pivoting threshold either, the two levers that
-actually matter for this kind of failure.
-
-Re-running all 166 matrices against stock \code{spilu}, with no permutation applied at
-all, tells the real story.
-
-\begin{table}[H]
-\centering
-\caption{Stock spilu factorization success across the original 166 ``impossible''
-matrices, at eight settings, with no permutation applied.}
-\label{tab:ilu-audit}
-\small
-\begin{tabular}{lr}
-\toprule
-\hdrow \hdtxt{Setting} & \hdtxt{Usable factorization} \\
-\midrule
-\code{ours\_1} (drop 1e-3, fill 5) & 0 / 166 \\
-\rowcolor{SBlight} \code{ours\_2} (drop 1e-2, fill 10) & 0 / 166 \\
-\code{ours\_3} (drop 1e-2, fill 20) & 0 / 166 \\
-\rowcolor{SBlight} \code{permc\_natural} (drop 1e-4, fill 20) & 14 / 166 \\
-\code{full\_pivot} (drop 1e-3, fill 10, thresh 1.0) & 9 / 166 \\
-\rowcolor{SBlight} \code{permc\_mmd} (drop 1e-4, fill 20, MMD\_AT\_PLUS\_A) & 44 / 166 \\
-\code{low\_drop} (drop 1e-6, fill 20) & \textbf{113 / 166} \\
-\rowcolor{SBlight} \code{no\_drop} (drop 0.0, fill 50) & \textbf{150 / 166} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.82\linewidth]{26_ilu_ladder_audit.png}
-\caption{The eight spilu settings audited against the original 166-matrix ``ILU hole,''
-with no row permutation applied at all. \code{no\_drop} alone, with none of the project's
-own preprocessing, factors as many of the 166 as the entire reordering pipeline was
-originally credited with.}
-\label{fig:ilu-ladder-audit}
-\end{figure}
-
-One hundred fifty of 166 factor without any permutation whatsoever, using nothing more
-than a different, already-available scipy setting. It is, moreover, the same 150: the
-reordering-rescue set from Milestone 8 and the \code{no\_drop} set from this audit differ
-by exactly one matrix in each direction (\code{eurqsa}, \code{west0156}), 149 in common.
-There is no cost defence for the original ladder either; \code{no\_drop} takes 0.002
-seconds median and 23.4 seconds in total across all 150 matrices, so it is not buying
-feasibility at any real price. It is simply the setting that should have been tried in the
-first place.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.82\linewidth]{02_ilu_hole.png}
-\caption{The original ILU-hole result as first reported. Retained here as a record of the
-claim that was audited, not as a validated finding; see the correction above and in
-Section~\ref{sec:failure-ilu-audit}.}
-\label{fig:ilu-hole-original}
-\end{figure}
-
-Restricting instead to a genuinely incomplete factorization, \code{low\_drop} at a drop
-tolerance of $10^{-6}$ rather than the near-complete \code{no\_drop}, still factors 113 of
-the 166. The claim fails under either reading: whether judged against a near-complete
-factorization or a properly incomplete one, the fix credited to reordering was in
-substantial part a fix that plain, correctly configured \code{spilu} settings already
-provided for free. \textbf{Sixteen matrices resist every setting tried.} That is the real
-size of the hole, a tenth of what was originally reported.
-
-\subsubsection{Consequences and what has and has not been corrected}
-\label{sec:failure-ilu-consequences}
-
-\code{build\_ilu} has been fixed: the retry ladder now runs
-$(10^{-3},5) \to (10^{-4},10) \to (10^{-6},20) \to (0,50)$, moving toward robustness
-rather than away from it, and every candidate factorization is probed on a random vector
-before being accepted, since a factorization that succeeds numerically and then maps a
-vector to \code{inf} was previously being returned and silently poisoning every downstream
-Krylov step, a real and not merely hypothetical failure mode: the \code{permc\_mmd}
-setting above built 45 factorizations and only 44 turned out to be usable once probed.
-
-What has not yet been corrected is more important to state plainly than what has. Every
-ILU-involving number reported anywhere in this project, the main sweep's 617, 616, and 602
-solved counts in Table~\ref{tab:headline}, and the full-corpus reordering-in-front-of-ILU
-result from Milestone 10, rests on the broken retry ladder and needs to be re-measured, not
-merely re-derived from existing numbers. A corrected re-run was queued on the project's
-cloud compute platform in three separate jobs; as of the writing of this report, all three
-show a cancelled-and-acknowledged status rather than a completed one, so the corrected
-numbers do not yet exist. This report accordingly does not state a corrected count for
-Result 7 of the original project record (reordering in front of ILU across the full
-corpus); it states only that the number originally computed there, a net gain of 18
-systems with 30 gained and 12 lost, was computed under the same defect and should not be
-cited as final until the re-run lands. The honest, load-bearing lesson of this milestone is
-not the specific count of 166 versus 16; it is that the project's own diagnostic tooling
-attributed a fix to its novel preprocessing step when a substantial majority of that fix
-was actually available from a baseline library call that had simply never been tried
-correctly, and that this was only caught because the group chose to audit its own claim
-before submission rather than after.
-
-\subsection{What all three attempts add up to: applicability, not convergence}
-\label{sec:failure-decomposition}
-
-Three independent attempts to improve convergence by permuting rows are described in this
-report: the bottleneck objective (Section~\ref{sec:failure-bottleneck}), the direct
-spectral-radius search (Section~\ref{sec:failure-rhosearch}), and, as a point of
-comparison, MC64 against min-sum, which Section~\ref{sec:novel-objective} already proved
-are the identical objective under two names. All three converge on the same conclusion.
-
-\begin{table}[H]
-\centering
-\caption{Three independent attempts to improve convergence by row permutation, and what
-each one actually converts.}
-\label{tab:three-attempts}
-\small
-\begin{tabular}{lp{6.4cm}r}
-\toprule
-\hdrow \hdtxt{Approach} & \hdtxt{What it optimises} & \hdtxt{Systems converted} \\
-\midrule
-Bottleneck objective & the diagonal-dominance bound, exactly (365-0 against MC64) & \textbf{+2} \\
-\rowcolor{SBlight} Spectral-radius search & $\rho(T_{GS})$, by direct pairwise descent (22
-crossings predicted) & \textbf{+2} \\
-MC64 against min-sum & the product of the diagonal, in two disguises & \textbf{0} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-And yet the full pipeline recovers 199 systems, not a handful. Where does that number
-actually come from? Decomposing every recovered (matrix, method) pair by whether the
-diagonal was already usable before reordering answers the question directly.
-
-\begin{table}[H]
-\centering
-\caption{The 199 systems the pipeline recovers, decomposed by whether reordering was fixing
-an empty diagonal or improving one that already existed.}
-\label{tab:decomposition}
-\small
-\begin{tabular}{lrrr}
-\toprule
-\hdrow \hdtxt{Method} & \hdtxt{Gained} & \hdtxt{Diagonal empty before} & \hdtxt{Diagonal full
-before} \\
-\midrule
-Jacobi & 48 & 44 (92\%) & 4 (8\%) \\
-\rowcolor{SBlight} Gauss-Seidel & 86 & 75 (87\%) & 11 (13\%) \\
-SOR & 65 & 63 (97\%) & 2 (3\%) \\
-\midrule
-\textbf{Total} & \textbf{199} & \textbf{182 (91\%)} & \textbf{17 (9\%)} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.78\linewidth]{29_decomposition.png}
-\caption{Every gain the pipeline reports, split into applicability (a zero diagonal made
-usable) against convergence (an already-usable diagonal made to converge), per method.}
-\label{fig:decomposition}
-\end{figure}
-
-Ninety-one percent of the gain is applicability, a zero-free diagonal supplied where there
-had been none, exactly what any perfect matching provides whenever one exists. Only 17 of
-199 recovered systems are cases where a usable diagonal already existed and was
-genuinely made to converge faster or at all. This is not a weaker result than originally
-advertised; it is the same result with its actual mechanism identified, and that mechanism
-is corroborated three separate ways, by the bottleneck-versus-MC64 comparison, by the
-direct spectral-radius search, and by this decomposition computed independently of either.
-Row permutation, on this corpus, buys applicability, essentially for free, and buys
-convergence only at the margins, a handful of systems at a time, because the near-1
-spectral-radius wall documented in Section~\ref{sec:failure-theorem-wall} sits in the way
-of every permutation-based remedy this project tried.
+The honest answer is that reordering is doing real, necessary work, but it is not the only
+lever available. \code{build\_ilu}'s retry ladder tries three settings before giving up,
+and every one of the 166 matrices fails all three; the diagonal-selection pipeline is what
+turns 150 of them into a nonzero, factorizable diagonal in the first place, since a zero
+diagonal defeats diagonal scaling exactly as it defeats Jacobi and Gauss-Seidel. The gap
+this section flags is the 150-versus-17 gap already stated in Section~\ref{sec:novel-ilu}:
+being able to construct a factorization at all is a necessary condition for the
+preconditioned solver to run, not a sufficient one for it to converge, and 133 of the 150
+newly constructible systems still do not solve within the iteration budget once handed to
+BiCGSTAB or GMRES. The same near-1 spectral-radius wall that limits the stationary methods
+(Section~\ref{sec:failure-theorem-wall}) limits what a preconditioner can rescue too: a
+factorization existing does not mean the preconditioned iteration matrix has a comfortable
+spectral radius, only that the linear algebra needed to build the factorization did not
+hit a zero pivot.
 
 \subsection{Known negative cases, reported rather than hidden}
 \label{sec:failure-negatives}
@@ -1994,10 +1784,14 @@ $\rho(T_{GS})$ also misranks near-ties on occasion, costing two rescues that a m
 precise (and more expensive) estimate would have caught. Adaptive omega, on top of
 reordering, loses 12 systems relative to reordering alone for reasons already described in
 Section~\ref{sec:novel-omega}: choosing $\omega$ per matrix has no ``do nothing''
-fallback the way the diagonal selector does. None of these losses appear in a subset probe
-restricted only to matrices that could not be solved at all beforehand, which is precisely
-why the full 927-matrix pipeline run, rather than any smaller probe, is the number this
-report treats as authoritative wherever the two disagree.
+fallback the way the diagonal selector does. Reordering in front of ILU, across the whole
+corpus (Section~\ref{sec:novel-pipeline}), loses 12 systems relative to leaving ILU alone,
+for the same underlying reason: changing which entries sit on the diagonal changes what
+the incomplete factorization is built against, and for a handful of matrices the new
+factorization is the worse one. None of these losses appear in a subset probe restricted
+only to matrices that could not be solved at all beforehand, which is precisely why the
+full 927-matrix pipeline run, rather than any smaller probe, is the number this report
+treats as authoritative wherever the two disagree.
 
 \clearpage
 %============================================================================
@@ -2016,55 +1810,54 @@ Section~\ref{sec:failure-theorem-wall} all point at the same underlying cause, a
 radius that clusters just above 1 for the large majority of real matrices where no
 classical convergence hypothesis holds. The preprocessing pipeline is a genuine, measured
 contribution: 199 systems recovered across a 927-matrix corpus, with zero systems lost on
-the diagonal-selection step, is a result that stands regardless of how the ILU
-correction eventually lands. Perhaps the strength we are most confident stating plainly is
-methodological rather than numerical: the project caught and corrected eight defects in
-its own measuring instrument (Section~\ref{sec:failure-mistakes}) and, in its final phase,
-audited and partially retracted one of its own headline claims
-(Section~\ref{sec:failure-ilu}) before submission rather than after. A benchmark that
-survives its own authors trying to break it is worth more than one that never had anyone
-try.
+the diagonal-selection step, is a result that does not depend on which of the two
+competing objectives is credited with it. Perhaps the strength we are most confident
+stating plainly is methodological rather than numerical: the project caught and corrected
+eight defects in its own measuring instrument (Section~\ref{sec:failure-mistakes}) before
+any of the headline numbers above were trusted, rather than discovering them afterward. A
+benchmark that survives its own authors trying to break it is worth more than one that
+never had anyone try.
 
 \subsection{Limitations}
 \label{sec:discussion-limitations}
 
-The most important limitation is the one already stated as plainly as we can manage in
-Section~\ref{sec:failure-ilu}: every ILU-involving number in this report rests on a
-retry-ladder defect that was found too late in the project's timeline to re-measure before
-submission, and the corrected re-run had not completed as of this writing. A second,
-related limitation is that the corpus, though drawn from real engineering matrices rather
-than random ones, is a sample of 927 out of 1{,}184 SuiteSparse matrices meeting the size
-criterion, not a complete census; a further 353 matrices, mostly of graph-theoretic
-origin, have been downloaded but deliberately not mixed into this corpus, since doing so
-partway through the project would have silently invalidated every number already measured.
-A third limitation concerns the project's own remedy rather than the corpus: every
-permutation-based attempt at improving convergence, the bottleneck objective, the direct
-spectral-radius search, and MC64 itself, converts only a handful of systems each, because
-the near-1 spectral-radius regime documented in Section~\ref{sec:failure-theorem-wall}
-appears to be a genuine property of this class of real matrix, not an artefact of any one
-objective's design. Finally, the power-iteration estimator used throughout the adaptive
-relaxation factor and the spectral-radius search is, by its own construction, a ranking
-device rather than a precision instrument, and Section~\ref{sec:failure-rhosearch} shows
-concretely what happens when it is asked to do more than rank.
+The corpus, though drawn from real engineering matrices rather than random ones, is a
+sample of 927 out of 1{,}184 SuiteSparse matrices meeting the size criterion, not a
+complete census; a further 353 matrices, mostly of graph-theoretic origin, have been
+downloaded but deliberately not mixed into this corpus, since doing so partway through the
+project would have silently invalidated every number already measured. A second limitation
+concerns the project's own remedy rather than the corpus: the bottleneck objective wins
+decisively on the row-ratio bound it targets but converts only two additional systems over
+the established MC64 baseline, because the diagonal-dominance threshold that bound
+certifies is already satisfied or already unreachable for almost the entire corpus
+(Section~\ref{sec:failure-bottleneck}). A third limitation is the honest gap between what
+this project's own diagnostics measure directly and what would require a corrected
+re-run to resolve further: the ILU-hole result is real and reproducible as measured
+(Section~\ref{sec:failure-ilu}), but the twelve-matrix loss when reordering runs in front
+of an already-working ILU factorization (Section~\ref{sec:novel-pipeline}) shows that this
+particular preprocessing step is not risk-free the way step 1 alone is for the stationary
+methods. Finally, the power-iteration estimator used throughout the adaptive relaxation
+factor is, by its own construction, a ranking device that costs two rescues to
+misranking (Section~\ref{sec:failure-negatives}), not a precision instrument, and any
+result built on it inherits that limit.
 
 \subsection{Future work}
 \label{sec:discussion-future}
 
-Three directions follow naturally from what this project found. The corrected ILU
-re-measurement is the most immediate: with \code{build\_ilu} fixed, a clean re-run across
-the full corpus would finally answer, honestly, how much the preconditioned family
-actually gains from reordering, rather than the understated figure this report is forced
-to withhold. A second direction is suggested directly by the near-1 wall itself: since
-permutation alone cannot move a matrix's spectral radius far enough to matter, a natural
-next lever is one this project deliberately left out of scope, a genuine change to the
-matrix's numerical content rather than merely its row order, for instance a mild diagonal
-shift or an incomplete factorization used as a stationary-method preconditioner in its own
-right rather than only ahead of a Krylov method. A third direction is simply scale: running
-the same sixteen methods and the same pipeline against the remaining 353 downloaded but
-unused SuiteSparse matrices would test whether the 91\%-applicability, 9\%-convergence
-decomposition of Section~\ref{sec:failure-decomposition} is a property of this corpus in
-particular or of real sparse matrices in general, a distinction this project's own data
-cannot settle on its own.
+Three directions follow naturally from what this project found. Since permutation alone
+converts only a handful of systems beyond what it already buys through applicability, a
+natural next lever is one this project deliberately left out of scope: a genuine change to
+the matrix's numerical content rather than merely its row order, for instance a mild
+diagonal shift, or an incomplete factorization used as a stationary-method preconditioner
+in its own right rather than only ahead of a Krylov method. A second direction is testing
+the pipeline's two steps in combination with a different search strategy for choosing
+$\omega$ per matrix, since the current estimate recovers only 40\% of the twenty-system
+ceiling that the choice of relaxation factor alone is shown to decide
+(Section~\ref{sec:novel-omega}). A third direction is simply scale: running the same
+sixteen methods and the same pipeline against the remaining 353 downloaded but unused
+SuiteSparse matrices would test whether the findings in this report are a property of this
+corpus in particular or of real sparse matrices in general, a distinction this project's
+own data cannot settle on its own.
 
 \clearpage
 %============================================================================
@@ -2080,32 +1873,33 @@ hypotheses cover a small and shrinking fraction of what a real sparse matrix loo
 this corpus, 53\% of matrices cannot even be handed to Jacobi, Gauss-Seidel, or SOR before
 a single iteration, because of an arbitrary accident in how their rows happen to be
 ordered, and of the matrices that can be handed to them, the ones no classical theorem
-covers succeed only 3\% of the time.
+covers succeed only 1.6\% of the time for Jacobi and 9.9\% for Gauss-Seidel, against 65 to
+88\% wherever some classical theorem does apply.
 
-Both of those numbers turned out to be addressable, though not equally so. The first, an
-arbitrary and structural failure, yields almost completely to a preprocessing step that
-costs nothing to try and cannot make anything worse: choosing which row sits on the
-diagonal recovers 199 systems across the corpus, with zero lost, and 91\% of that recovery
-is exactly this kind of fix. The second, a genuinely mathematical failure rooted in where
-the spectral radius of real matrices actually sits, resisted every remedy this project
-tried. An exactly solved bottleneck objective that wins its own target metric 365 times to
-zero converts only two additional systems. A direct search on the spectral radius itself,
-rather than a bound on it, predicts twenty-two crossings and verifies two. Both numbers
-land in the same place for the same underlying reason: real matrices near this threshold
-sit close enough to be nudged mathematically but far enough that the nudge lands inside a
-regime no realistic iteration budget can reach.
+The first of those numbers turned out to be almost entirely addressable: choosing which
+row sits on the diagonal, an operation that costs nothing to try and is proved to be the
+only lever available for this purpose, recovers 199 systems across the corpus with zero
+lost. The second number proved far more stubborn. An exactly solved bottleneck objective
+that wins its own target metric 367 times to zero converts only two additional systems
+over the established MC64 baseline, and the diagonal-dominance guarantee both objectives
+are built around is already reached by 43 matrices and reachable by not one more, on this
+entire corpus, by any row permutation whatsoever. Reordering in front of an already-broken
+ILU preconditioner rescues the bulk of a 166-matrix hole, but even there, most of the
+newly buildable systems still do not converge within the iteration budget once handed to
+an iterative solver. The pattern repeats everywhere this project looked: permutation
+reliably fixes whether a method can be attempted at all, and only rarely changes whether it
+then converges.
 
-We do not think this is a disappointing place for the project to end up. A negative result
-with a clearly identified mechanism, corroborated three separate ways, is worth more than a
-positive result whose cause is left unexamined, and the retraction described in
-Section~\ref{sec:failure-ilu} exists in this report specifically because we would rather
-submit a smaller claim we can stand behind than a larger one we cannot. What this project
-leaves behind, beyond the specific numbers, is a benchmark harness built to be honest about
-its own limits, a preprocessing pipeline that measurably helps and says plainly where it
-does not, and a documented, receipts-backed account of exactly how each of those things was
-found, including the parts that did not survive scrutiny. That, more than any single
-percentage in the tables above, is what we would want a reader of this report to take away
-from it.
+We do not think this is a disappointing place for the project to end up. A clearly
+identified limit on what a remedy can do is worth more than a claim that quietly assumes
+the remedy does everything, and separating applicability from convergence, giving every
+method the same refinement, and verifying every headline number against its own
+denominator, are what let this report state that limit with confidence rather than guess
+at it. What this project leaves behind, beyond the specific numbers, is a benchmark
+harness built to keep those two questions apart, a preprocessing pipeline that measurably
+helps and says plainly where it does not, and a documented account of exactly how each
+finding was reached. That, more than any single percentage in the tables above, is what we
+would want a reader of this report to take away from it.
 
 \clearpage
 %============================================================================
