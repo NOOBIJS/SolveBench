@@ -162,7 +162,10 @@
 \pagestyle{empty}
 \begin{center}
 
-\vspace*{0.6cm}
+\vspace*{0.3cm}
+\includegraphics[width=2.5cm]{../logo.jpg}
+
+\vspace{0.4cm}
 {\large\bfseries Department of Computer Science and Engineering}\\[0.1cm]
 {\large\bfseries Bangladesh University of Engineering and Technology}\\[0.1cm]
 {\normalsize Dhaka, Bangladesh}
@@ -195,7 +198,8 @@ Md.\ Rafat Kabir & 2105054 \\
 
 \vspace{0.8cm}
 \begin{tabular}{ll}
-\textbf{Course Teacher:} & Department of CSE, BUET \\
+\textbf{Supervisor:} & \textbf{Ishrat Jahan} \\
+& Department of CSE, BUET \\
 \end{tabular}
 
 \vfill
@@ -312,8 +316,8 @@ described in full later in this report:
   matrix sits on the diagonal and, for SOR, chooses its relaxation factor per matrix, and
   a full measurement of what that pipeline does and does not buy
   (Section~\ref{sec:novel}, Section~\ref{sec:results}).
-  \item A dedicated failure analysis, carried out once every arm of the pipeline had
-  finished running, that explains precisely why the classical methods fail and why the
+  \item A dedicated failure analysis, carried out once every combination of solver and
+  preprocessing step had finished running, that explains precisely why the classical methods fail and why the
   project's own bottleneck objective, though it wins decisively on the quantity it was
   built to minimise, converts only a modest number of additional systems
   (Section~\ref{sec:failure}).
@@ -815,41 +819,30 @@ way to judge how much of it was luck.
 \centering
 \resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[node distance=1.05cm]
-  \node[milestone] (m0) at (0,0) {M0};
-  \node[milestone] (m1) at (2.6,0) {M1};
-  \node[milestone] (m2) at (5.2,0) {M2};
-  \node[milestone] (m3) at (7.8,0) {M3};
-  \node[milestone] (m4) at (10.4,0) {M4};
-  \node[milestone] (m5) at (13.0,0) {M5};
-  \node[milestone] (m6) at (13.0,-3.6) {M6};
-  \node[milestone] (m7) at (10.4,-3.6) {M7};
-  \node[milestone] (m8) at (7.8,-3.6) {M8};
-  \node[milestone] (m9) at (5.2,-3.6) {M9};
-  \node[milestone] (m10) at (2.6,-3.6) {M10};
-  \draw[fl] (m0) -- (m1); \draw[fl] (m1) -- (m2); \draw[fl] (m2) -- (m3);
-  \draw[fl] (m3) -- (m4); \draw[fl] (m4) -- (m5); \draw[fl] (m5) -- (m6);
-  \draw[fl] (m6) -- (m7); \draw[fl] (m7) -- (m8); \draw[fl] (m8) -- (m9);
-  \draw[fl] (m9) -- (m10);
+  \node[milestone] (m1) at (0,0) {M1};
+  \node[milestone] (m2) at (2.6,0) {M2};
+  \node[milestone] (m3) at (5.2,0) {M3};
+  \node[milestone] (m4) at (7.8,0) {M4};
+  \node[milestone] (m5) at (10.4,0) {M5};
+  \node[milestone] (m6) at (13.0,0) {M6};
+  \node[milestone] (m7) at (15.6,0) {M7};
+  \draw[fl] (m1) -- (m2); \draw[fl] (m2) -- (m3); \draw[fl] (m3) -- (m4);
+  \draw[fl] (m4) -- (m5); \draw[fl] (m5) -- (m6); \draw[fl] (m6) -- (m7);
   \node[note,text width=2.5cm] at (0,-1.3) {original proposal,\\measured honestly};
-  \node[note,text width=2.5cm] at (2.6,-1.3) {an honest\\measuring instrument};
-  \node[note,text width=2.5cm] at (5.2,-1.3) {the 491: half the\\corpus is undefined};
-  \node[note,text width=2.5cm] at (7.8,-1.3) {the idea: choose\\the diagonal};
-  \node[note,text width=2.5cm] at (10.4,-1.3) {proving what can\\and cannot work};
-  \node[note,text width=2.5cm] at (13.0,-1.3) {the objective, and\\a false start};
-  \node[note,text width=2.5cm] at (13.0,-4.9) {four scipy\\routines that hung};
-  \node[note,text width=2.5cm] at (10.4,-4.9) {the reordering\\study result};
-  \node[note,text width=2.5cm] at (7.8,-4.9) {the ILU hole};
-  \node[note,text width=2.5cm] at (5.2,-4.9) {the relaxation\\factor};
-  \node[note,text width=2.5cm] at (2.6,-4.9) {assembling\\the pipeline};
+  \node[note,text width=2.5cm] at (2.6,-1.3) {choose the\\diagonal};
+  \node[note,text width=2.5cm] at (5.2,-1.3) {the objective, and\\a false start};
+  \node[note,text width=2.5cm] at (7.8,-1.3) {the reordering\\study result};
+  \node[note,text width=2.5cm] at (10.4,-1.3) {the ILU hole};
+  \node[note,text width=2.5cm] at (13.0,-1.3) {the relaxation\\factor};
+  \node[note,text width=2.5cm] at (15.6,-1.3) {assembling\\the pipeline};
 \end{tikzpicture}}
-\caption{The eleven milestones of the project's own contribution, in the order they
-actually happened, read left to right along the top row and then left to right again
-along the bottom row. Sections~\ref{sec:novel-apk} through~\ref{sec:novel-pipeline} follow
-this same order.}
+\caption{The seven milestones of the project's own contribution, in the order they
+actually happened. Sections~\ref{sec:novel-apk} through~\ref{sec:novel-pipeline} follow
+this same order, matching the project's presentation deck.}
 \label{fig:milestones}
 \end{figure}
 
-\subsection{Milestone 0: the original proposal, measured honestly}
+\subsection{Milestone 1: the original proposal, measured honestly}
 \label{sec:novel-apk}
 
 Before any of the analysis in this report existed, the group's original course proposal
@@ -896,31 +889,19 @@ everything honestly, including your own idea, before claiming it is new. A full,
 dedicated treatment of why this rule failed to be novel, and what its measured value
 actually is, appears again in Section~\ref{sec:failure-apk}.
 
-\subsection{Milestone 1: building an honest measuring instrument}
+\subsection{Milestone 2: choose the diagonal}
 \label{sec:novel-harness}
 
-Before any new idea could be tested fairly, the benchmark itself had to be trustworthy,
-and the earliest version of the code had several problems, each only found by carefully
-auditing its own output rather than trusting it.
-
-A solver's own claim of success was being trusted uncritically: if a routine returned
-without raising an exception, it was marked successful, even though some of those runs
-had a relative residual as large as $9.71 \times 10^{12}$, wrong by twelve orders of
-magnitude. Success rates were divided by the size of the whole corpus, even for methods
-such as Conjugate Gradient that are mathematically defined on only a small, symmetric
-positive-definite slice of it, which unfairly penalised every specialised method.
-Iterative refinement, a technique that polishes an already-computed answer with one
-additional cheap step, was being applied to only one method, which is exactly why that
-method appeared to be the most accurate; the advantage being measured was the refinement
-step, not the method underneath it. Gauss-Seidel and SOR were re-analysing their
-triangular system from scratch on every single iteration, up to ten thousand times per
-matrix, inflating their measured running time by a factor of eleven to fourteen.
-
-Fixing these was not optional polish; it was the precondition for every later result in
-this report to mean anything, and Section~\ref{sec:failure-mistakes} lists all eight
-mistakes found this way, not only these four, together with exactly what changed once each
-was fixed. The lasting outcome of this milestone is \code{metrics.py}, the single place in
-the codebase that decides whether a solve counted as a success, using eight distinct
+Before any new idea could be tested fairly, the benchmark itself had to be trustworthy.
+The earliest version of the code trusted a solver's own claim of success (some of those
+runs had a relative residual as large as $9.71 \times 10^{12}$), divided success rates by
+the whole corpus regardless of applicability, gave iterative refinement to one method
+only, and let Gauss-Seidel and SOR re-analyse their triangular system on every single
+iteration, inflating measured runtime by a factor of eleven to fourteen. Fixing these was
+the precondition for every later result in this report to mean anything;
+Section~\ref{sec:failure-mistakes} lists all eight defects found this way, together with
+what changed once each was fixed. The lasting outcome is \code{metrics.py}, the single
+place in the codebase that decides whether a solve counted as a success, using eight
 outcome categories rather than a bare pass or fail, precisely because ``the method could
 not even be attempted'' and ``the method was attempted and failed'' are different facts
 that a simple binary hides.
@@ -935,9 +916,7 @@ inside ``failed.''}
 \label{fig:outcomes}
 \end{figure}
 
-\subsection{Milestone 2: the discovery that reshaped the project}
 \label{sec:novel-491}
-
 Once the harness could be trusted, the first full sweep over the corpus with all sixteen
 methods produced one number that reoriented the rest of the project. Jacobi,
 Gauss-Seidel, and SOR all divide by the diagonal entries of $A$ at every step, and if even
@@ -956,9 +935,7 @@ project's central question from \emph{is Jacobi slow} into \emph{can Jacobi even
 applicable in the first place}, a question with a much larger and more tractable answer
 space.
 
-\subsection{Milestone 3: the idea, choose the diagonal}
 \label{sec:novel-idea}
-
 Once the 491 was understood, an important observation followed almost immediately. The
 row order of a matrix is simply a list, row one, row two, row three, decided by whoever
 built the matrix, be it a meshing program, a circuit simulator, or an engineer's own
@@ -977,17 +954,16 @@ correctness; it only changes which entries of $A$ end up on the diagonal.
   \draw[fl] (before) -- (arrow);
   \draw[fl] (arrow) -- (after);
 \end{tikzpicture}
-\caption{The seed of the entire contribution. Reordering the rows of a matrix changes
-nothing about the system it represents, but it changes everything about whether the
-stationary methods can even be attempted.}
+\caption{Reordering the rows of a matrix changes nothing about the system it represents,
+but it changes everything about whether the stationary methods can even be attempted.}
 \label{fig:diagonal-swap}
 \end{figure}
 
 Same equations, same answer, completely different eligibility for the stationary methods.
-Choosing which row goes where, before the matrix is ever handed to a solver, is the seed
-of the entire contribution described in the remainder of this section.
+Every milestone after this one builds on choosing which row goes where, before the matrix
+is ever handed to a solver.
 
-\subsection{Milestone 4: proving what can and cannot work}
+\subsubsection{Proving It's the Only Lever}
 \label{sec:novel-proof}
 
 Before searching for a good row order, it was necessary to know which kinds of
@@ -1009,7 +985,7 @@ is what turned ``try shuffling the rows'' from a guess into a principled, justif
 search: the search was restricted to row permutations specifically because it could be
 shown that nothing else was worth searching over.
 
-\subsection{Milestone 5: building the objective, and a false start}
+\subsection{Milestone 3: the objective, and a false start}
 \label{sec:novel-objective}
 
 Given that row permutation is the only lever, the next question is which permutation.
@@ -1064,7 +1040,7 @@ rediscovers it the hard way. The real competition, in the end, is between two ge
 different objectives: MC64, the established one, and bottleneck, the one this project
 proposes.
 
-\subsection{Milestone 6: four scipy routines that could not be trusted}
+\subsubsection{Four scipy Routines That Could Not Be Trusted}
 \label{sec:novel-hangs}
 
 This milestone cost more real engineering time than any other part of the project, and is
@@ -1107,7 +1083,7 @@ refuses to let anything proceed to the cloud until all 930 matrices pass without
 hang. The eventual full preflight run completed all 930 matrices in 66.5 minutes with zero
 problems, proof that the fix actually worked rather than an assumption that it did.
 
-\subsection{Milestone 7: the reordering study result}
+\subsection{Milestone 4: the reordering study result}
 \label{sec:novel-reordering-result}
 
 With the search made reliable, the actual experiment could finally be run: for every
@@ -1135,7 +1111,7 @@ the previous one, per stationary method.}
 Almost all of that gain, however, belongs to MC64, not to the bottleneck idea. Of the 199
 rescued systems, 195 are rescued by both objectives together, 4 by bottleneck alone, and 2
 by MC64 alone, a net gain for the new objective over the established one of only two
-systems. This mirrors Milestone 0 closely: the idea of reordering is genuinely powerful,
+systems. This mirrors Milestone 1 closely: the idea of reordering is genuinely powerful,
 but the specific choice of objective barely changes the outcome, at least by this
 particular measure. On the quantity bottleneck was actually built to minimise, the worst
 row ratio itself rather than the count of systems solved, it wins outright: across the 873
@@ -1158,7 +1134,7 @@ by any row permutation whatsoever. The theorem is true, and, on this data, empty
 result that wins 367 to 0 on its own target quantity converts only two additional systems
 is examined directly in Section~\ref{sec:failure-bottleneck}.
 
-\subsection{Milestone 8: the ILU hole}
+\subsection{Milestone 5: the ILU hole}
 \label{sec:novel-ilu}
 
 While writing up the reordering result, a related question arose: does the same
@@ -1174,7 +1150,7 @@ Gauss-Seidel solves 0, and a sparse direct solver solves 148. That last number i
 important one: it shows these are not intrinsically hard systems, a direct solver handles
 nearly all of them without difficulty, they are systems the iterative toolkit specifically
 cannot reach, for one narrow and fixable reason. Applying the same diagonal-selection idea
-from Milestone 5 in front of ILU, reordering makes \textbf{150 of the 166 constructible},
+from Milestone 3 in front of ILU, reordering makes \textbf{150 of the 166 constructible},
 and of those, 17 actually solve. The gap between 150 buildable and 17 solved is reported
 deliberately rather than left implicit: being able to construct a preconditioner is not
 the same as the resulting system then converging, a distinction returned to in
@@ -1188,7 +1164,7 @@ reordering recovers once applied in front of ILU construction.}
 \label{fig:ilu-hole}
 \end{figure}
 
-\subsection{Milestone 9: the relaxation factor, chosen per matrix}
+\subsection{Milestone 6: the relaxation factor, chosen per matrix}
 \label{sec:novel-omega}
 
 SOR has one tuning parameter Jacobi and Gauss-Seidel do not: the relaxation factor
@@ -1250,10 +1226,10 @@ the 400-matrix probe where a usable diagonal exists.}
 Eight net systems recovered out of the twenty-system ceiling identified above, forty
 percent of everything that was even possible to gain this way.
 
-\subsection{Milestone 10: assembling the pipeline}
+\subsection{Milestone 7: assembling the pipeline}
 \label{sec:novel-pipeline}
 
-Putting Milestones 7, 8, and 9 together gives the final structure of the contribution: a
+Putting Milestones 4, 5, and 6 together gives the final structure of the contribution: a
 two-step preprocessing pipeline that runs in front of an otherwise completely unmodified
 solver.
 
@@ -1278,14 +1254,15 @@ be undone once the solver returns.}
 \label{fig:pipeline}
 \end{figure}
 
-Every arm of this pipeline is measured separately as well as together, because ``the
-pipeline helps'' is not, by itself, a real result; which specific step helps, and by how
-much, is the real result. The full-corpus run measuring every pipeline arm together
-completed on all 927 matrices in 413.6 minutes with no hang and no budget stop, and it
-confirmed two things that the smaller probes in Milestones 8 and 9 could not show on their
+Every solver-and-step combination in this pipeline is measured separately as well as
+together, because ``the pipeline helps'' is not, by itself, a real result; which specific
+step helps, and by how much, is the real result. The full-corpus run measuring every
+combination together completed on all 927 matrices in 413.6 minutes with no hang and no
+budget stop, and it
+confirmed two things that the smaller probes in Milestones 5 and 6 could not show on their
 own.
 
-Reordering alone already takes SOR from 119 to 184 (Milestone 7); adding adaptive omega on
+Reordering alone already takes SOR from 119 to 184 (Milestone 4); adding adaptive omega on
 top takes it to 208, a 75\% increase over the as-given baseline, stronger than reordering
 alone's 55\%. This second step is not loss-free the way the first one is: relative to step
 1 alone it gains 36 and loses 12, because there is no ``leave $\omega$ alone'' fallback the
@@ -1300,7 +1277,7 @@ corpus in one run.}
 \end{figure}
 
 The second confirmation is reordering measured in front of ILU across the entire corpus,
-rather than only the 166-matrix subset from Milestone 8, where the baseline could only
+rather than only the 166-matrix subset from Milestone 5, where the baseline could only
 ever show a gain since it started at zero. Across all 927 matrices, ILU-BiCGSTAB moves
 from 616 to 634 solved, and ILU-Krylov (dispatched) moves from 617 to 635, both on
 identical gained-and-lost sets: \textbf{30 gained, 12 lost, net +18}. Twelve matrices
@@ -1308,7 +1285,7 @@ where ILU already worked stop being solvable once the diagonal is reordered, bec
 reordering changes what the incomplete factorization is built against, and for those
 twelve the new factorization is worse. This loss does not appear anywhere in the
 166-matrix subset above, because that subset's baseline was zero everywhere; it is the
-honest counterpart to Milestone 8's gain, reported here rather than folded silently into
+honest counterpart to Milestone 5's gain, reported here rather than folded silently into
 the headline.
 
 \begin{figure}[H]
@@ -1426,6 +1403,62 @@ steps for that same up-front cost.}
 \caption{Iteration counts needed for convergence, among successful solves, by method.}
 \label{fig:iteration-counts}
 \end{figure}
+
+\subsection{Residual and relative error, across all sixteen methods}
+\label{sec:results-accuracy}
+
+Cost and iterations describe how much work a method spends; they say nothing about how
+accurate the answer is once it converges. Table~\ref{tab:residual-error} reports the
+median relative residual, $\|A\vec{x}-\vec{b}\|/\|\vec{b}\|$, and the median relative
+error against the known solution, for every method's successful solves, grouped by family.
+
+\begin{table}[H]
+\centering
+\caption{Median relative residual and relative error at convergence, all sixteen methods,
+grouped by family.}
+\label{tab:residual-error}
+\small
+\begin{tabular}{@{}p{2.6cm}p{4.2cm}rr@{}}
+\toprule
+\hdrow \hdtxt{Family} & \hdtxt{Method} & \hdtxt{Median rel.\ residual} & \hdtxt{Median rel.\ error} \\
+\midrule
+\multirow{4}{2.6cm}{Direct, hand-written}
+  & Gauss elimination & 7.2e-16 & 2.2e-12 \\
+  & LU & 4.1e-16 & 2.8e-12 \\
+  & Gauss-Jordan & 2.9e-15 & 7.1e-13 \\
+  & Cholesky & 2.1e-16 & 3.9e-14 \\
+\cmidrule(lr){2-4}
+\multirow{2}{2.6cm}{Direct, library}
+  & spsolve (SuperLU) & 6.5e-16 & 2.6e-12 \\
+  & splu (SuperLU) & 6.5e-16 & 2.6e-12 \\
+\cmidrule(lr){2-4}
+\multirow{3}{2.6cm}{Stationary}
+  & Jacobi & 7.7e-9 & 8.1e-9 \\
+  & Gauss-Seidel & 8.7e-9 & 1.1e-7 \\
+  & SOR & 9.2e-9 & 8.1e-8 \\
+\cmidrule(lr){2-4}
+\multirow{3}{2.6cm}{Krylov}
+  & BiCGSTAB & 7.8e-9 & 2.4e-6 \\
+  & Conjugate Gradient & 8.5e-9 & 4.0e-5 \\
+  & GMRES(30) & 9.4e-9 & 6.3e-7 \\
+\cmidrule(lr){2-4}
+\multirow{4}{2.6cm}{Preconditioned (ILU)}
+  & ILU only & 1.1e-15 & 9.4e-15 \\
+  & ILU-GMRES(30) & 1.3e-10 & 4.1e-9 \\
+  & ILU-BiCGSTAB & 1.4e-9 & 1.7e-7 \\
+  & ILU-Krylov (dispatched) & 1.6e-9 & 1.9e-7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every method's median residual clears the $10^{-8}$ success threshold with room to spare;
+the spread across families spans thirteen orders of magnitude in accuracy. The direct
+methods sit near the floor of double-precision arithmetic, since they are not iterating
+toward a tolerance at all, they are solving the triangular systems that fall out of a
+factorization. ILU only reaches a similarly tight residual, but on a far smaller and
+easier population, only 79 of 736 applicable matrices, 10.7\% conditional success
+(Table~\ref{tab:headline}), so it is not a fair comparison against the families that solve
+the bulk of the corpus.
 
 \subsection{The base paper's own test, on real data}
 \label{sec:results-basepaper}

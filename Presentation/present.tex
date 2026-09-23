@@ -14,6 +14,7 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{colortbl}
+\usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{pifont}
 \usepackage{tikz}
@@ -197,11 +198,11 @@
     \end{column}
   \end{columns}
   \vspace{0.7em}
-  \begin{center}
-  \colorbox{LSlightgold}{\parbox{0.9\linewidth}{\centering\footnotesize
-  Every number in this deck is measured and traceable to a table in the repository.
-  Where a result is still being measured, we say so.}}
-  \end{center}
+  % \begin{center}
+  % \colorbox{LSlightgold}{\parbox{0.9\linewidth}{\centering\footnotesize
+  % Every number in this deck is measured and traceable to a table in the repository.
+  % Where a result is still being measured, we say so.}}
+  % \end{center}
 \end{frame}
 
 %=============================================================================
@@ -232,7 +233,7 @@
     \end{column}
   \end{columns}
   \vspace{0.6em}
-  \begin{block}{\small The whole project, in one sentence}
+  \begin{block}{\small The complete project in one line}
     \footnotesize Whether an iterative method converges depends entirely on the
     structure of $A$. That dependency is what this project measures, on real data.
   \end{block}
@@ -256,7 +257,7 @@
       which one wins depends on the matrix.
   \end{itemize}
   \vspace{0.4em}
-  \begin{block}{\small The gap this leaves open}
+  \begin{block}{\small The gap we discovered}
     \footnotesize The paper never once touches a matrix from a real engineering
     problem. Everything is either worked out by hand at toy size, or generated at
     random. Random numbers do not look like real data: they carry none of the
@@ -264,7 +265,7 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{The Gap, and Our Question}
+\begin{frame}{The Gap and Our Question}
   \small
   \vspace{0.2em}
   Nobody has checked whether the paper's conclusions survive contact with matrices
@@ -285,7 +286,7 @@
 \end{frame}
 
 %=============================================================================
-\dividerframe{PART 2}{What We Built From the Paper}{Jacobi, Gauss-Seidel, SOR, and the convergence theory behind them}
+\dividerframe{PART 2}{What We Implemented From the Paper}{Jacobi, Gauss-Seidel, SOR and the convergence theory behind them}
 %=============================================================================
 
 \begin{frame}{Jacobi and Gauss-Seidel: the Update Rules}
@@ -315,7 +316,7 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{SOR, and Whether Any of This Converges}
+\begin{frame}{SOR, and it's Convergence Criterion}
   \small
   \textbf{\color{LSteal}SOR (Successive Over-Relaxation)} adds one tuning number,
   $\omega$, that lets the update overshoot on purpose:
@@ -333,10 +334,9 @@
   $\rho=0.999$ needs about 18{,}000.
 \end{frame}
 
-\begin{frame}{The Full Method Roster: 16 Solvers, 5 Families}
+\begin{frame}{Our extended approach: 16 Solvers, 5 Families}
   \small
-  We did not stop at the two methods the paper studies. Without a floor and a
-  ceiling, ``Jacobi is slow'' is not a meaningful sentence.
+  We did not stop at the two methods the paper studies. Without proper comparison, ``Jacobi is slow'' is not a meaningful sentence.
   \vspace{0.4em}
   \renewcommand{\arraystretch}{1.28}
   \begin{center}
@@ -356,8 +356,7 @@
   \end{center}
   \vspace{0.5em}
   \footnotesize\color{LSgray}
-  The last row, ILU-Krylov (dispatched), is our original course proposal, APK. Its
-  story is told honestly in Part 5.
+  
 \end{frame}
 
 %=============================================================================
@@ -409,34 +408,34 @@
   numbers, they differ in shape.
 \end{frame}
 
-\begin{frame}{Corpus Bookkeeping: Being Honest About 930 Files}
-  \small
-  \vspace{0.2em}
-  \begin{itemize}\setlength\itemsep{0.5em}
-    \item 930 files downloaded. \textbf{3 are exact duplicates} of other files under
-      a different name $\Rightarrow$ \textbf{927 unique matrices}.
-    \item \textbf{6 files were truncated downloads}: each file's own header declared
-      more nonzero entries than the file contained, so they silently failed to
-      load. Usable corpus: \textbf{924}.
-    \item \textbf{100 of the 930 are random matrices we generated ourselves}, sizes
-      5 to 300, specifically to reproduce the base paper's own validation method
-      (Part 4 shows what that comparison found).
-    \item One domain was spelled two ways in the source data, splitting it in two
-      by accident. We merge it back.
-  \end{itemize}
-  \vspace{0.5em}
-  \begin{block}{\small Why this matters}
-    \footnotesize A downloaded file that is never checked against its own declared
-    size can silently break a result months later. This is one of the mistakes we
-    made and fixed (Part 5, and the closing section).
-  \end{block}
-\end{frame}
+% \begin{frame}{Corpus Bookkeeping: Being Honest About 930 Files}
+%   \small
+%   \vspace{0.2em}
+%   \begin{itemize}\setlength\itemsep{0.5em}
+%     \item 930 files downloaded. \textbf{3 are exact duplicates} of other files under
+%       a different name $\Rightarrow$ \textbf{927 unique matrices}.
+%     \item \textbf{6 files were truncated downloads}: each file's own header declared
+%       more nonzero entries than the file contained, so they silently failed to
+%       load. Usable corpus: \textbf{924}.
+%     \item \textbf{100 of the 930 are random matrices we generated ourselves}, sizes
+%       5 to 300, specifically to reproduce the base paper's own validation method
+%       (Part 4 shows what that comparison found).
+%     \item One domain was spelled two ways in the source data, splitting it in two
+%       by accident. We merge it back.
+%   \end{itemize}
+%   \vspace{0.5em}
+%   \begin{block}{\small Why this matters}
+%     \footnotesize A downloaded file that is never checked against its own declared
+%     size can silently break a result months later. This is one of the mistakes we
+%     made and fixed (Part 5, and the closing section).
+%   \end{block}
+% \end{frame}
 
 \begin{frame}{How We Decide a Solve Actually Succeeded}
   \small
   \vspace{0.1em}
-  A solver's own claim of success is \bad{recorded, never trusted}. Success is
-  decided afterwards, by us, from the residual we measure independently:
+  A solver's own claim of success is \bad{recorded }. Success is
+  decided afterwards,  from the residual we measure independently:
   \[ \text{relative residual} = \|A\vec{x}-\vec{b}\| / \|\vec{b}\| \le 10^{-8} \;\Rightarrow\; \text{solved} \]
   \vspace{0.3em}
   \footnotesize
@@ -459,9 +458,9 @@
     \end{column}
   \end{columns}
   \vspace{0.4em}
-  \colorbox{LSlightgold}{\parbox{0.96\linewidth}{\footnotesize
-  The very first version of this project trusted a solver's own success flag, and
-  passed 57 solves whose actual residual reached $9.71\times10^{12}$.}}
+  % \colorbox{LSlightgold}{\parbox{0.96\linewidth}{\footnotesize
+  % The very first version of this project trusted a solver's own success flag, and
+  % passed 57 solves whose actual residual reached $9.71\times10^{12}$.}}
 \end{frame}
 
 %=============================================================================
@@ -473,7 +472,7 @@
   \slidefig[0.78]{04_method_scoreboard.png}
   \end{center}
   \footnotesize\color{LSgray}\centering
-  Two rates, never multiplied. Conjugate Gradient is applicable on only 11.7\% of
+  The Conjugate Gradient is applicable on only 11.7\% of
   the corpus, but solves 84.3\% of what it is allowed to try.
 \end{frame}
 
@@ -502,10 +501,10 @@
   \end{center}
   \vspace{0.4em}
   \footnotesize\color{LSgray}\centering
-  All 16 rows, with every denominator, are in \texttt{RESULTS.md}.
+  % All 16 rows, with every denominator, are in \texttt{RESULTS.md}.
 \end{frame}
 
-\begin{frame}{Speed and Robustness, in One Picture}
+\begin{frame}{Speed and Robustness}
   \begin{center}
   \slidefig[0.82]{05_performance_profile.png}
   \end{center}
@@ -515,20 +514,76 @@
   much of the corpus it can solve at all.
 \end{frame}
 
-\begin{frame}{Cost and Iteration Count}
-  \begin{columns}[T]
-    \begin{column}{0.49\textwidth}
-      \centering\halffig{08_cost_profile.png}
-    \end{column}
-    \begin{column}{0.49\textwidth}
-      \centering\halffig{10_iteration_counts.png}
-    \end{column}
-  \end{columns}
-  \vspace{0.3em}
+\begin{frame}{Cost of a Successful Solve}
+  \begin{center}
+  \slidefig[0.85]{08_cost_profile.png}
+  \end{center}
   \footnotesize\color{LSgray}\centering
-  Cost is counted in matrix-vector products, not seconds: shared Kaggle hardware
-  makes wall-clock time unreproducible. One preconditioned step costs far more
-  arithmetic than one Jacobi step, so fewer iterations is not the same as less work.
+  Matrix-vector products, iterative families only. Direct methods perform no matvecs at
+  all, their cost is the one-time factorization instead, so they are absent by
+  construction, not because they are free.
+\end{frame}
+
+\begin{frame}{Iteration Counts, Where Each Method Succeeds}
+  \begin{center}
+  \slidefig[0.6]{10_iteration_counts.png}
+  \end{center}
+  \footnotesize\color{LSgray}\centering
+  One preconditioned step costs far more arithmetic than one Jacobi step, since it also
+  pays for a preconditioner application, so fewer iterations is not the same as less work.
+\end{frame}
+
+\begin{frame}{Wall-Clock Runtime, by Method Family}
+  \begin{center}
+  \slidefig[0.68]{09_runtime_scaling.png}
+  \end{center}
+  \footnotesize\color{LSgray}\centering
+  Read as a trend, not exact numbers: this ran on shared Kaggle hardware, so wall-clock
+  time is not reproducible the way a matvec count is, which is why cost is measured in
+  matrix-vector products everywhere else in this deck.
+\end{frame}
+
+\begin{frame}{Residual and Relative Error, All Sixteen Methods}
+  \begin{center}
+  \tiny
+  \renewcommand{\arraystretch}{0.98}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}p{1.85cm}p{2.55cm}rr@{}}
+    \toprule
+    \hdrow \hdtxt{Family} & \hdtxt{Method} & \hdtxt{Median rel.\ residual} & \hdtxt{Median rel.\ error}\\
+    \midrule
+    \multirow{4}{1.85cm}{\raggedright\bfseries\color{LSnavy}Direct, hand-written}
+      & Gauss elimination & 7.2e-16 & 2.2e-12\\
+      & LU & 4.1e-16 & 2.8e-12\\
+      & Gauss-Jordan & 2.9e-15 & 7.1e-13\\
+      & Cholesky & 2.1e-16 & 3.9e-14\\
+    \cmidrule(lr){2-4}
+    \multirow{2}{1.85cm}{\raggedright\bfseries\color{LSnavy}Direct, library}
+      & spsolve & 6.5e-16 & 2.6e-12\\
+      & splu & 6.5e-16 & 2.6e-12\\
+    \cmidrule(lr){2-4}
+    \multirow{3}{1.85cm}{\raggedright\bfseries\color{LSnavy}Stationary}
+      & Jacobi & 7.7e-9 & 8.1e-9\\
+      & Gauss-Seidel & 8.7e-9 & 1.1e-7\\
+      & SOR & 9.2e-9 & 8.1e-8\\
+    \cmidrule(lr){2-4}
+    \multirow{3}{1.85cm}{\raggedright\bfseries\color{LSnavy}Krylov}
+      & BiCGSTAB & 7.8e-9 & 2.4e-6\\
+      & Conjugate Gradient & 8.5e-9 & 4.0e-5\\
+      & GMRES(30) & 9.4e-9 & 6.3e-7\\
+    \cmidrule(lr){2-4}
+    \multirow{4}{1.85cm}{\raggedright\bfseries\color{LSnavy}Preconditioned (ILU)}
+      & ILU only & 1.1e-15 & 9.4e-15\\
+      & ILU-GMRES(30) & 1.3e-10 & 4.1e-9\\
+      & ILU-BiCGSTAB & 1.4e-9 & 1.7e-7\\
+      & ILU-Krylov (dispatched) & 1.6e-9 & 1.9e-7\\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.1em}
+  \footnotesize\color{LSgray}\centering
+  Every method's median residual clears the $10^{-8}$ success threshold with room to
+  spare; the spread across families spans thirteen orders of magnitude in accuracy.
 \end{frame}
 
 \begin{frame}{Does the Textbook Theory Predict the Outcome?}
@@ -549,7 +604,7 @@
 
 \heroframe{The Single Most Important Fact We Found}{491 of 927}{matrices leave Jacobi, Gauss-Seidel and SOR mathematically undefined, all at once, because of one zero on the diagonal}
 
-\begin{frame}{The Base Paper's Own Test Bed, at Real Scale}
+\begin{frame}{The Base Paper's Own Test Cry, at Real Scale}
   \begin{center}
   \slidefig[0.6]{23_random_matrices.png}
   \end{center}
@@ -562,10 +617,10 @@
 \end{frame}
 
 %=============================================================================
-\dividerframe{PART 5}{The Story of Our Novelty}{Ten milestones, in the order they actually happened, starting from our first idea}
+\dividerframe{PART 5}{The Story of Our Novelty}{Seven milestones, in the order they actually happened, starting from our first idea}
 %=============================================================================
 
-\begin{frame}{Milestone 0: Our Starting Point, APK}
+\begin{frame}{Milestone 1: Our Starting Point, APK}
   \small
   Our original proposal: inspect the matrix, then dispatch to the right Krylov
   method.
@@ -586,32 +641,17 @@
   \end{center}
   \vspace{0.3em}
   \footnotesize\color{LSgray}
-  Kept today as an honestly labelled baseline, not as our novelty. This is why the
+  Kept it as an honestly labelled baseline, not as our novelty. This is why the
   project needed a real contribution.
 \end{frame}
 
-\begin{frame}{Milestone 1--2: an Honest Harness, and the 491}
+\begin{frame}{Milestone 2: Choose the Diagonal}
   \small
-  Before any new idea could be tested fairly, the benchmark itself had to be
-  trustworthy. We rebuilt it, fixing five separate problems (Part 7 lists all
-  eight mistakes found across the whole project).
-  \vspace{0.4em}
-  Once it could be trusted, the very first full sweep produced the number that
-  reshaped everything that followed:
-  \vspace{0.3em}
-  \begin{center}
-  \colorbox{LSlight}{\parbox{0.9\linewidth}{\centering\small
-  \textbf{491 of 927 matrices (53\%) have at least one zero on the diagonal.}\\
-  Jacobi, Gauss-Seidel and SOR cannot even attempt them.}}
-  \end{center}
+  Once the benchmark could be trusted, its first honest sweep turned up this:
+  \textbf{491 of 927 matrices (53\%) have at least one zero on the diagonal},
+  Jacobi, Gauss-Seidel and SOR cannot even attempt them.
   \vspace{0.5em}
-  \footnotesize
-  This turned the question from ``is Jacobi slow?'' into a much bigger one:
-  \emph{can we make Jacobi applicable in the first place?}
-\end{frame}
 
-\begin{frame}{Milestone 3: the Idea, Choose the Diagonal}
-  \small
   Row order is arbitrary. It was decided by the meshing software or the circuit
   numbering convention, never by the solver that will run later. Permuting rows
   changes nothing about the answer:
@@ -626,11 +666,10 @@
   \end{center}
   \vspace{0.5em}
   \footnotesize
-  \textbf{\color{LSteal}This single idea is the seed of everything in the rest of
-  this part.}
+  \textbf{\color{LSteal}Every milestone after this one builds on this single idea.}
 \end{frame}
 
-\begin{frame}{Milestone 4: Proving What Can and Cannot Work}
+\begin{frame}{Milestone 2 (continued): Proving It's the Only Lever}
   \small
   Before searching for a good row order, we checked what kinds of change could
   possibly help, so the search would not waste time on something pointless.
@@ -650,7 +689,7 @@
   This proof, not a guess, is why we searched over row permutations specifically.
 \end{frame}
 
-\begin{frame}{Milestone 5: the Objective, and a False Start}
+\begin{frame}{Milestone 3: the Objective, and a False Start}
   \small
   Choosing the diagonal is an \emph{assignment problem}, solvable exactly.
   \vspace{0.3em}
@@ -673,20 +712,13 @@
   \textbf{The false start:} a second objective, min-sum, was meant as a natural
   contrast. Algebra shows $\sum\log(1{+}\text{ratio}) = \text{const} - \sum\log|a_{ii}|$:
   min-sum \textbf{is} MC64 under another name. Verified on 193 matrices, 193 matches.}}
+  \vspace{0.4em}
+  \footnotesize\color{LSgray}Solving this exactly needed a fast matching algorithm too:
+  two off-the-shelf scipy routines hung on real matrices, four separate times, before
+  a dense-assignment replacement fixed it.
 \end{frame}
 
-\begin{frame}{Milestone 6: Four scipy Hangs}
-  \begin{center}
-  \slidefig[0.92]{19_hang_fixes.png}
-  \end{center}
-  \vspace{0.2em}
-  \footnotesize\color{LSgray}\centering
-  Two ready-made scipy matching routines hung, four separate times, in four
-  separate ways, on real matrices. One of them stalled an entire 12.7-hour Kaggle
-  session. The fix each time: a dense assignment instead.
-\end{frame}
-
-\begin{frame}{Milestone 7: What Reordering Actually Buys}
+\begin{frame}{Milestone 4: What Reordering Actually Buys}
   \begin{center}
   \slidefig[0.62]{20_incremental_gains.png}
   \end{center}
@@ -697,7 +729,7 @@
   objective is the small one.
 \end{frame}
 
-\begin{frame}{Milestone 7 (continued): Our Objective, Head to Head}
+\begin{frame}{Milestone 4 (continued): Our Objective, Head to Head}
   \begin{center}
   \slidefig[0.75]{03_dominance.png}
   \end{center}
@@ -708,7 +740,7 @@
   permutation. 43 already were.
 \end{frame}
 
-\begin{frame}{Milestone 8: the ILU Hole}
+\begin{frame}{Milestone 5: the ILU Hole}
   \begin{center}
   \slidefig[0.86]{02_ilu_hole.png}
   \end{center}
@@ -719,7 +751,7 @@
   and 17 solve outright.
 \end{frame}
 
-\begin{frame}{Milestone 9: the Relaxation Factor, Chosen per Matrix}
+\begin{frame}{Milestone 6: the Relaxation Factor, Chosen per Matrix}
   \begin{center}
   \slidefig[0.58]{21_adaptive_omega.png}
   \end{center}
@@ -730,9 +762,9 @@
   20 systems where $\omega$ decides the outcome at all.
 \end{frame}
 
-\begin{frame}{Milestone 10: Assembling the Pipeline}
+\begin{frame}{Milestone 7: Assembling the Pipeline}
   \centering
-  \vspace{0.1em}
+  \vspace*{2.0cm}
   \resizebox{0.98\textwidth}{!}{%
   \begin{tikzpicture}
     \node[data] (in) at (0,0) {$A, \vec{b}$};
@@ -745,20 +777,14 @@
     \draw[fl] (s2) -- (s3);
     \draw[fl] (s3) -- (out);
   \end{tikzpicture}}
-  \vspace{0.9em}
-  \small
-  \begin{itemize}\setlength\itemsep{0.35em}
-    \item Every arm is measured \emph{separately} as well as \emph{together}.
-      ``The pipeline helps'' is not a result; \emph{which step} helps, and by how
-      much, is.
-    \item Steps 1 and 2 never touch the solver itself. $A'\vec{x}=\vec{b}'$ solves
-      the original system directly: nothing needs to be undone.
-    \item \textbf{\color{LSteal}All seven arms have now run}, across all 927 matrices,
-      413.6 minutes, no hang. What that run found is on the next two slides.
-  \end{itemize}
+  \vspace{1.2em}
+  \small\centering
+  Steps 1 and 2 never touch the solver itself. $A'\vec{x}=\vec{b}'$ solves the
+  original system directly: nothing needs to be undone.
+  \vspace{2.0cm}
 \end{frame}
 
-\begin{frame}{Milestone 10 (continued): SOR Through Both Steps}
+\begin{frame}{Milestone 7 (continued): SOR Through Both Steps}
   \begin{center}
   \slidefig[0.6]{24_sor_full_pipeline.png}
   \end{center}
@@ -769,19 +795,19 @@
   $\omega$ per matrix has no ``do nothing'' fallback the way step 1 does.
 \end{frame}
 
-\begin{frame}{Milestone 10 (continued): Reordering in Front of ILU, Whole Corpus}
+\begin{frame}{Milestone 7 (continued): Reordering in Front of ILU, Whole Corpus}
   \begin{center}
   \slidefig[0.86]{25_ilu_full_corpus.png}
   \end{center}
   \vspace{0.2em}
   \footnotesize\color{LSgray}\centering
-  The 166-matrix hole (Milestone 8) could only show gains, since its baseline was zero.
+  The 166-matrix hole (Milestone 5) could only show gains, since its baseline was zero.
   Across all 927, ILU-BiCGSTAB and ILU-Krylov both move on identical sets: 30 gained,
   12 lost, net +18. Changing the diagonal changes what ILU factors against.
 \end{frame}
 
 %=============================================================================
-\dividerframe{PART 6}{Honest Limits}{What we do and do not claim, stated plainly}
+\dividerframe{PART 6}{Honest Limits}{What we do and do not claim}
 %=============================================================================
 
 \begin{frame}{What We Do Not Claim}
@@ -803,61 +829,8 @@
   \end{itemize}
   \vspace{0.5em}
   \colorbox{LSlightgold}{\parbox{0.95\linewidth}{\centering\footnotesize
-  What we do claim: a diagnosed cause, a principled objective with a proof behind
-  it, and a measured, honest gain. That is what the story in Part 5 is built on.}}
-\end{frame}
-
-%=============================================================================
-\dividerframe{PART 7}{Where Things Stand}{Everything planned has run. What comes next}
-%=============================================================================
-
-\begin{frame}{Status Right Now}
-  \small
-  \renewcommand{\arraystretch}{1.02}
-  \begin{center}
-  \begin{tabular}{@{}p{6.7cm}p{4.0cm}@{}}
-    \toprule
-    \hdrow \hdtxt{Piece} & \hdtxt{Status}\\
-    \midrule
-    16-method main sweep, 927 matrices & \gd{done}\\
-    \rowcolor{LSlight}
-    Spectral analysis (theory vs.\ reality) & \gd{done}\\
-    Refinement study & \gd{done}\\
-    \rowcolor{LSlight}
-    Reordering study (stationary methods) & \gd{done}\\
-    ILU-hole diagnosis (166 matrices) & \gd{done}\\
-    \rowcolor{LSlight}
-    Adaptive-omega probe (400 matrices) & \gd{done}\\
-    Full 7-arm pipeline, whole corpus & \gd{done}\\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-  \vspace{0.1em}
-  \colorbox{LSlightgold}{\parbox{0.96\linewidth}{\centering\footnotesize
-  \textbf{Every planned run has finished. Nothing in this project is still running.}}}
-  \vspace{0.1em}
-  \footnotesize\color{LSgray}
-  353 further SuiteSparse matrices have been downloaded into a separate folder for
-  a possible future, larger run. They are deliberately not mixed into the 927 this
-  project's numbers are measured on.
-\end{frame}
-
-\begin{frame}{Eight Mistakes We Made, and Fixed}
-  \scriptsize
-  \begin{enumerate}\setlength\itemsep{0.28em}
-    \item Trusted a solver's own success flag (57 false successes, residual $10^{12}$).
-    \item Divided success rates by the whole corpus instead of by applicability.
-    \item Gave iterative refinement to one method only.
-    \item Gauss-Seidel and SOR re-factored inside the loop, inflating runtime 11--14x.
-    \item A divergence guard that killed genuine, slow-to-turn convergences.
-    \item Two copies of the library quietly drifted apart.
-    \item Downloaded files were never checked against their own declared size.
-    \item Trusted two scipy routines without testing them on real data first.
-  \end{enumerate}
-  \vspace{0.4em}
-  \footnotesize\color{LSgray}\centering
-  Full detail on every one of these, with the number each fix changed, is in
-  \texttt{Presentation/explaination.md} and \texttt{docs/GUIDE.md}.
+  What we do claim: a diagnosed cause, an objective that is exact rather than
+  heuristic, and a measured, honest gain.}}
 \end{frame}
 
 \begin{frame}[plain]
