@@ -1,0 +1,990 @@
+# build every figure and summary table locally from the notebooks' CSVs, not on Kaggle
+import argparse
+import sys
+from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+import numpy as np
+import pandas as pd
+from matplotlib.patches import Patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+from solvebench import corpus
+
+ROOT = Path(__file__).resolve().parent.parent
+
+# --- palette -----------------------------------------------------------------
+C1, C2, C3 = "#2a78d6", "#eb6834", "#1baf7a"
+SEQ = ["#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7",
+       "#3987e5", "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b"]
+STATUS = {"solved": "#0ca30c",            # good
+          "inaccurate": "#d03b3b",        # critical: claimed success, wrong answer
+          "did_not_converge": "#fab219",  # warning: admitted failure
+          "diverged": "#ec835a",          # serious: blew up
+          "not_applicable": "#8a8880",    # the method is undefined on this matrix
+          "excluded": "#dcdbd3"}          # corpus/harness, says nothing about the solver
+
+# reasons that are properties of the corpus/harness, not the solver
+EXCLUDED_AS = {"structurally_singular": "excluded", "skipped_too_large": "excluded",
+               "load_failed": "excluded", "error": "excluded"}
+
+SURFACE, INK, INK2, MUTED = "#fcfcfb", "#0b0b0b", "#52514e", "#898781"
+GRID, AXIS = "#e1e0d9", "#c3c2b7"
+
+plt.rcParams.update({
+    "figure.facecolor": SURFACE, "axes.facecolor": SURFACE, "savefig.facecolor": SURFACE,
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Segoe UI", "DejaVu Sans", "Arial"],
+    "text.color": INK, "axes.labelcolor": INK2, "axes.titlecolor": INK,
+    "xtick.color": MUTED, "ytick.color": MUTED,
+    "axes.edgecolor": AXIS, "axes.linewidth": 0.8,
+    "grid.color": GRID, "grid.linewidth": 0.8, "grid.linestyle": "-",
+    "axes.grid": True, "axes.axisbelow": True,
+    "axes.spines.top": False, "axes.spines.right": False,
+    "legend.frameon": False, "figure.dpi": 160, "savefig.bbox": "tight",
+    "font.size": 9, "axes.titlesize": 11, "legend.fontsize": 8,
+})
+
+# every rate in every figure divides by this, never by the whole corpus
+APPLICABLE = ["solved", "inaccurate", "did_not_converge", "diverged"]
+
+FIGURES = []
+
+
+def save(fig, name, caption):
+    path = OUT / f"{name}.png"
+    fig.savefig(path)
+    plt.close(fig)
+    FIGURES.append({"file": path.name, "caption": caption})
+    print(f"  {path.name:<44s} {path.stat().st_size/1024:>7.1f} KB")
+
+
+def _hide_grid_x(ax):
+    ax.grid(axis="y", visible=False)
+
+
+# --------------------------------------------------------------- figures
+
+def fig_scoreboard(res):
+    # applicability and conditional success, two rates on one axis, never multiplied
+    from collections import OrderedDict
+    order = list(OrderedDict.fromkeys(res["method"]))
+    rows = []
+    for m in order:
+        sub = res[res.method == m]
+        applicable = sub.status.isin(APPLICABLE).sum()
+        solved = (sub.status == "solved").sum()
+        rows.append((m, applicable / len(sub) if len(sub) else np.nan,
+                     solved / applicable if applicable else np.nan, applicable, solved))
+    d = pd.DataFrame(rows, columns=["method", "applicability", "conditional", "n_app", "n_ok"])
+    d = d.sort_values("conditional", ascending=True, na_position="first")
+
+    fig, ax = plt.subplots(figsize=(9, 0.42 * len(d) + 1.6))
+    y = np.arange(len(d))
+    h = 0.36
+    ax.barh(y + h / 2 + 0.02, d.applicability, height=h, color=C1, label="Applicability  (defined on / corpus)")
+    ax.barh(y - h / 2 - 0.02, d.conditional, height=h, color=C2, label="Conditional success  (solved / applicable)")
+
+    for yi, r in zip(y, d.itertuples()):
+        if np.isfinite(r.conditional):
+            inside = r.conditional > 0.86  # long bar's label goes inside, else it collides right
+            ax.text(r.conditional - 0.012 if inside else r.conditional + 0.012,
+                    yi - h / 2 - 0.02, f"{r.conditional:.0%}",
+                    va="center", ha="right" if inside else "left",
+                    fontsize=7.5, color=SURFACE if inside else INK2)
+        ax.text(1.03, yi, f"n={int(r.n_app)}", va="center", fontsize=7, color=MUTED,
+                transform=ax.get_yaxis_transform())
+
+    ax.set_yticks(y, d.method, fontsize=8.5)
+    ax.set_xlim(0, 1.0)
+    ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
+    # no x-label -- ticks are already percentages, legend below names both series
+    ax.set_title("Applicability and conditional success are separate measurements",
+                 loc="left", pad=12)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.04), ncols=2)  # outside, data fills the axes
+    _hide_grid_x(ax)
+    save(fig, "04_method_scoreboard",
+         "Applicability (how much of the corpus a method is defined on) against "
+         "conditional success (how much of that it solves). Multiplying the two "
+         "into one rate is what understated several baselines.")
+
+
+def fig_outcomes(res):
+    # 8 statuses collapsed to 6 colours -- the 3 corpus/harness reasons merge into "excluded"
+    from collections import OrderedDict
+    order = list(OrderedDict.fromkeys(res["method"]))
+    grouped = res.assign(status=res.status.map(lambda s: EXCLUDED_AS.get(s, s)))
+    counts = (grouped.groupby(["method", "status"]).size().unstack(fill_value=0)
+              .reindex(order))
+    present = [s for s in STATUS if s in counts.columns]
+    counts = counts[present]
+
+    fig, ax = plt.subplots(figsize=(9, 0.42 * len(counts) + 1.8))
+    left = np.zeros(len(counts))
+    y = np.arange(len(counts))
+    for s in present:
+        v = counts[s].values
+        ax.barh(y, v, left=left, height=0.62, color=STATUS[s],
+                edgecolor=SURFACE, linewidth=1.2, label=s.replace("_", " "))
+        left += v
+    ax.set_yticks(y, counts.index, fontsize=8.5)
+    ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+    ax.set_xlabel("attempts")
+    ax.set_title("Outcome of every (matrix, method) attempt", loc="left", pad=12)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.06), ncols=4)
+    _hide_grid_x(ax)
+    save(fig, "06_outcomes",
+         "'inaccurate' is the category that did not exist before: the solver "
+         "returned without complaint and the residual says the answer is wrong.")
+
+
+def fig_domain_heatmap(res):
+    # conditional success per domain and method, one hue light to dark
+    app = res.status.isin(APPLICABLE)
+    g = (res.assign(_app=app, _ok=res.status == "solved")
+           .groupby(["domain", "method"])[["_app", "_ok"]].sum())
+    rate = (g["_ok"] / g["_app"].replace(0, np.nan)).unstack()
+    from collections import OrderedDict
+    rate = rate.reindex(columns=[m for m in OrderedDict.fromkeys(res["method"])
+                                 if m in rate.columns])
+    rate = rate.loc[rate.notna().sum(axis=1).sort_values(ascending=False).index]
+
+    cmap = matplotlib.colors.LinearSegmentedColormap.from_list("seq", SEQ)
+    cmap.set_bad("#f4f3ef")
+    fig, ax = plt.subplots(figsize=(0.55 * rate.shape[1] + 4.5, 0.34 * len(rate) + 2.2))
+    im = ax.imshow(rate.values, cmap=cmap, vmin=0, vmax=1, aspect="auto")
+    ax.set_xticks(range(rate.shape[1]), rate.columns, rotation=45, ha="right", fontsize=8)
+    ax.set_yticks(range(len(rate)), [d.replace("_problem", "") for d in rate.index], fontsize=8)
+    ax.set_title("Conditional success by domain", loc="left", pad=12)
+    ax.grid(False)
+    cb = fig.colorbar(im, ax=ax, fraction=0.02, pad=0.015)
+    cb.set_label("solved / applicable", color=INK2, fontsize=8)
+    cb.outline.set_visible(False)
+    cb.ax.tick_params(color=MUTED, labelcolor=MUTED, labelsize=7.5)
+    save(fig, "07_domain_heatmap",
+         "Grey cells are domains where a method is defined on nothing. Rates are "
+         "conditional; per-domain denominators are in per_domain.csv.")
+
+
+def fig_cost_profile(res):
+    # matvecs vs size per family; direct methods excluded (matvecs=0 would be a log-axis artefact)
+    ok = res[(res.status == "solved") & res.matvecs.notna() & (res.n > 0)
+             & (res.matvecs > 0)]
+    if ok.empty:
+        return
+    fams = [f for f in ["stationary", "krylov", "preconditioned"] if f in set(ok.family)]
+    fig, axes = plt.subplots(1, len(fams), figsize=(3.2 * len(fams), 3.4),
+                             sharex=True, sharey=True)
+    axes = np.atleast_1d(axes)
+    for ax, fam in zip(axes, fams):
+        s = ok[ok.family == fam]
+        ax.scatter(s.n, s.matvecs, s=9, color=C1, alpha=0.5,
+                   linewidths=0.4, edgecolors=SURFACE)
+        ax.axhline(s.matvecs.median(), color=C2, lw=1.2, zorder=3)
+        ax.text(0.03, 0.95, f"median {s.matvecs.median():.0f}",  # top-left, corner is dense
+                transform=ax.transAxes, ha="left", va="top", fontsize=8, color=C2)
+        ax.text(0.03, 0.88, f"n={len(s)} solves",
+                transform=ax.transAxes, ha="left", va="top", fontsize=7.5, color=MUTED)
+        ax.set_xscale("log"); ax.set_yscale("log")
+        ax.set_title(fam, fontsize=9.5, color=INK2)
+        ax.set_xlabel("matrix size n")
+    axes[0].set_ylabel("matrix-vector products")
+    fig.suptitle("Cost of a successful solve, iterative families only",
+                 x=0.02, ha="left", fontsize=11, color=INK)
+    save(fig, "08_cost_profile",
+         "Counted work rather than wall-clock time, which is not reproducible on shared "
+         "hardware. Direct methods are absent by construction: they perform no "
+         "matrix-vector products at all, so their cost is the factorisation instead.")
+
+
+def fig_conditioning(res):
+    # accuracy against conditioning, split into two strata rather than pooled
+    ok = res[(res.status == "solved") & res.condition_number.notna()
+             & res.error_rel.notna() & (res.error_rel > 0)]
+    if ok.empty:
+        return
+    well = ok[ok.condition_number <= 1e15]
+    ill = ok[ok.condition_number > 1e15]
+    fig, ax = plt.subplots(figsize=(7.2, 4.2))
+    ax.scatter(well.condition_number, well.error_rel, s=8, color=C1, alpha=0.45,
+               linewidths=0, label=f"well-posed, cond <= 1e15  (n={len(well)})")
+    ax.scatter(ill.condition_number, ill.error_rel, s=8, color=C2, alpha=0.55,
+               linewidths=0, label=f"numerically singular, cond > 1e15  (n={len(ill)})")
+    ax.axvline(1e15, color=AXIS, linewidth=1.0)
+    ax.text(1.15e15, ax.get_ylim()[1], " double-precision limit", fontsize=7.5,
+            color=MUTED, va="top")
+    ax.set_xscale("log"); ax.set_yscale("log")
+    ax.set_xlabel("condition number"); ax.set_ylabel("relative forward error")
+    ax.set_title("Forward error against conditioning", loc="left", pad=12)
+    ax.legend(loc="lower right")
+    save(fig, "16_conditioning",
+         "Pooling the two strata is what let dataset ill-conditioning masquerade "
+         "as solver inaccuracy in the earlier error medians.")
+
+
+def fig_dispatch_ablation(res):
+    # does the symmetry dispatch rule contribute anything measurable?
+    fams = ["ILU only", "ILU-BiCGSTAB", "ILU-GMRES(30)", "ILU-Krylov (dispatched)"]
+    have = [m for m in fams if m in set(res.method)]
+    if len(have) < 2:
+        return
+    counts = [(res[(res.method == m) & (res.status == "solved")].shape[0]) for m in have]
+    colours = [C1 if m != "ILU-Krylov (dispatched)" else C2 for m in have]
+
+    applicable = int(res[res.method == have[0]].status.isin(APPLICABLE).sum())
+    fig, ax = plt.subplots(figsize=(6.8, 3.6))
+    bars = ax.bar(range(len(have)), counts, width=0.6, color=colours)
+    ax.set_ylim(0, max(counts) * 1.18)      # headroom so the labels clear the legend
+    for b, c in zip(bars, counts):
+        ax.text(b.get_x() + b.get_width() / 2, c, f"{c}", ha="center", va="bottom",
+                fontsize=9, color=INK2)
+    ax.set_xticks(range(len(have)), [m.replace("ILU-", "ILU-\n") for m in have], fontsize=8.5)
+    ax.set_ylabel(f"matrices solved  (of {applicable} applicable)")
+    ax.set_title("The dispatch rule against always running one Krylov method", loc="left", pad=12)
+    # Below the axes: inside, it sat on top of the tallest bar's value label.
+    ax.legend(handles=[Patch(color=C2, label="dispatched (the rule proposed as novel)"),
+                       Patch(color=C1, label="fixed choice, no dispatch")],
+              loc="upper center", bbox_to_anchor=(0.5, -0.18), ncols=2)
+    _hide_grid_x(ax); ax.grid(axis="x", visible=False); ax.grid(axis="y", visible=True)
+    save(fig, "17_dispatch_ablation",
+         "If the dispatched bar matches always-BiCGSTAB, the dispatch rule adds "
+         "nothing. Earlier probes put both at 51/70.")
+
+
+def fig_spectral(spec):
+    # where the spectral radii actually fall, against the rho = 1 threshold
+    ok = spec[spec.get("status") == "analysed"] if "status" in spec else spec
+
+    # ECDF not histogram -- rho(T_GS) spans 80 decades, binning would collapse it to a spike
+    fig, ax = plt.subplots(figsize=(7.6, 4.2))
+    notes = []
+    for col, name, colour in (("rho_jacobi", "Jacobi", C1),
+                              ("rho_gauss_seidel", "Gauss-Seidel", C2)):
+        raw = pd.to_numeric(ok.get(col), errors="coerce")
+        undefined = int(raw.isna().sum())        # zero diagonal: T does not exist
+        finite = raw[np.isfinite(raw)].sort_values()
+        if finite.empty:
+            continue
+        below = int((finite < 1).sum())
+        exact = int((finite == 0).sum())  # rho=0 (nilpotent) can't sit on a log axis
+        v = finite[finite > 0]
+        y = (np.arange(len(v)) + 1 + exact) / len(finite)
+        ax.step(v, y, where="post", color=colour, lw=2,
+                label=f"{name}   {below} of {len(finite)} below 1  ({below/len(finite):.0%})")
+        ax.plot([v.iloc[0]], [(exact + 1) / len(finite)], "o", color=colour, ms=5,
+                markeredgecolor=SURFACE, markeredgewidth=1.2)
+        notes.append(f"{name}: {undefined} undefined (zero diagonal)"
+                     + (f", {exact} with $\\rho=0$" if exact else ""))
+
+    ax.axvline(1.0, color="#d03b3b", lw=1.4)
+    ax.text(1.15, 0.03, r"$\rho=1$", color="#d03b3b", fontsize=8.5)
+    ax.set_xscale("log")
+    ax.set_xlim(1e-4, 1e4)
+    ax.set_ylim(0, 1.02)
+    ax.yaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
+    # Say what the clipped window hides rather than letting the curve run off.
+    for col, name, colour, dy in (("rho_jacobi", "Jacobi", C1, 0.0),
+                                  ("rho_gauss_seidel", "Gauss-Seidel", C2, 0.06)):
+        raw = pd.to_numeric(ok.get(col), errors="coerce")
+        f = raw[np.isfinite(raw)]
+        beyond = int((f > 1e4).sum())
+        if beyond:
+            ax.text(0.985, 0.30 - dy, f"{beyond} {name} systems beyond $10^4$",
+                    transform=ax.transAxes, ha="right", fontsize=7.5, color=colour)
+    ax.set_xlabel(r"spectral radius $\rho(T)$")
+    ax.set_ylabel("share of systems with $\\rho$ at or below x")
+    ax.legend(loc="upper left")
+    ax.text(0.02, -0.20, "   ·   ".join(notes), transform=ax.transAxes,
+            fontsize=7.5, color=MUTED, va="top")
+    fig.suptitle("Convergence is decided by whether rho falls left of 1",
+                 x=0.02, ha="left", fontsize=11, color=INK)
+    save(fig, "11_spectral_radius",
+         "The quantity the base paper exists to characterise, computed here for "
+         "every matrix in the corpus.")
+
+
+def fig_hypothesis_coverage(spec):
+    # which classical theorem covers each matrix -- nominal, so one colour
+    if "hypothesis_class" not in spec:
+        return
+    counts = spec.hypothesis_class.dropna().value_counts()
+    if counts.empty:
+        return
+    fig, ax = plt.subplots(figsize=(6.8, 0.42 * len(counts) + 1.8))
+    y = np.arange(len(counts))[::-1]
+    ax.barh(y, counts.values, height=0.6, color=C1)
+    for yi, v in zip(y, counts.values):
+        ax.text(v, yi, f" {v}", va="center", fontsize=8.5, color=INK2)
+    ax.set_yticks(y, counts.index, fontsize=9)
+    ax.set_xlabel("matrices")
+    ax.set_title("Hypothesis-class coverage across the corpus", loc="left", pad=12)
+    _hide_grid_x(ax)
+    save(fig, "12_hypothesis_coverage",
+         "Stein-Rosenberg (1948) forbids Jacobi-converges-while-Gauss-Seidel-does-not "
+         "for M-matrices; Householder-John (1958) guarantees Gauss-Seidel for SPD. "
+         "Coverage of these classes is what explains the benchmark's own headline.")
+
+
+def fig_prediction(res, spec):
+    # theory against observation, including the third case theory cannot state
+    if "jacobi_verdict" not in spec:
+        return
+    rows = []
+    for meth, col in (("Jacobi", "jacobi_verdict"), ("Gauss-Seidel", "gs_verdict")):
+        sub = res[res.method == meth].set_index("matrix")
+        sub = sub[sub.status.isin(APPLICABLE)]  # undefined-on-matrix isn't "did not solve"
+        obs = sub.status == "solved"
+        pred = spec.set_index("matrix")[col]
+        joined = pd.concat([pred.rename("pred"), obs.rename("obs")], axis=1).dropna()
+        for verdict in ("converges", "too_slow", "diverges"):
+            s = joined[joined.pred == verdict]
+            if len(s):
+                # astype(bool) needed: pd.concat widens bool to int, so ~1 is -2 not False
+                solved = int(s.obs.astype(bool).sum())
+                rows.append((meth, verdict, solved, len(s) - solved))
+    if not rows:
+        return
+    d = pd.DataFrame(rows, columns=["method", "verdict", "solved", "not_solved"])
+
+    # stacked bars, not side-by-side -- side-by-side breaks apart visually near zero
+    methods = list(dict.fromkeys(d.method))
+    fig, axes = plt.subplots(1, len(methods), figsize=(4.4 * len(methods), 4.0),
+                             sharey=True)
+    axes = np.atleast_1d(axes)
+    order = ["converges", "too_slow", "diverges"]
+    for ax, meth in zip(axes, methods):
+        sub = d[d.method == meth].set_index("verdict").reindex(order).fillna(0)
+        x = np.arange(len(order))
+        ax.bar(x, sub.solved, width=0.55, color=C1, label="observed: solved")
+        ax.bar(x, sub.not_solved, width=0.55, bottom=sub.solved, color=C2,
+               edgecolor=SURFACE, linewidth=1.2, label="observed: not solved")
+        span = d.groupby("method")[["solved", "not_solved"]].sum().sum(axis=1).max()
+        for xi, r in zip(x, sub.itertuples()):
+            total = r.solved + r.not_solved
+            for value, base, colour in ((r.solved, 0, C1),
+                                        (r.not_solved, r.solved, C2)):
+                if not value:
+                    continue
+                if value < 0.045 * span:  # too small a sliver for a white label inside it
+                    ax.text(xi + 0.31, base + value / 2, f"{int(value)}", ha="left",
+                            va="center", fontsize=7.5, color=colour)
+                else:
+                    ax.text(xi, base + value / 2, f"{int(value)}", ha="center",
+                            va="center", fontsize=8, color=SURFACE)
+            ax.text(xi, total, f"n={int(total)}", ha="center", va="bottom",
+                    fontsize=7.5, color=MUTED)
+        ax.set_xticks(x, order, fontsize=9)
+        ax.set_title(meth, fontsize=10, color=INK2, loc="left")
+        ax.grid(axis="x", visible=False)
+    axes[0].set_ylabel("matrices  (where the method is defined)")
+    axes[0].set_ylim(0, d.groupby("method")[["solved", "not_solved"]].sum().sum(axis=1).max() * 0.85)
+    fig.suptitle("Predicted verdict against observed outcome", x=0.02, ha="left",
+                 fontsize=11, color=INK)
+    axes[-1].legend(loc="upper right", fontsize=8)
+    save(fig, "13_prediction_vs_observation",
+         "'too_slow' is the case the textbook criterion cannot express: rho < 1, so "
+         "convergence is guaranteed, but not within any usable iteration budget.")
+
+
+def fig_refinement(study):
+    # refinement given to every method, not to one
+    ok = study[study.status == "solved"]
+    if ok.empty:
+        return
+    err = ok.pivot_table(index="method", columns="refinement_passes",
+                         values="error_rel", aggfunc="median").dropna(how="all")
+    cost = ok.pivot_table(index="method", columns="refinement_passes",
+                          values="matvecs", aggfunc="median").reindex(err.index)
+    if err.empty:
+        return
+
+    # dots not bars -- a log axis has no zero, so bar length would be meaningless here
+    cols = sorted(err.columns)
+    order = err[cols[1]].sort_values(ascending=False).index if len(cols) > 1 else err.index
+    err, cost = err.reindex(order), cost.reindex(order)
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 0.40 * len(err) + 2.2), sharey=True)
+    y = np.arange(len(err))
+    for ax, table, xlabel in ((axes[0], err, "median relative forward error"),
+                              (axes[1], cost, "median matrix-vector products")):
+        for yi, row in zip(y, table.itertuples(index=False)):
+            vals = [v for v in row if np.isfinite(v) and v > 0]
+            if len(vals) > 1:
+                ax.plot([min(vals), max(vals)], [yi, yi], color=GRID, lw=1.4, zorder=1,
+                        solid_capstyle="round")
+        for c, colour in zip(cols, [C1, C2, C3]):
+            v = table[c] if c in table else None
+            if v is None:
+                continue
+            m = np.isfinite(v) & (v > 0)
+            ax.scatter(v[m], y[m.values], s=44, color=colour, zorder=3,
+                       edgecolors=SURFACE, linewidths=1.4,
+                       label=f"{c} pass{'es' if c != 1 else ''}")
+        ax.set_xscale("log")
+        ax.set_xlabel(xlabel)
+        ax.grid(axis="y", visible=False)
+    axes[0].set_yticks(y, err.index, fontsize=8.5)
+    axes[0].invert_xaxis()          # better to the right in both panels
+    axes[0].set_title("accuracy  (further right is better)", fontsize=9, color=INK2, loc="left")
+    axes[1].set_title("cost  (further left is better)", fontsize=9, color=INK2, loc="left")
+    fig.suptitle("Refinement applied to every method, on equal terms",
+                 x=0.02, ha="left", fontsize=11, color=INK)
+    axes[1].legend(loc="upper center", bbox_to_anchor=(-0.05, -0.09), ncols=3)
+    save(fig, "15_refinement_effect",
+         "Refinement applied to every method, not to one. Given the same wrapper, Jacobi "
+         "becomes the most accurate method in the benchmark and the dispatched ILU-Krylov "
+         "does not -- but Jacobi pays roughly twenty times the work for it, which is why "
+         "cost is plotted beside accuracy rather than left to a footnote. In the first "
+         "sweep only one method received refinement, and that is where its accuracy "
+         "advantage came from.")
+
+
+def _fig_base_paper_test_core(res, filename, show_annotation):
+    jac = res[res.method == "Jacobi"].set_index("matrix")
+    gs = res[res.method == "Gauss-Seidel"].set_index("matrix")
+    # only count systems where both methods are even defined, else the 491 zero-diagonal ones skew it
+    applicable = jac.status.isin(APPLICABLE) & gs.status.isin(APPLICABLE)
+    d = pd.concat([(jac.status == "solved").rename("J"),
+                   (gs.status == "solved").rename("G")], axis=1)[applicable].dropna()
+    if d.empty:
+        return
+    counts = [int((d.J & d.G).sum()), int((~d.J & d.G).sum()),
+              int((d.J & ~d.G).sum()), int((~d.J & ~d.G).sum())]
+    labels = ["both\nconverge", "only\nGauss-Seidel", "only\nJacobi", "neither"]
+    colours = [C1, C1, C2, C1]
+
+    fig, ax = plt.subplots(figsize=(6.6, 3.8))
+    bars = ax.bar(range(4), counts, width=0.6, color=colours)
+    ax.set_ylim(0, max(counts) * 1.22)          # headroom so labels clear the top
+    for b, c in zip(bars, counts):
+        ax.text(b.get_x() + b.get_width() / 2, c, f"{c}", ha="center", va="bottom",
+                fontsize=9.5, color=INK2)
+    if show_annotation:
+        # only-Jacobi bar is zero -- annotate the empty column instead of a legend swatch
+        ax.annotate("Stein-Rosenberg (1948)\nforbids this for M-matrices",
+                    xy=(2, 0), xytext=(2, max(counts) * 0.42), ha="center", fontsize=7.5,
+                    color=C2, arrowprops=dict(arrowstyle="-", color=C2, lw=1.0,
+                                              shrinkA=2, shrinkB=16))
+    ax.set_xticks(range(4), labels, fontsize=8.5)
+    ax.set_ylabel(f"matrices  (n={len(d)} where both are defined)")
+    ax.set_title("The base paper's comparison, re-run on real matrices", loc="left", pad=12)
+    ax.grid(axis="x", visible=False)
+    save(fig, filename,
+         "The denominator is matrices where both methods are defined, not the "
+         "whole corpus -- Jacobi and Gauss-Seidel are undefined wherever the "
+         "diagonal carries a zero.")
+
+
+def fig_base_paper_test(res, spec):
+    # shared with Report/finalreport.tex -- keep the Stein-Rosenberg annotation, don't remove
+    _fig_base_paper_test_core(res, "14_jacobi_vs_gauss_seidel", show_annotation=True)
+
+
+def fig_base_paper_test_clean(res, spec):
+    # slide-only, no annotation -- separate file, never touches the report's own copy
+    _fig_base_paper_test_core(res, "14_jacobi_vs_gauss_seidel_clean", show_annotation=False)
+
+
+# ------------------------------------------------- the novel method: reordering
+
+# the three conditions, in argument order: control, established tool, ours
+COND_ORDER = ["none", "mc64", "best"]
+COND_LABEL = {"none": "as given", "mc64": "MC64", "best": "ours (portfolio)"}
+COND_COLOUR = {"none": MUTED, "mc64": C2, "best": C1}
+
+
+def _count_axis(ax, vals, legend_cols):
+    # integer ticks (counts, not fractions), legend below the axis so it can't collide
+    top = max(vals) if vals else 1
+    ax.set_ylim(0, max(top, 1) * 1.12)
+    ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.legend(ncol=legend_cols, loc="upper center", bbox_to_anchor=(0.5, -0.13))
+
+
+def _solved_by(reo, cond, method):
+    sub = reo[(reo.condition == cond) & (reo.method == method)]
+    return set(sub[sub.status == "solved"].matrix)
+
+
+def fig_reordering_scoreboard(reo):
+    # shared with Report/finalreport.tex, 2-bar version -- don't touch filename/bar count, 3-bar slide variant is fig_reordering_scoreboard_by_objective below
+    methods = [m for m in ("Jacobi", "Gauss-Seidel", "SOR") if m in set(reo.method)]
+    if not methods or "best" not in set(reo.condition):
+        return
+    before = [len(_solved_by(reo, "none", m)) for m in methods]
+    after = [len(_solved_by(reo, "best", m)) for m in methods]
+
+    fig, ax = plt.subplots(figsize=(7.4, 4.0))
+    x = np.arange(len(methods))
+    w = 0.34
+    ax.bar(x - w / 2, before, w, color=MUTED, label="as given")
+    ax.bar(x + w / 2, after, w, color=C1, label="with the pipeline")
+    for xi, (b, a) in zip(x, zip(before, after)):
+        ax.text(xi - w / 2, b, str(b), ha="center", va="bottom", fontsize=9, color=INK2)
+        ax.text(xi + w / 2, a, str(a), ha="center", va="bottom", fontsize=9, color=INK2)
+        if b:
+            ax.text(xi, max(b, a) * 1.06, f"+{100 * (a - b) / b:.0f}%", ha="center",
+                    va="bottom", fontsize=11, color=C1, fontweight="bold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(methods)
+    ax.set_ylabel("systems solved")
+    ax.set_title("Choosing the diagonal before iterating")
+    _count_axis(ax, before + after, 2)
+    ax.set_ylim(0, max(after) * 1.22)
+    _hide_grid_x(ax)
+    n_mat = reo.matrix.nunique()
+    save(fig, "01_pipeline_scoreboard",
+         f"Systems solved out of {n_mat} matrices, with the solvers themselves unchanged "
+         "-- only the order of the rows and, for SOR, the relaxation factor. "
+         f"{sum(after) - sum(before)} systems recovered across the three methods and "
+         "none lost, which the portfolio guarantees rather than merely achieves: "
+         "'change nothing' is one of the candidates it selects among. Which objective "
+         "won each matrix, and what each contributes on its own, is in RESULTS.md "
+         "section 8.")
+
+
+def fig_reordering_scoreboard_by_objective(reo):
+    # slide-only 3-bar variant (as given/MC64/ours) -- separate file, report's 2-bar stays untouched
+    methods = [m for m in ("Jacobi", "Gauss-Seidel", "SOR") if m in set(reo.method)]
+    if not methods or "best" not in set(reo.condition):
+        return
+    counts = {cond: [len(_solved_by(reo, cond, m)) for m in methods] for cond in COND_ORDER}
+    before, after = counts["none"], counts["best"]
+
+    fig, ax = plt.subplots(figsize=(7.6, 4.2))
+    x = np.arange(len(methods))
+    w = 0.26
+    offsets = {"none": -w, "mc64": 0, "best": w}
+    for cond in COND_ORDER:
+        vals = counts[cond]
+        ax.bar(x + offsets[cond], vals, w, color=COND_COLOUR[cond], label=COND_LABEL[cond])
+        for xi, v in zip(x, vals):
+            ax.text(xi + offsets[cond], v, str(v), ha="center", va="bottom",
+                    fontsize=9, color=INK2)
+    for xi, b, m, a in zip(x, before, counts["mc64"], after):
+        if b:
+            ax.text(xi, max(b, m, a) * 1.1,
+                    f"+{100 * (a - b) / b:.0f}%", ha="center", va="bottom", fontsize=11,
+                    color=C1, fontweight="bold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(methods)
+    ax.set_ylabel("systems solved")
+    ax.set_title("Choosing the diagonal before iterating")
+    _count_axis(ax, before + counts["mc64"] + after, 3)
+    ax.set_ylim(0, max(after) * 1.28)
+    _hide_grid_x(ax)
+    n_mat = reo.matrix.nunique()
+    save(fig, "01_pipeline_scoreboard_mc64",
+         f"Systems solved out of {n_mat} matrices, with the solvers themselves unchanged "
+         "-- only the order of the rows and, for SOR, the relaxation factor. MC64 alone "
+         "already carries almost all of the gain; the group's own objective matches it "
+         "exactly on Jacobi and adds one further system each on Gauss-Seidel and SOR. "
+         f"{sum(after) - sum(before)} systems recovered across the three methods and "
+         "none lost, which the portfolio guarantees rather than merely achieves: "
+         "'change nothing' is one of the candidates it selects among.")
+
+
+def fig_dominance(reo):
+    # worst row ratio per objective -- below 1 is strict diagonal dominance, guaranteed convergence
+    cols = [("ratio_none", "as given", MUTED), ("ratio_mc64", "MC64", C2),
+            ("ratio_minsum", "min-sum", C3), ("ratio_bottleneck", "bottleneck", C1)]
+    cols = [c for c in cols if c[0] in reo.columns]
+    if not cols:
+        print("  (skipped 16_dominance: no ratio_* columns in this run)")
+        return
+    one = reo[reo.condition == "best"].drop_duplicates("matrix")
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(9.4, 3.8),
+                                  gridspec_kw={"width_ratios": [1.5, 1]})
+
+    labels, dom, undef, tot = [], [], [], []
+    for col, lab, _c in cols:
+        v = pd.to_numeric(one[col], errors="coerce")
+        labels.append(lab)
+        dom.append(int((v < 1).sum()))
+        undef.append(int(np.isinf(v).sum()))
+        tot.append(int(v.notna().sum()))
+
+    # bars of "43" tie at the threshold for every objective, so compare the ratio itself
+    a = pd.to_numeric(one.get("ratio_mc64"), errors="coerce")
+    c = pd.to_numeric(one.get("ratio_bottleneck"), errors="coerce")
+    both = np.isfinite(a) & np.isfinite(c) & (a > 0) & (c > 0)
+    a, c = a[both], c[both]
+    better, worse = int((c < a).sum()), int((c > a).sum())
+    tie = int((c == a).sum())
+    ax.scatter(a[c == a], c[c == a], s=9, color=MUTED, alpha=0.45,
+               label="identical ({})".format(tie), zorder=2)
+    ax.scatter(a[c < a], c[c < a], s=13, color=C1,
+               label="bottleneck better ({})".format(better), zorder=3)
+    if worse:
+        ax.scatter(a[c > a], c[c > a], s=13, color=STATUS["inaccurate"],
+                   label="MC64 better ({})".format(worse), zorder=4)
+    lo = float(min(a.min(), c.min())) * 0.6
+    hi = float(max(a.max(), c.max())) * 1.6
+    ax.plot([lo, hi], [lo, hi], color=AXIS, lw=1.0, zorder=1)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    ax.set_xlabel("worst row ratio under MC64")
+    ax.set_ylabel("under bottleneck (ours)")
+    ax.set_title("The quantity the method minimises")
+    ax.legend(loc="upper left", fontsize=8)
+
+    # dash patterns too -- coincident curves in one solid style would just erase each other
+    dashes = [(), (5, 2), (1, 1.8), (6, 2, 1, 2)]
+    for (col, lab, colour), dash in zip(cols, dashes):
+        v = pd.to_numeric(one[col], errors="coerce")
+        v = v[np.isfinite(v) & (v > 0)]
+        if not len(v):
+            continue
+        xs = np.sort(v)
+        ys = np.arange(1, len(xs) + 1) / len(xs)
+        line, = ax2.plot(xs, ys, color=colour, lw=1.7, label=lab, solid_capstyle="butt")
+        if dash:
+            line.set_dashes(list(dash))
+    ax2.axvline(1.0, color=STATUS["inaccurate"], lw=1.0, ls="--", zorder=0)
+    ax2.set_xscale("log")
+    ax2.xaxis.set_minor_formatter(mticker.NullFormatter())  # minor ticks collide under a decade
+    ax2.xaxis.set_major_formatter(mticker.LogFormatterMathtext())
+    ax2.set_xlabel("worst row ratio  (dashed red line: ratio = 1)")
+    ax2.set_ylabel("fraction at or below")
+    ax2.set_ylim(0, 1.02)
+    ax2.set_title("Full distribution")
+    ax2.legend(loc="upper left", bbox_to_anchor=(1.02, 1.0))
+
+    n_inf = max(undef) if undef else 0
+    save(fig, "03_dominance",
+         "Left: the worst row ratio each objective achieves, matrix by matrix. Points "
+         "below the line are matrices where the convergence-oriented objective beats "
+         "MC64 on the quantity that governs convergence; there are none above it. This "
+         "is the method doing exactly what it is designed to do. Right: the same "
+         "quantity as a distribution. What the improvement does NOT buy is the "
+         "guarantee -- a ratio below 1 is strict diagonal dominance and forces both "
+         "Jacobi and Gauss-Seidel to converge, and 43 matrices already satisfy it while "
+         "no permutation brings a single further matrix under the threshold. The gain "
+         "is real and it lands in a regime where it does not decide convergence. "
+         "Finite positive ratios only; up to {} matrices have an infinite ratio (a zero "
+         "diagonal) under some objective.".format(n_inf))
+
+
+def fig_dominance_clean(reo):
+    # slide-only, left panel only (no min-sum) -- separate file, report keeps both panels
+    one = reo[reo.condition == "best"].drop_duplicates("matrix")
+    a = pd.to_numeric(one.get("ratio_mc64"), errors="coerce")
+    c = pd.to_numeric(one.get("ratio_bottleneck"), errors="coerce")
+    both = np.isfinite(a) & np.isfinite(c) & (a > 0) & (c > 0)
+    if not both.any():
+        return
+    a, c = a[both], c[both]
+    better, worse = int((c < a).sum()), int((c > a).sum())
+    tie = int((c == a).sum())
+
+    fig, ax = plt.subplots(figsize=(5.6, 4.4))
+    ax.scatter(a[c == a], c[c == a], s=9, color=MUTED, alpha=0.45,
+               label="identical ({})".format(tie), zorder=2)
+    ax.scatter(a[c < a], c[c < a], s=13, color=C1,
+               label="bottleneck better ({})".format(better), zorder=3)
+    if worse:
+        ax.scatter(a[c > a], c[c > a], s=13, color=STATUS["inaccurate"],
+                   label="MC64 better ({})".format(worse), zorder=4)
+    lo = float(min(a.min(), c.min())) * 0.6
+    hi = float(max(a.max(), c.max())) * 1.6
+    ax.plot([lo, hi], [lo, hi], color=AXIS, lw=1.0, zorder=1)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    ax.set_xlabel("worst row ratio under MC64")
+    ax.set_ylabel("under bottleneck (ours)")
+    ax.set_title("The quantity the method minimises")
+    ax.legend(loc="upper left", fontsize=8)
+
+    save(fig, "03_dominance_clean",
+         "The worst row ratio each objective achieves, matrix by matrix. Points below "
+         "the line are matrices where the convergence-oriented objective beats MC64 on "
+         "the quantity that governs convergence; there are none above it.")
+
+
+# ------------------------------------- benchmark axes the proposal promised
+
+# one representative per family (best by systems solved), so 5 series not 16
+REPS = [("spsolve (SuperLU)", "sparse direct", C1),
+        ("ILU-Krylov (dispatched)", "ILU + Krylov", C2),
+        ("BiCGSTAB", "Krylov, no preconditioner", C3),
+        ("Gauss-Seidel", "stationary", "#8b5cf6"),
+        ("LU", "dense direct", "#b45309")]
+DASH = [(), (5, 2), (1, 1.8), (6, 2, 1, 2), (3, 1.5)]
+
+
+def fig_performance_profile(res):
+    # Dolan-More profile: runtime / fastest-on-that-matrix, tau=1 is "fastest", tail is robustness
+    ok = res[(res.refinement_passes == 0) & (res.status == "solved")
+             & (res.runtime_sec > 0)]
+    if ok.empty:
+        return
+    best = ok.groupby("matrix").runtime_sec.min()
+    universe = sorted(set(ok.matrix))
+    fig, ax = plt.subplots(figsize=(7.4, 4.2))
+    for (m, label, colour), dash in zip(REPS, DASH):
+        s = ok[ok.method == m].set_index("matrix").runtime_sec
+        if s.empty:
+            continue
+        ratio = np.sort((s / best.reindex(s.index)).values)
+        xs = np.concatenate([[1.0], ratio])
+        ys = np.concatenate([[0.0], np.arange(1, len(ratio) + 1) / len(universe)])
+        line, = ax.step(xs, ys, where="post", color=colour, lw=1.9, label=label)
+        if dash:
+            line.set_dashes(list(dash))
+        ax.text(xs[-1], ys[-1], f" {ys[-1] * 100:.0f}%", color=INK2, fontsize=8,
+                va="center")
+    ax.set_xscale("log")
+    ax.set_xlim(1, None)
+    ax.set_ylim(0, 1.02)
+    ax.xaxis.set_minor_formatter(mticker.NullFormatter())
+    ax.set_xlabel("tau  —  runtime, as a multiple of the fastest solver on that matrix")
+    ax.set_ylabel("fraction of the corpus")
+    ax.set_title("Performance profile: speed and robustness in one picture")
+    ax.legend(loc="lower right")
+    save(fig, "05_performance_profile",
+         f"Dolan-More profile over the {len(universe)} matrices at least one method "
+         "solved, one representative per family. Height at tau = 1 is how often that "
+         "method is the outright fastest; the right-hand plateau is how much of the "
+         "corpus it solves at all. Runtime is used here rather than the matvec count "
+         "the rest of this report prefers, because matvecs are zero by construction "
+         "for direct methods and a profile needs one cost every family can be measured "
+         "in. Kaggle runtimes are not reproducible in absolute terms; the ratio to the "
+         "per-matrix best is far more stable than the seconds themselves.")
+
+
+def fig_runtime_scaling(res):
+    # restricted to matrices all 4 families solve, else it looks like Krylov/stationary get faster at scale from survivorship bias
+    ok = res[(res.refinement_passes == 0) & (res.status == "solved")
+             & (res.runtime_sec > 0)]
+    if ok.empty:
+        return
+    fams = [r for r in REPS if r[1] != "dense direct"]
+    sets = [set(ok[ok.method == m].matrix) for m, _, _ in fams]
+    if not all(sets):
+        return
+    common = set.intersection(*sets)
+    if len(common) < 20:
+        return
+    ok = ok[ok.matrix.isin(common)]
+
+    MIN_PER_BIN = 5      # a median over three points is noise, not a trend
+    edges = np.logspace(np.log10(max(ok.nnz.min(), 1)), np.log10(ok.nnz.max()), 7)
+    centres = np.sqrt(edges[:-1] * edges[1:])
+    fig, ax = plt.subplots(figsize=(7.4, 4.2))
+    counts, bin_x = None, []
+    for (m, label, colour), dash in zip(fams, DASH):
+        s_ = ok[ok.method == m]
+        idx = np.digitize(s_.nnz, edges) - 1
+        xs, ys, ns = [], [], []
+        for k in range(len(centres)):
+            sel = s_.runtime_sec[idx == k]
+            if len(sel) >= MIN_PER_BIN:
+                xs.append(centres[k])
+                ys.append(sel.median())
+                ns.append(len(sel))
+        if len(xs) < 2:
+            continue
+        if counts is None:
+            counts, bin_x = ns, xs
+        line, = ax.plot(xs, ys, color=colour, lw=1.9, marker="o", ms=4.5, label=label)
+        if dash:
+            line.set_dashes(list(dash))
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    # rightmost bin is thin and selected-for-easiness, so its dip is sample bias not the method
+    if counts:
+        lo = ax.get_ylim()[0]
+        for cx, cn in zip(bin_x, counts):
+            ax.text(cx, lo, f"n={cn}", ha="center", va="bottom", fontsize=7,
+                    color=MUTED)
+    ax.set_xlabel(f"nonzeros   (the {len(common)} matrices all four families solve)")
+    ax.set_ylabel("runtime, seconds (median per size bin)")
+    ax.set_title("How each family scales, on a common set of problems")
+    ax.legend(loc="upper left")
+    save(fig, "09_runtime_scaling",
+         f"Median runtime within each nonzero bin, restricted to the {len(common)} "
+         "matrices every family shown here solves, so the curves describe the same "
+         "problems at every size. Without that restriction the Krylov and stationary "
+         "curves bend downward at the right -- not because those methods speed up, but "
+         "because at large sizes they only succeed on the easy matrices. Dense LU is "
+         "omitted: its n = 2,000 cap would shrink the size range to a third. Slope is "
+         "the readable quantity; absolute seconds on shared Kaggle hardware are not "
+         "reproducible.")
+
+
+def fig_iteration_counts(res):
+    # distributions not means -- bimodal by construction, converges early or hits the cap
+    meth = [("Jacobi", C1), ("Gauss-Seidel", C2), ("SOR", C3),
+            ("BiCGSTAB", "#8b5cf6"), ("ILU-BiCGSTAB", "#b45309")]
+    ok = res[(res.refinement_passes == 0) & (res.status == "solved")
+             & (res.iterations > 0)]
+    if ok.empty:
+        return
+    fig, ax = plt.subplots(figsize=(7.4, 4.0))
+    for (m, colour), dash in zip(meth, DASH):
+        s = ok[ok.method == m].iterations
+        if len(s) < 5:
+            continue
+        xs = np.sort(s.values)
+        line, = ax.step(xs, np.arange(1, len(xs) + 1) / len(xs), where="post",
+                        color=colour, lw=1.9,
+                        label=f"{m}  (n={len(xs)}, median {int(np.median(xs))})")
+        if dash:
+            line.set_dashes(list(dash))
+    ax.set_xscale("log")
+    ax.set_ylim(0, 1.02)
+    ax.xaxis.set_minor_formatter(mticker.NullFormatter())
+    ax.set_xlabel("iterations to reach the tolerance")
+    ax.set_ylabel("fraction of that method's successes")
+    ax.set_title("Iterations needed, where the method succeeds at all")
+    ax.legend(loc="lower right", fontsize=8)
+    save(fig, "10_iteration_counts",
+         "Each curve is conditioned on that method's own successes, so the vertical "
+         "axis is not comparable across methods as a success rate -- n is printed in "
+         "the legend for that reason. One preconditioned ILU-BiCGSTAB step does far "
+         "more arithmetic than one Jacobi step, so a lower curve here means fewer "
+         "steps, not less work; figure 08 counts the work.")
+
+
+def fig_ilu_hole(res, probe):
+    # 2 panels: left = the hole is real (166 matrices, no ILU); right = reordering fixes 150/166
+    n_total = len(probe)
+    if not n_total:
+        return
+    targets = set(probe.matrix)
+    base = res[(res.refinement_passes == 0) & (res.matrix.isin(targets))]
+
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(9.6, 3.9),
+                                  gridspec_kw={"width_ratios": [1.15, 1]})
+
+    # --- left: who can solve these today
+    rows = [("Gauss-Seidel", C3), ("GMRES(30)", "#8b5cf6"), ("BiCGSTAB", C2),
+            ("spsolve (SuperLU)", C1)]
+    labels, vals, colours = [], [], []
+    for m, colour in rows:
+        s = base[base.method == m]
+        if not len(s):
+            continue
+        labels.append(m)
+        vals.append(int((s.status == "solved").sum()))
+        colours.append(colour)
+    y = np.arange(len(labels))
+    ax.barh(y, vals, 0.6, color=colours)
+    for yi, v in zip(y, vals):
+        ax.text(v, yi, f"  {v}", va="center", fontsize=9, color=INK2)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels)
+    ax.invert_yaxis()
+    ax.set_xlim(0, n_total * 1.12)
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax.set_xlabel(f"solved, of the {n_total} matrices where ILU cannot be built")
+    ax.set_title("The hole: no preconditioner, no iterative solve")
+    ax.grid(axis="y", visible=False)
+
+    # --- right: what choosing the diagonal recovers
+    built = int(probe["best"].sum())
+    solved = int((probe["best_status"] == "solved").sum())
+    stages = ["ILU builds\nas given", "ILU builds\nafter step 1", "and solves\nafter step 1"]
+    heights = [0, built, solved]
+    bars = ax2.bar(np.arange(3), heights, 0.55,
+                   color=[STATUS["not_applicable"], C1, STATUS["solved"]])
+    for b, h in zip(bars, heights):
+        ax2.text(b.get_x() + b.get_width() / 2, h, str(h), ha="center", va="bottom",
+                 fontsize=10, color=INK2)
+    ax2.set_xticks(np.arange(3))
+    ax2.set_xticklabels(stages, fontsize=8.5)
+    ax2.set_ylim(0, n_total * 1.15)
+    ax2.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+    ax2.set_ylabel(f"matrices (of {n_total})")
+    ax2.set_title("What choosing the diagonal recovers")
+    _hide_grid_x(ax2)
+
+    save(fig, "02_ilu_hole",
+         f"On {n_total} matrices no usable incomplete factorization exists, which removes "
+         "all four preconditioned methods at once. What is left solves almost none of "
+         "them, while a sparse direct solver handles most -- so these are not intrinsically "
+         "hard systems, they are systems the iterative toolkit cannot reach. The cause is "
+         "narrow: build_ilu falls back to diagonal scaling when spilu fails, and a zero on "
+         f"the diagonal closes that door too. Choosing the diagonal first makes {built} of "
+         f"the {n_total} constructible and {solved} solve outright. The gap between those "
+         "two numbers is the honest part: a preconditioner that can be built is not a "
+         "solve, and the remainder get one and still do not converge.")
+
+
+# --------------------------------------------------------------- driver
+
+def main():
+    global OUT
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--results", default=str(ROOT / "results" / "tables"))
+    ap.add_argument("--out", default=str(ROOT / "results" / "figures"))
+    args = ap.parse_args()
+
+    tables = Path(args.results)
+    OUT = Path(args.out)
+    OUT.mkdir(parents=True, exist_ok=True)
+
+    def load(name):
+        p = tables / name
+        if not p.exists():
+            print(f"  (skipped: {name} not present yet)")
+            return None
+        df = pd.read_csv(p)
+        # merge the split CFD domain + drop the dup rows before anything gets plotted
+        fixed = corpus.apply(df)
+        if len(fixed) != len(df):
+            print(f"  {name}: {len(df) - len(fixed)} duplicate rows removed")
+        return fixed
+
+    print(f"reading {tables}")
+    res = load("benchmark_results.csv")
+    spec = load("spectral.csv")
+    study = load("refinement_study.csv")
+    reo = load("reordering_study.csv")
+    ilu_probe = load("ilu_reorder_probe.csv")
+
+    print(f"\nwriting figures to {OUT}")
+    if res is not None:
+        fig_scoreboard(res)
+        fig_outcomes(res)
+        fig_domain_heatmap(res)
+        fig_cost_profile(res)
+        fig_conditioning(res)
+        fig_dispatch_ablation(res)
+        fig_base_paper_test(res, spec)
+        fig_base_paper_test_clean(res, spec)
+        fig_performance_profile(res)
+        fig_runtime_scaling(res)
+        fig_iteration_counts(res)
+    if spec is not None:
+        fig_spectral(spec)
+        fig_hypothesis_coverage(spec)
+        if res is not None:
+            fig_prediction(res, spec)
+    if study is not None:
+        fig_refinement(study)
+    if ilu_probe is not None and res is not None:
+        fig_ilu_hole(res, ilu_probe)
+    if reo is not None:
+        fig_reordering_scoreboard(reo)
+        fig_reordering_scoreboard_by_objective(reo)
+        fig_dominance(reo)
+        fig_dominance_clean(reo)
+
+    if FIGURES:
+        index = "\n".join(f"- `{f['file']}` -- {f['caption']}" for f in FIGURES)
+        (OUT / "index.md").write_text(f"# Figures\n\n{index}\n", encoding="utf-8")
+        print(f"\n  {len(FIGURES)} figures + index.md")
+    else:
+        print("\n  nothing produced -- no input tables found")
+
+
+if __name__ == "__main__":
+    main()

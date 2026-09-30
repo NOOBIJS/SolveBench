@@ -1,0 +1,31 @@
+# credentials -- never commit, never push
+kaggle.json
+**/kaggle.json
+*.key
+.env
+
+# matrix corpus -- not redistributed here, re-download via tools/download_corpus.py
+dataset/
+dataset_large/
+matrices/
+*.mtx
+*.zip
+
+# python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# scratch left behind by tools/test_notebooks.py executing a notebook locally
+.nbscratch/
+/solvebench/
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
