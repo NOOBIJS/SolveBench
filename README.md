@@ -106,6 +106,3 @@ python tools/build_notebooks.py          # regenerate the Kaggle notebooks
 python tools/test_notebooks.py 4         # execute every generated cell locally
 python tools/make_figures.py             # redraw every figure from results/tables/
 ```
-
-A `kaggle.json` API token is required to push notebooks to Kaggle. It is
-git-ignored and must never be committed.
